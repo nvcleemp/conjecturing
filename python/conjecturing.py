@@ -18,7 +18,7 @@ class node:
         if self.type == 0:
             return self.content
         elif self.type == 1:
-            return '({})'.format(str(self.left))
+            return '({} {})'.format(self.content, str(self.left))
         else:
             return '({} {} {})'.format(str(self.left), self.content, str(self.right)) 
     
