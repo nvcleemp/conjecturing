@@ -35,10 +35,9 @@ class node:
     def removeChild(self):
         if self.right == None:
             n, self.left, self.type = self.left, None, 0
-            return n
         else:
             n, self.right, self.type = self.right, None, 1
-            return n
+        return n
     
     def setContent(self, content):
         self.content = content
@@ -59,7 +58,7 @@ class tree:
         self.root.depth = 0
         self.unused = [node() for _ in range(unary + 2*binary)]
         
-        self.nodesAtDepth = {0: self.root}        
+        self.nodesAtDepth = {0: [self.root]}        
         
         self.depth = 0
         self.uCount = 0
@@ -78,6 +77,14 @@ class tree:
         child = self.unused.pop()
         parent.addChild(child)
         child.depth = parent.depth + 1
+        if child.depth > self.depth: self.depth = child.depth
+        
+        if parent.type == 2:
+            self.uCount -= 1
+            self.bCount += 1
+        else:
+            self.uCount += 1
+            
         if child.depth in self.nodesAtDepth:
             self.nodesAtDepth[child.depth].append(child)
         else:
@@ -86,9 +93,17 @@ class tree:
     def removeChild(self, parent):
         child = parent.removeChild()
         self.unused.append(child)
+        
         self.nodesAtDepth[child.depth].pop()
         #child2 = self.nodesAtDepth[child.depth].pop()
         #assert child == child2, "Should be the same"
+        if not self.nodesAtDepth[child.depth]: self.depth -= 1
+        
+        if parent.type == 1:
+            self.uCount += 1
+            self.bCount -= 1
+        else:
+            self.uCount -= 1
     
     
 def generateTree(unary, binary):
@@ -96,24 +111,40 @@ def generateTree(unary, binary):
         yield t
     
 def _generateTree(t):
+    if t.uCount > t.unary + 1 or t.bCount > t.binary:
+        return
+    
     if t.isComplete():
         yield t
         return
     
     if t.depth == 0:
-        t.uCount += 1
         t.addChild(t.root)
-        t.depth = 1
         for nt in _generateTree(t):
             yield nt
-        t.depth = 0
         t.removeChild(t.root)
-        t.uCount -= 1
     else:
         #get extensible nodes at level depth - 1
-        #get extensible (i.e. all) nodes at level depth
+        start = len(t.nodesAtDepth[t.depth-1]) - 1
+        while start >= 0 and t.nodesAtDepth[t.depth-1][start].type == 0:
+            start -= 1
         
-        pass
+        if start >= 0 and t.nodesAtDepth[t.depth-1][start].type == 1:
+            start -= 1
+            
+        for parent in t.nodesAtDepth[t.depth-1][start+1:]:
+            t.addChild(parent)
+            for nt in _generateTree(t):
+                yield nt
+            t.removeChild(parent)
+        
+        
+        #get extensible (i.e. all) nodes at level depth
+        for parent in t.nodesAtDepth[t.depth]:
+            t.addChild(parent)
+            for nt in _generateTree(t):
+                yield nt
+            t.removeChild(parent)
         
 def generateLabeledTree(unary, binary, invariantCount, unaryOperators, binaryNonCommutativeOperators, binaryCommutativeOperators):
     invariants = {'I{}'.format(i):True for i in range(1, invariantCount+1)}
@@ -143,8 +174,15 @@ def _generateLabeledTree(nodes, pos, invariants, unaryOperators, binaryNonCommut
                     yield None
         else:
             #non commutative operators
+            for op in binaryNonCommutativeOperators:
+                nodes[pos].content = op
+                for _ in _generateLabeledTree(nodes, pos + 1, invariants, unaryOperators, binaryNonCommutativeOperators, binaryCommutativeOperators):
+                    yield None
+                
             
             #commutative operators
-            pass
-                                
-        
+            for op in binaryCommutativeOperators:
+                if str(nodes[pos].left) < str(nodes[pos].right):
+                    nodes[pos].content = op
+                    for _ in _generateLabeledTree(nodes, pos + 1, invariants, unaryOperators, binaryNonCommutativeOperators, binaryCommutativeOperators):
+                        yield None
