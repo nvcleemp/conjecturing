@@ -32,6 +32,9 @@ int targetUnary;
 int targetBinary;
 
 int invariantCount;
+int unaryOperatorCount;
+int commBinaryOperatorCount;
+int nonCommBinaryOperatorCount;
 
 unsigned long int treeCount = 0;
 
