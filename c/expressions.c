@@ -23,6 +23,9 @@ typedef int boolean;
 
 int verbose = FALSE;
 
+int targetUnary;
+int targetBinary;
+
 typedef struct node {
     struct node *left;
     struct node *right;
