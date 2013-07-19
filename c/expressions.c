@@ -187,6 +187,12 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
 void handleTree(TREE *tree){
     treeCount++;
     if(onlyUnlabeled) return;
+    
+    //start by ordering nodes
+    NODE *orderedNodes[targetUnary + 2*targetBinary + 1];
+    
+    int pos = 0;
+    getOrderedNodes(tree->root, orderedNodes, &pos);
 }
 
 void generateTreeImpl(TREE *tree){
