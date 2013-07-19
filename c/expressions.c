@@ -110,6 +110,14 @@ void initTree(TREE *tree){
     tree->nodesAtDepth[0][0] = tree->root;
 }
 
+void freeTree(TREE *tree){
+    int i;
+    for(i=0; i<MAX_NODES_USED - 1; i++){
+        free(tree->unusedStack[i]);
+    }
+    free(tree->root);
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
