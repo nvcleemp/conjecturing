@@ -334,7 +334,9 @@ int main(int argc, char *argv[]) {
     
     generateTree(unary, binary);
     
-    fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
+    if(onlyUnlabeled){
+        fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
+    }
     
     return 0;
 }
