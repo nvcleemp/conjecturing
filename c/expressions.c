@@ -226,8 +226,9 @@ void generateTree(int unary, int binary){
 void help(char *name){
     fprintf(stderr, "The program %s constructs expression based on provided parameters.\n\n", name);
     fprintf(stderr, "Usage\n=====\n");
-    fprintf(stderr, " %s [options]\n", name);
-    fprintf(stderr, "       <description>.\n");
+    fprintf(stderr, " %s [options] unary binary\n", name);
+    fprintf(stderr, "       Generates expressions with the given number of unary and binary\n");
+    fprintf(stderr, "       operators.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Valid options\n=============\n");
     fprintf(stderr, "* Various options\n");
