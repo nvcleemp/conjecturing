@@ -121,6 +121,14 @@ void freeTree(TREE *tree){
     free(tree->root);
 }
 
+/* 
+ * Returns non-zero value if the tree satisfies the current target counts
+ * for unary and binary operators. Returns 0 in all other cases.
+ */
+boolean isComplete(TREE *tree){
+    return tree->unaryCount == targetUnary && tree->binaryCount == targetBinary;
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
