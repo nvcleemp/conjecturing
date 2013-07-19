@@ -74,6 +74,22 @@ NODE *removeChildFromNode(NODE *parent){
     }
 }
 
+void getOrderedNodes(NODE *node, NODE **orderedNodes, int *currentPosition){
+    if(node->type==2){
+        getOrderedNodes(node->left, orderedNodes, currentPosition);
+        getOrderedNodes(node->right, orderedNodes, currentPosition);
+        orderedNodes[*currentPosition] = node;
+        (*currentPosition)++;
+    } else if(node->type==1){
+        getOrderedNodes(node->left, orderedNodes, currentPosition);
+        orderedNodes[*currentPosition] = node;
+        (*currentPosition)++;
+    } else {
+        orderedNodes[*currentPosition] = node;
+        (*currentPosition)++;
+    }
+}
+
 typedef struct tree {
     struct node *root;
     
