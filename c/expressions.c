@@ -16,6 +16,47 @@ typedef int boolean;
 
 int verbose = FALSE;
 
+typedef struct node {
+    struct node *left;
+    struct node *right;
+    
+    int type; //i.e., number of children
+    int depth;
+    
+    char *content;
+} NODE;
+
+const NODE DEFAULT_NODE = {NULL, NULL, 0, 0, NULL};
+
+void addChildToNode(NODE *parent, NODE *child){
+    if(parent->left == NULL){
+        parent->left = child;
+        parent->type = 1;
+    } else if(parent->right == NULL){
+        parent->right = child;
+        parent->type = 2;
+    } else {
+        fprintf(stderr, "ERROR: Parent already has two children.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+NODE *removeChildFromNode(NODE *parent){
+    if(parent->right != NULL){
+        NODE *child = parent->right;
+        parent->right = NULL;
+        parent->type = 1;
+        return child;
+    } else if(parent->left != NULL){
+        NODE *child = parent->left;
+        parent->left = NULL;
+        parent->type = 0;
+        return child;
+    } else {
+        fprintf(stderr, "ERROR: Parent has no children.\n");
+        exit(EXIT_FAILURE);
+    }
+}
 
 //===================================================================
 // Usage methods
