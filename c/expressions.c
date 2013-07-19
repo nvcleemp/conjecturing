@@ -280,6 +280,13 @@ int processOptions(int argc, char **argv) {
                 return EXIT_FAILURE;
         }
     }
+    
+    // check the non-option arguments
+    if (argc - optind != 2) {
+        usage(name);
+        return EXIT_FAILURE;
+    }
+    
     return -1;
 }
 
@@ -287,6 +294,11 @@ int main(int argc, char *argv[]) {
     
     int po = processOptions(argc, argv);
     if(po != -1) return po;
+    
+    int unary = strtol(argv[optind], NULL, 10);
+    int binary = strtol(argv[optind+1], NULL, 10);
+    
+    generateTree(unary, binary);
     
     fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
     
