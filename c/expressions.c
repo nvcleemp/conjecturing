@@ -28,6 +28,8 @@ int targetBinary;
 
 unsigned long int treeCount = 0;
 
+boolean onlyUnlabeled = FALSE;
+
 typedef struct node {
     struct node *left;
     struct node *right;
@@ -168,6 +170,7 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
 
 void handleTree(TREE *tree){
     treeCount++;
+    if(onlyUnlabeled) return;
 }
 
 void generateTreeImpl(TREE *tree){
@@ -231,6 +234,10 @@ void help(char *name){
     fprintf(stderr, "       operators.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Valid options\n=============\n");
+    fprintf(stderr, "* Generated types\n");
+    fprintf(stderr, "    -u, --unlabeled\n");
+    fprintf(stderr, "       Generate unlabeled expression trees.\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "* Various options\n");
     fprintf(stderr, "    -h, --help\n");
     fprintf(stderr, "       Print this help and return.\n");
@@ -251,7 +258,8 @@ int processOptions(int argc, char **argv) {
     char *name = argv[0];
     static struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
-        {"verbose", no_argument, NULL, 'v'}
+        {"verbose", no_argument, NULL, 'v'},
+        {"unlabeled", no_argument, NULL, 'u'}
     };
     int option_index = 0;
 
@@ -271,6 +279,9 @@ int processOptions(int argc, char **argv) {
                 return EXIT_SUCCESS;
             case 'v':
                 verbose = TRUE;
+                break;
+            case 'u':
+                onlyUnlabeled = TRUE;
                 break;
             case '?':
                 usage(name);
