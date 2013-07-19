@@ -285,7 +285,7 @@ int processOptions(int argc, char **argv) {
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hf:dvoF:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvu", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 //handle long option with no alternative
