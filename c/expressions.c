@@ -26,6 +26,8 @@ int verbose = FALSE;
 int targetUnary;
 int targetBinary;
 
+unsigned long int treeCount = 0;
+
 typedef struct node {
     struct node *left;
     struct node *right;
@@ -165,7 +167,7 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
 }
 
 void handleTree(TREE *tree){
-    //TODO
+    treeCount++;
 }
 
 void generateTreeImpl(TREE *tree){
@@ -286,6 +288,7 @@ int main(int argc, char *argv[]) {
     int po = processOptions(argc, argv);
     if(po != -1) return po;
     
+    fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
     
     return 0;
 }
