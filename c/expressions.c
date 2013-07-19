@@ -42,9 +42,11 @@ void addChildToNode(NODE *parent, NODE *child){
     if(parent->left == NULL){
         parent->left = child;
         parent->type = 1;
+        child->depth = parent->depth + 1;
     } else if(parent->right == NULL){
         parent->right = child;
         parent->type = 2;
+        child->depth = parent->depth + 1;
     } else {
         fprintf(stderr, "ERROR: Parent already has two children.\n");
         exit(EXIT_FAILURE);
