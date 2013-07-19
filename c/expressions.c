@@ -14,6 +14,13 @@ typedef int boolean;
 #define TRUE 1
 #define FALSE 0
 
+#define MAX_UNARY_COUNT 10
+#define MAX_BINARY_COUNT 10
+
+#define MAX_TREE_DEPTH MAX_UNARY_COUNT + MAX_BINARY_COUNT
+#define MAX_TREE_LEVEL_WIDTH MAX_BINARY_COUNT + 1
+#define MAX_NODES_USED MAX_UNARY_COUNT + 2*MAX_BINARY_COUNT + 1
+
 int verbose = FALSE;
 
 typedef struct node {
