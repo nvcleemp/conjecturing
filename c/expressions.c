@@ -65,6 +65,20 @@ NODE *removeChildFromNode(NODE *parent){
     }
 }
 
+typedef struct tree {
+    struct node *root;
+    
+    struct node *unusedStack[MAX_NODES_USED - 1]; //-1 because root is never unused
+    int unusedStackSize;
+    
+    struct node *nodesAtDepth[MAX_TREE_DEPTH+1][MAX_TREE_LEVEL_WIDTH];
+    int levelWidth[MAX_TREE_DEPTH+1];
+    int depth;
+    
+    int unaryCount;
+    int binaryCount;
+} TREE;
+
 //===================================================================
 // Usage methods
 //===================================================================
