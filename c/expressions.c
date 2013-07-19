@@ -31,6 +31,8 @@ int verbose = FALSE;
 int targetUnary;
 int targetBinary;
 
+int invariantCount;
+
 unsigned long int treeCount = 0;
 
 boolean onlyUnlabeled = FALSE;
@@ -321,7 +323,12 @@ int processOptions(int argc, char **argv) {
     }
     
     // check the non-option arguments
-    if (argc - optind != 2) {
+    if (onlyUnlabeled && argc - optind != 2) {
+        usage(name);
+        return EXIT_FAILURE;
+    }
+    
+    if (!onlyUnlabeled && argc - optind != 3) {
         usage(name);
         return EXIT_FAILURE;
     }
@@ -336,6 +343,9 @@ int main(int argc, char *argv[]) {
     
     int unary = strtol(argv[optind], NULL, 10);
     int binary = strtol(argv[optind+1], NULL, 10);
+    if(!onlyUnlabeled) {
+        invariantCount = strtol(argv[optind+2], NULL, 10);
+    }
     
     generateTree(unary, binary);
     
