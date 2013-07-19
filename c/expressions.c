@@ -164,6 +164,60 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
     }
 }
 
+void handleTree(TREE *tree){
+    //TODO
+}
+
+void generateTreeImpl(TREE *tree){
+    int i, start;
+    
+    if(tree->unaryCount > targetUnary + 1 || tree->binaryCount > targetBinary)
+        return;
+    
+    if(isComplete(tree)){
+        handleTree(tree);
+        return;
+    }
+    
+    start = tree->levelWidth[tree->depth-1]-1;
+    while(start>=0 && tree->nodesAtDepth[tree->depth-1][start]->type==0){
+        start--;
+    }
+    if(start>=0 && tree->nodesAtDepth[tree->depth-1][start]->type==1){
+        start--;
+    }
+    
+    for(i=start+1; i<tree->levelWidth[tree->depth-1]; i++){
+        NODE *parent = tree->nodesAtDepth[tree->depth-1][i];
+        addChildToNodeInTree(tree, parent);
+        generateTreeImpl(tree);
+        removeChildFromNodeInTree(tree, parent);
+    }
+    
+    for(i=0; i<tree->levelWidth[tree->depth]; i++){
+        NODE *parent = tree->nodesAtDepth[tree->depth][i];
+        addChildToNodeInTree(tree, parent);
+        generateTreeImpl(tree);
+        removeChildFromNodeInTree(tree, parent);
+    }
+}
+
+void generateTree(int unary, int binary){
+    TREE tree;
+    targetUnary = unary;
+    targetBinary = binary;
+    initTree(&tree);
+    
+    if (unary==0 && binary==0){
+        handleTree(&tree);
+    } else {
+        addChildToNodeInTree(&tree, tree.root);
+        generateTreeImpl(&tree);
+        removeChildFromNodeInTree(&tree, tree.root);
+    }
+    
+    freeTree(&tree);
+}
 //===================================================================
 // Usage methods
 //===================================================================
@@ -232,6 +286,6 @@ int main(int argc, char *argv[]) {
     int po = processOptions(argc, argv);
     if(po != -1) return po;
     
-
+    
     return 0;
 }
