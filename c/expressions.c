@@ -131,6 +131,39 @@ boolean isComplete(TREE *tree){
     return tree->unaryCount == targetUnary && tree->binaryCount == targetBinary;
 }
 
+void addChildToNodeInTree(TREE *tree, NODE *parent){
+    NODE *child = tree->unusedStack[--(tree->unusedStackSize)];
+    addChildToNode(parent, child);
+    if(child->depth > tree->depth) tree->depth = child->depth;
+    
+    if(parent->type==2){
+        tree->unaryCount--;
+        tree->binaryCount++;
+    } else {
+        tree->unaryCount++;
+    }
+    
+    tree->nodesAtDepth[child->depth][(tree->levelWidth[child->depth])++] = child;
+}
+
+void removeChildFromNodeInTree(TREE *tree, NODE *parent){
+    NODE *child = removeChildFromNode(parent);
+    tree->unusedStack[tree->unusedStackSize] = child;
+    (tree->unusedStackSize)++;
+    tree->levelWidth[child->depth]--;
+    
+    if(tree->levelWidth[child->depth]==0){
+        tree->depth--;
+    }
+    
+    if(parent->type==1){
+        tree->binaryCount--;
+        tree->unaryCount++;
+    } else {
+        tree->unaryCount--;
+    }
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
