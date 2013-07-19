@@ -79,6 +79,37 @@ typedef struct tree {
     int binaryCount;
 } TREE;
 
+void initTree(TREE *tree){
+    int i;
+    for(i=0; i<MAX_NODES_USED - 1; i++){
+        tree->unusedStack[i] = malloc(sizeof(NODE));
+        tree->unusedStack[i]->left = tree->unusedStack[i]->right = NULL;
+        tree->unusedStack[i]->depth = 0;
+        tree->unusedStack[i]->type = 0;
+        tree->unusedStack[i]->content = NULL;
+    }
+    tree->unusedStackSize = MAX_NODES_USED - 1;
+    
+    for(i=0; i<MAX_TREE_DEPTH+1; i++){
+        tree->levelWidth[i]=0;
+    }
+    
+    tree->binaryCount = tree->unaryCount = 0;
+    tree->depth = 0;
+    
+    //create the root
+    NODE *root = malloc(sizeof(NODE));
+    root->left = root->right = NULL;
+    root->depth = 0;
+    root->type = 0;
+    root->content = NULL;
+    
+    //set the root
+    tree->root = root;
+    tree->levelWidth[0] = 1;
+    tree->nodesAtDepth[0][0] = tree->root;
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
