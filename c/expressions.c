@@ -32,9 +32,29 @@ int targetUnary;
 int targetBinary;
 
 int invariantCount;
-int unaryOperatorCount;
-int commBinaryOperatorCount;
-int nonCommBinaryOperatorCount;
+int unaryOperatorCount = 7;
+/* 
+ * 1: x - 1
+ * 2: x + 1
+ * 3: x * 2
+ * 4: x / 2
+ * 5: x ** 2
+ * 6: x * (-1)
+ * 7: x ** (-1)
+ */
+
+int commBinaryOperatorCount = 2;
+/* 
+ * 1: x + y
+ * 2: x * y
+ */
+
+int nonCommBinaryOperatorCount = 3;
+/* 
+ * 1: x - y
+ * 2: x / y
+ * 3: x ** y
+ */
 
 unsigned long int treeCount = 0;
 
