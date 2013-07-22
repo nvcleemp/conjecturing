@@ -79,10 +79,9 @@ typedef struct node {
     
     int pos;
     
+    int contentLabel[2];
     char *content;
 } NODE;
-
-const NODE DEFAULT_NODE = {NULL, NULL, 0, 0, NULL};
 
 void addChildToNode(NODE *parent, NODE *child){
     if(parent->left == NULL){
@@ -229,6 +228,78 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
     }
 }
 
+void handleLabeledTree(TREE *tree){
+}
+
+boolean leftSideBiggest(NODE *node, NODE **orderedNodes){
+    NODE *leftMost = node->left;
+    while (leftMost->left != NULL) leftMost = leftMost->left;
+    int startLeft = leftMost->pos;
+    int startRight = node->left->pos+1;
+    int lengthLeft = startRight - startLeft;
+    int lengthRight = node->pos - startRight;
+    
+    if(lengthLeft > lengthRight){
+        return TRUE;
+    } else if (lengthLeft < lengthRight){
+        return FALSE;
+    } else {
+        int i = 0;
+        while (i<lengthLeft &&
+                orderedNodes[startLeft + i]->contentLabel[0]==orderedNodes[startRight + i]->contentLabel[0] &&
+                orderedNodes[startLeft + i]->contentLabel[1]==orderedNodes[startRight + i]->contentLabel[1]){
+            i++;
+        }
+        return i==lengthLeft ||
+                (orderedNodes[startLeft + i]->contentLabel[0] > orderedNodes[startRight + i]->contentLabel[0]) ||
+                ((orderedNodes[startLeft + i]->contentLabel[0] == orderedNodes[startRight + i]->contentLabel[0]) &&
+                 (orderedNodes[startLeft + i]->contentLabel[1] > orderedNodes[startRight + i]->contentLabel[1]));
+    }
+}
+
+void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
+    int i;
+    
+    if (pos == targetUnary + 2*targetBinary + 1){
+        handleLabeledTree(tree);
+    } else {
+        NODE *currentNode = orderedNodes[pos];
+        if (currentNode->type == 0){
+            currentNode->contentLabel[0] = INVARIANT_LABEL;
+            for (i=0; i<invariantCount; i++){
+                if (!invariantsUsed[i]){
+                    currentNode->contentLabel[1] = i;
+                    invariantsUsed[i] = TRUE;
+                    generateLabeledTree(tree, orderedNodes, pos+1);
+                    invariantsUsed[i] = FALSE;
+                }
+            }
+        } else if (currentNode->type == 1){
+            currentNode->contentLabel[0] = UNARY_LABEL;
+            for (i=0; i<unaryOperatorCount; i++){
+                currentNode->contentLabel[1] = unaryOperators[i];
+                generateLabeledTree(tree, orderedNodes, pos+1);
+            }
+        } else { // currentNode->type == 2
+            //first try non-commutative binary operators
+            currentNode->contentLabel[0] = NON_COMM_BINARY_LABEL;
+            for (i=0; i<nonCommBinaryOperatorCount; i++){
+                currentNode->contentLabel[1] = nonCommBinaryOperators[i];
+                generateLabeledTree(tree, orderedNodes, pos+1);
+            }
+            
+            //then try commutative binary operators
+            if (leftSideBiggest(currentNode, orderedNodes)){
+                currentNode->contentLabel[0] = COMM_BINARY_LABEL;
+                for (i=0; i<commBinaryOperatorCount; i++){
+                    currentNode->contentLabel[1] = commBinaryOperators[i];
+                    generateLabeledTree(tree, orderedNodes, pos+1);
+                }
+            }
+        }
+    }
+}
+
 void handleTree(TREE *tree){
     treeCount++;
     if(onlyUnlabeled) return;
@@ -244,6 +315,8 @@ void handleTree(TREE *tree){
     for (i=0; i<invariantCount; i++){
         invariantsUsed[i] = FALSE;
     }
+    
+    generateLabeledTree(tree, orderedNodes, 0);
 }
 
 void generateTreeImpl(TREE *tree){
