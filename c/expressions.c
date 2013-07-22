@@ -28,8 +28,8 @@ typedef int boolean;
 
 int verbose = FALSE;
 
-int targetUnary;
-int targetBinary;
+int targetUnary; //number of unary nodes in the generated trees
+int targetBinary; //number of binary nodes in the generated trees
 
 int invariantCount;
 int unaryOperatorCount = 7;
