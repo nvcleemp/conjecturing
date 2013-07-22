@@ -26,6 +26,11 @@ typedef int boolean;
 #define MAX_COMM_BINARY_OPERATORS 20
 #define MAX_NCOMM_BINARY_OPERATORS 20
 
+#define INVARIANT_LABEL 0
+#define UNARY_LABEL 1
+#define COMM_BINARY_LABEL 2
+#define NON_COMM_BINARY_LABEL 3
+
 int verbose = FALSE;
 
 int targetUnary; //number of unary nodes in the generated trees
