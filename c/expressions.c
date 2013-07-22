@@ -77,6 +77,8 @@ typedef struct node {
     int type; //i.e., number of children
     int depth;
     
+    int pos;
+    
     char *content;
 } NODE;
 
@@ -119,13 +121,16 @@ void getOrderedNodes(NODE *node, NODE **orderedNodes, int *currentPosition){
         getOrderedNodes(node->left, orderedNodes, currentPosition);
         getOrderedNodes(node->right, orderedNodes, currentPosition);
         orderedNodes[*currentPosition] = node;
+        node->pos = *currentPosition;
         (*currentPosition)++;
     } else if(node->type==1){
         getOrderedNodes(node->left, orderedNodes, currentPosition);
         orderedNodes[*currentPosition] = node;
+        node->pos = *currentPosition;
         (*currentPosition)++;
     } else {
         orderedNodes[*currentPosition] = node;
+        node->pos = *currentPosition;
         (*currentPosition)++;
     }
 }
