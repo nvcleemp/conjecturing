@@ -290,6 +290,20 @@ void help(char *name){
     fprintf(stderr, "    -u, --unlabeled\n");
     fprintf(stderr, "       Generate unlabeled expression trees.\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "* Parameters\n");
+    fprintf(stderr, "    --unary n\n");
+    fprintf(stderr, "       The number of unary operators used during the generation of labeled\n");
+    fprintf(stderr, "       expression trees. This value is ignored when generating valid\n");
+    fprintf(stderr, "       expressions.\n");
+    fprintf(stderr, "    --commutative n\n");
+    fprintf(stderr, "       The number of commutative binary operators used during the generation\n");
+    fprintf(stderr, "       of labeled expression trees. This value is ignored when generating valid\n");
+    fprintf(stderr, "       expressions.\n");
+    fprintf(stderr, "    --non-commutative n\n");
+    fprintf(stderr, "       The number of non-commutative binary operators used during the\n");
+    fprintf(stderr, "       generation of labeled expression trees. This value is ignored when\n");
+    fprintf(stderr, "       generating valid expressions.\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "* Various options\n");
     fprintf(stderr, "    -h, --help\n");
     fprintf(stderr, "       Print this help and return.\n");
@@ -309,6 +323,9 @@ int processOptions(int argc, char **argv) {
     int c;
     char *name = argv[0];
     static struct option long_options[] = {
+        {"unary", required_argument, NULL, 0},
+        {"commutative", required_argument, NULL, 0},
+        {"non-commutative", required_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'}
@@ -320,6 +337,15 @@ int processOptions(int argc, char **argv) {
             case 0:
                 //handle long option with no alternative
                 switch(option_index) {
+                    case 0:
+                        unaryOperatorCount = strtol(optarg, NULL, 10);
+                        break;
+                    case 1:
+                        commBinaryOperatorCount = strtol(optarg, NULL, 10);
+                        break;
+                    case 2:
+                        nonCommBinaryOperatorCount = strtol(optarg, NULL, 10);
+                        break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
                         usage(name);
