@@ -399,6 +399,26 @@ int main(int argc, char *argv[]) {
         invariantCount = strtol(argv[optind+2], NULL, 10);
     }
     
+    //set the operator labels
+    /* TODO: this is only temporarily. Once we are generating
+     * actual expressions the labels will not be consecutively
+     * but will refer to the actual operators being used. This
+     * code however will be retained for when just labeled trees
+     * are being generated.
+     */
+    if(!onlyUnlabeled) {
+        int i;
+        for (i=0; i<unaryOperatorCount; i++) {
+            unaryOperators[i] = i;
+        }
+        for (i=0; i<commBinaryOperatorCount; i++) {
+            commBinaryOperators[i] = i;
+        }
+        for (i=0; i<nonCommBinaryOperatorCount; i++) {
+            nonCommBinaryOperators[i] = i;
+        }
+    }
+    
     generateTree(unary, binary);
     
     if(onlyUnlabeled){
