@@ -42,12 +42,14 @@ int unaryOperatorCount = 7;
  * 6: x * (-1)
  * 7: x ** (-1)
  */
+int unaryOperators[MAX_UNARY_OPERATORS];
 
 int commBinaryOperatorCount = 2;
 /* 
  * 1: x + y
  * 2: x * y
  */
+int commBinaryOperators[MAX_COMM_BINARY_OPERATORS];
 
 int nonCommBinaryOperatorCount = 3;
 /* 
@@ -55,6 +57,7 @@ int nonCommBinaryOperatorCount = 3;
  * 2: x / y
  * 3: x ** y
  */
+int nonCommBinaryOperators[MAX_NCOMM_BINARY_OPERATORS];
 
 unsigned long int treeCount = 0;
 
