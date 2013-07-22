@@ -37,6 +37,8 @@ int targetUnary; //number of unary nodes in the generated trees
 int targetBinary; //number of binary nodes in the generated trees
 
 int invariantCount;
+boolean invariantsUsed[MAX_INVARIANT_COUNT];
+
 int unaryOperatorCount = 7;
 /* 
  * 1: x - 1
@@ -231,6 +233,12 @@ void handleTree(TREE *tree){
     
     int pos = 0;
     getOrderedNodes(tree->root, orderedNodes, &pos);
+    
+    //mark all invariants as unused
+    int i;
+    for (i=0; i<invariantCount; i++){
+        invariantsUsed[i] = FALSE;
+    }
 }
 
 void generateTreeImpl(TREE *tree){
