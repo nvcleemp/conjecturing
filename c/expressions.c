@@ -67,6 +67,7 @@ int nonCommBinaryOperatorCount = 3;
 int nonCommBinaryOperators[MAX_NCOMM_BINARY_OPERATORS];
 
 unsigned long int treeCount = 0;
+unsigned long int labeledTreeCount = 0;
 
 boolean onlyUnlabeled = FALSE;
 
@@ -229,6 +230,7 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
 }
 
 void handleLabeledTree(TREE *tree){
+    labeledTreeCount++;
 }
 
 boolean leftSideBiggest(NODE *node, NODE **orderedNodes){
@@ -514,6 +516,9 @@ int main(int argc, char *argv[]) {
     
     if(onlyUnlabeled){
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
+    } else {
+        fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
+        fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
     }
     
     return 0;
