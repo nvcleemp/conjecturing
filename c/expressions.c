@@ -26,6 +26,8 @@ typedef int boolean;
 #define MAX_COMM_BINARY_OPERATORS 20
 #define MAX_NCOMM_BINARY_OPERATORS 20
 
+#define MAX_ENTITY_COUNT 1000
+
 #define INVARIANT_LABEL 0
 #define UNARY_LABEL 1
 #define COMM_BINARY_LABEL 2
