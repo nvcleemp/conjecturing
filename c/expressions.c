@@ -68,6 +68,10 @@ int nonCommBinaryOperatorCount = 3;
  */
 int nonCommBinaryOperators[MAX_NCOMM_BINARY_OPERATORS];
 
+double invariantValues[MAX_ENTITY_COUNT][MAX_INVARIANT_COUNT];
+
+int entityCount = 0;
+
 unsigned long int treeCount = 0;
 unsigned long int labeledTreeCount = 0;
 
