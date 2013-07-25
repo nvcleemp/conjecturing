@@ -41,6 +41,15 @@ int targetBinary; //number of binary nodes in the generated trees
 int invariantCount;
 boolean invariantsUsed[MAX_INVARIANT_COUNT];
 
+int mainInvariant;
+
+#define LEQ 0 // i.e., MI <= expression
+#define LESS 1 // i.e., MI < expression
+#define GEQ 2 // i.e., MI >= expression
+#define GREATER 3 // i.e., MI > expression
+
+int inequality = LEQ;
+
 int unaryOperatorCount = 7;
 /* 
  * 1: x - 1
