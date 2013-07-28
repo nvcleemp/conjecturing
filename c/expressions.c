@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
+#include <math.h>
 
 typedef int boolean;
 #define TRUE 1
@@ -242,6 +243,97 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
     } else {
         tree->unaryCount--;
     }
+}
+
+double handleUnaryOperator(int id, double value){
+    if(id==0){
+        return value - 1;
+    } else if(id==1){
+        return value + 1;
+    } else if(id==2){
+        return value * 2;
+    } else if(id==3){
+        return value / 2;
+    } else if(id==4){
+        return value*value;
+    } else if(id==5){
+        return -value;
+    } else if(id==6){
+        return 1/value;
+    } else {
+        fprintf(stderr, "Unknown unary operator ID -- exiting\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+double handleCommutativeBinaryOperator(int id, double left, double right){
+    if(id==0){
+        return left + right;
+    } else if(id==1){
+        return left*right;
+    } else {
+        fprintf(stderr, "Unknown commutative binary operator ID -- exiting\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+double handleNonCommutativeBinaryOperator(int id, double left, double right){
+    if(id==0){
+        return left - right;
+    } else if(id==1){
+        return left/right;
+    } else if(id==2){
+        return pow(left, right);
+    } else {
+        fprintf(stderr, "Unknown non-commutative binary operator ID -- exiting\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+boolean handleComparator(double left, double right, int id){
+    if(id==0){
+        return left <= right;
+    } else if(id==1){
+        return left < right;
+    } else if(id==2){
+        return left >= right;
+    } else if(id==3){
+        return left > right;
+    } else {
+        fprintf(stderr, "Unknown comparator ID -- exiting\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+double evaluateNode(NODE *node, int entity){
+    if (node->contentLabel[0]==INVARIANT_LABEL) {
+        return invariantValues[entity][node->contentLabel[1]];
+    } else if (node->contentLabel[0]==UNARY_LABEL) {
+        return handleUnaryOperator(node->contentLabel[1], evaluateNode(node->left, entity));
+    } else if (node->contentLabel[0]==NON_COMM_BINARY_LABEL){
+        return handleNonCommutativeBinaryOperator(node->contentLabel[1],
+                evaluateNode(node->left, entity), evaluateNode(node->right, entity));
+    } else if (node->contentLabel[0]==COMM_BINARY_LABEL){
+        return handleCommutativeBinaryOperator(node->contentLabel[1],
+                evaluateNode(node->left, entity), evaluateNode(node->right, entity));
+    } else {
+        fprintf(stderr, "Unknown content label type -- exiting\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+boolean evaluateTree(TREE *tree){
+    int i;
+    int hitCount = 0;
+    for(i=0; i<entityCount; i++){
+        double expression = evaluateNode(tree->root, i);
+        if(!handleComparator(invariantValues[i][mainInvariant], expression, inequality)){
+            return FALSE;
+        } else if(expression==invariantValues[i][mainInvariant]) {
+            hitCount++;
+        }
+    }
+    return TRUE;
 }
 
 void handleLabeledTree(TREE *tree){
