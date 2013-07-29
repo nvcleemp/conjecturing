@@ -32,19 +32,19 @@ debug : build/expressions-debug
 
 build/expressions: $(CONJECTURING_SOURCES)
 	mkdir -p build
-	${CC32} $(CFLAGS) $(CONJECTURING_SOURCES) -o build/expressions
+	${CC32} $(CFLAGS) $(CONJECTURING_SOURCES) -o build/expressions -lm
 
 build/expressions-64: $(CONJECTURING_SOURCES)
 	mkdir -p build
-	${CC64} $(CFLAGS) $(CONJECTURING_SOURCES) -o build/expressions-64
+	${CC64} $(CFLAGS) $(CONJECTURING_SOURCES) -o build/expressions-64 -lm
 
 build/expressions-profile: $(CONJECTURING_SOURCES)
 	mkdir -p build
-	${CC32} -Wall -pg -g $(CONJECTURING_SOURCES) -o build/expressions-profile
+	${CC32} -Wall -pg -g $(CONJECTURING_SOURCES) -o build/expressions-profile -lm 
 
 build/expressions-debug: $(CONJECTURING_SOURCES)
 	mkdir -p build
-	${CC32} -Wall -rdynamic -g $(CONJECTURING_SOURCES) -o build/expressions-debug
+	${CC32} -Wall -rdynamic -g $(CONJECTURING_SOURCES) -o build/expressions-debug -lm
 
 sources: dist/conjecturing-sources.zip dist/conjecturing-sources.tar.gz
 
