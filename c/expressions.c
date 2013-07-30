@@ -92,6 +92,8 @@ unsigned long int labeledTreeCount = 0;
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
 
+//------ Datatypes -------
+
 typedef struct node {
     struct node *left;
     struct node *right;
@@ -104,6 +106,22 @@ typedef struct node {
     int contentLabel[2];
     char *content;
 } NODE;
+
+typedef struct tree {
+    struct node *root;
+    
+    struct node *unusedStack[MAX_NODES_USED - 1]; //-1 because root is never unused
+    int unusedStackSize;
+    
+    struct node *nodesAtDepth[MAX_TREE_DEPTH+1][MAX_TREE_LEVEL_WIDTH];
+    int levelWidth[MAX_TREE_DEPTH+1];
+    int depth;
+    
+    int unaryCount;
+    int binaryCount;
+} TREE;
+
+//------ Node operations -------
 
 void addChildToNode(NODE *parent, NODE *child){
     if(parent->left == NULL){
@@ -154,19 +172,7 @@ void getOrderedNodes(NODE *node, NODE **orderedNodes, int *currentPosition){
     }
 }
 
-typedef struct tree {
-    struct node *root;
-    
-    struct node *unusedStack[MAX_NODES_USED - 1]; //-1 because root is never unused
-    int unusedStackSize;
-    
-    struct node *nodesAtDepth[MAX_TREE_DEPTH+1][MAX_TREE_LEVEL_WIDTH];
-    int levelWidth[MAX_TREE_DEPTH+1];
-    int depth;
-    
-    int unaryCount;
-    int binaryCount;
-} TREE;
+//------ Tree operations -------
 
 void initTree(TREE *tree){
     int i;
@@ -247,6 +253,8 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
         tree->unaryCount--;
     }
 }
+
+//------ Expression operations -------
 
 double handleUnaryOperator(int id, double value){
     if(id==0){
@@ -355,6 +363,8 @@ boolean evaluateTree(TREE *tree){
     return TRUE;
 }
 
+//------ Labeled tree generation -------
+
 void handleLabeledTree(TREE *tree){
     labeledTreeCount++;
 }
@@ -428,6 +438,8 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
     }
 }
 
+//------ Unlabeled tree generation -------
+
 void handleTree(TREE *tree){
     treeCount++;
     if(onlyUnlabeled) return;
@@ -497,6 +509,8 @@ void generateTree(int unary, int binary){
     
     freeTree(&tree);
 }
+
+//------ Various functions -------
 
 void readOperators(FILE *f){
     //set operator counts to zero
