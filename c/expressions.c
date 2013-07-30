@@ -266,6 +266,16 @@ double handleUnaryOperator(int id, double value){
     }
 }
 
+void writeUnaryOperatorExample(FILE *f){
+    fprintf(f, "U 0    x - 1\n");
+    fprintf(f, "U 1    x + 1\n");
+    fprintf(f, "U 2    x * 2\n");
+    fprintf(f, "U 3    x / 2\n");
+    fprintf(f, "U 4    x ^ 2\n");
+    fprintf(f, "U 5    -x\n");
+    fprintf(f, "U 6    1 / x\n");
+}
+
 double handleCommutativeBinaryOperator(int id, double left, double right){
     if(id==0){
         return left + right;
@@ -274,6 +284,11 @@ double handleCommutativeBinaryOperator(int id, double left, double right){
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
+}
+
+void writeCommutativeBinaryOperatorExample(FILE *f){
+    fprintf(f, "C 0    x + y\n");
+    fprintf(f, "C 1    x * y\n");
 }
 
 double handleNonCommutativeBinaryOperator(int id, double left, double right){
@@ -286,6 +301,12 @@ double handleNonCommutativeBinaryOperator(int id, double left, double right){
     } else {
         BAILOUT("Unknown non-commutative binary operator ID")
     }
+}
+
+void writeNonCommutativeBinaryOperatorExample(FILE *f){
+    fprintf(f, "N 0    x - y\n");
+    fprintf(f, "N 1    x / y\n");
+    fprintf(f, "N 2    x ^ y\n");
 }
 
 boolean handleComparator(double left, double right, int id){
@@ -554,6 +575,9 @@ void help(char *name){
     fprintf(stderr, "       Print this help and return.\n");
     fprintf(stderr, "    -v, --verbose\n");
     fprintf(stderr, "       Make the program more verbose.\n");
+    fprintf(stderr, "    --example\n");
+    fprintf(stderr, "       Print an example of an input file for the operators. It is advised to\n");
+    fprintf(stderr, "       use this example as a starting point for your own file.\n");
 }
 
 void usage(char *name){
@@ -571,6 +595,7 @@ int processOptions(int argc, char **argv) {
         {"unary", required_argument, NULL, 0},
         {"commutative", required_argument, NULL, 0},
         {"non-commutative", required_argument, NULL, 0},
+        {"example", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -591,6 +616,12 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 2:
                         nonCommBinaryOperatorCount = strtol(optarg, NULL, 10);
+                        break;
+                    case 3:
+                        writeUnaryOperatorExample(stdout);
+                        writeCommutativeBinaryOperatorExample(stdout);
+                        writeNonCommutativeBinaryOperatorExample(stdout);
+                        return EXIT_SUCCESS;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
