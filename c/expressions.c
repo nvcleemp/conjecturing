@@ -558,6 +558,35 @@ char *trim(char *str){
     return str;
 }
 
+void readInvariantsValues(FILE *f){
+    int i,j;
+    char line[1024]; //array to temporarily store a line
+    
+    //first read number of invariants and number of entities
+    if(fgets(line, sizeof(line), f)){
+        if(sscanf(line, "%d %d", &entityCount, &invariantCount) != 2) {
+            BAILOUT("Error while reading invariants")
+        }
+    } else {
+        BAILOUT("Error while reading invariants")
+    }
+    
+    //start reading the individual values
+    for(i=0; i<entityCount; i++){
+        for(j=0; j<invariantCount; j++){
+            if(fgets(line, sizeof(line), f)){
+                double value = 0.0;
+                if(sscanf(line, "%lf", &value) != 1) {
+                    BAILOUT("Error while reading invariants")
+                }
+                invariantValues[i][j] = value;
+            } else {
+                BAILOUT("Error while reading invariants")
+            }
+        }
+    }
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
@@ -718,6 +747,7 @@ int main(int argc, char *argv[]) {
         }
     } else if (!onlyUnlabeled){
         readOperators(stdin);
+        readInvariantsValues(stdin);
     }
     
     generateTree(unary, binary);
