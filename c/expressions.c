@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <math.h>
+#include <ctype.h>
+#include <string.h>
 
 #define BAILOUT(msg) fprintf(stderr, msg " -- exiting!\n"); exit(EXIT_FAILURE);
 
