@@ -11,6 +11,8 @@
 #include <getopt.h>
 #include <math.h>
 
+#define BAILOUT(msg) fprintf(stderr, msg " -- exiting!\n"); exit(EXIT_FAILURE);
+
 typedef int boolean;
 #define TRUE 1
 #define FALSE 0
@@ -111,8 +113,7 @@ void addChildToNode(NODE *parent, NODE *child){
         parent->type = 2;
         child->depth = parent->depth + 1;
     } else {
-        fprintf(stderr, "ERROR: Parent already has two children.\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Parent already has two children")
     }
 }
 
@@ -128,8 +129,7 @@ NODE *removeChildFromNode(NODE *parent){
         parent->type = 0;
         return child;
     } else {
-        fprintf(stderr, "ERROR: Parent has no children.\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Parent has no children")
     }
 }
 
@@ -262,8 +262,7 @@ double handleUnaryOperator(int id, double value){
     } else if(id==6){
         return 1/value;
     } else {
-        fprintf(stderr, "Unknown unary operator ID -- exiting\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Unknown unary operator ID")
     }
 }
 
@@ -273,8 +272,7 @@ double handleCommutativeBinaryOperator(int id, double left, double right){
     } else if(id==1){
         return left*right;
     } else {
-        fprintf(stderr, "Unknown commutative binary operator ID -- exiting\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Unknown commutative binary operator ID")
     }
 }
 
@@ -286,8 +284,7 @@ double handleNonCommutativeBinaryOperator(int id, double left, double right){
     } else if(id==2){
         return pow(left, right);
     } else {
-        fprintf(stderr, "Unknown non-commutative binary operator ID -- exiting\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Unknown non-commutative binary operator ID")
     }
 }
 
@@ -301,8 +298,7 @@ boolean handleComparator(double left, double right, int id){
     } else if(id==3){
         return left > right;
     } else {
-        fprintf(stderr, "Unknown comparator ID -- exiting\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Unknown comparator ID")
     }
 }
 
@@ -318,8 +314,7 @@ double evaluateNode(NODE *node, int entity){
         return handleCommutativeBinaryOperator(node->contentLabel[1],
                 evaluateNode(node->left, entity), evaluateNode(node->right, entity));
     } else {
-        fprintf(stderr, "Unknown content label type -- exiting\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Unknown content label type")
     }
 }
 
@@ -490,12 +485,10 @@ void readOperators(FILE *f){
     char line[1024]; //array to temporarily store a line
     if(fgets(line, sizeof(line), f)){
         if(sscanf(line, "%d", &operatorCount) != 1) {
-            fprintf(stderr, "Error while reading operators -- exiting!\n");
-            exit(EXIT_FAILURE);
+            BAILOUT("Error while reading operators")
         }
     } else {
-        fprintf(stderr, "Error while reading operators -- exiting!\n");
-        exit(EXIT_FAILURE);
+        BAILOUT("Error while reading operators")
     }
     for(i=0; i<operatorCount; i++){
         if(fgets(line, sizeof(line), f)){
@@ -503,8 +496,7 @@ void readOperators(FILE *f){
             char operatorType = 'E'; //E for Error
             int operatorNumber = -1;
             if(sscanf(line, "%c %d", &operatorType, &operatorNumber) != 2) {
-                fprintf(stderr, "Error while reading operators -- exiting!\n");
-                exit(EXIT_FAILURE);
+                BAILOUT("Error while reading operators")
             }
             //process operator
             if(operatorType=='U'){
@@ -518,8 +510,7 @@ void readOperators(FILE *f){
                 exit(EXIT_FAILURE);
             }
         } else {
-            fprintf(stderr, "Error while reading operators -- exiting!\n");
-            exit(EXIT_FAILURE);
+            BAILOUT("Error while reading operators")
         }
     }
 }
