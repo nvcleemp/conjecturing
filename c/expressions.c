@@ -479,6 +479,51 @@ void generateTree(int unary, int binary){
     
     freeTree(&tree);
 }
+
+void readOperators(FILE *f){
+    //set operator counts to zero
+    unaryOperatorCount = commBinaryOperatorCount = nonCommBinaryOperatorCount = 0;
+    
+    //read the operators from the file
+    int i;
+    int operatorCount = 0;
+    char line[1024]; //array to temporarily store a line
+    if(fgets(line, sizeof(line), f)){
+        if(sscanf(line, "%d", &operatorCount) != 1) {
+            fprintf(stderr, "Error while reading operators -- exiting!\n");
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        fprintf(stderr, "Error while reading operators -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    for(i=0; i<operatorCount; i++){
+        if(fgets(line, sizeof(line), f)){
+            //read operator
+            char operatorType = 'E'; //E for Error
+            int operatorNumber = -1;
+            if(sscanf(line, "%c %d", &operatorType, &operatorNumber) != 2) {
+                fprintf(stderr, "Error while reading operators -- exiting!\n");
+                exit(EXIT_FAILURE);
+            }
+            //process operator
+            if(operatorType=='U'){
+                unaryOperators[unaryOperatorCount++] = operatorNumber;
+            } else if(operatorType=='C'){
+                commBinaryOperators[commBinaryOperatorCount++] = operatorNumber;
+            } else if(operatorType=='N'){
+                nonCommBinaryOperators[nonCommBinaryOperatorCount++] = operatorNumber;
+            } else {
+                fprintf(stderr, "Unknown operator type '%c' -- exiting!\n", operatorType);
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            fprintf(stderr, "Error while reading operators -- exiting!\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
@@ -616,7 +661,7 @@ int main(int argc, char *argv[]) {
      * code however will be retained for when just labeled trees
      * are being generated.
      */
-    if(!onlyUnlabeled) {
+    if(onlyLabeled) {
         int i;
         for (i=0; i<unaryOperatorCount; i++) {
             unaryOperators[i] = i;
@@ -627,6 +672,8 @@ int main(int argc, char *argv[]) {
         for (i=0; i<nonCommBinaryOperatorCount; i++) {
             nonCommBinaryOperators[i] = i;
         }
+    } else if (!onlyUnlabeled){
+        readOperators(stdin);
     }
     
     generateTree(unary, binary);
