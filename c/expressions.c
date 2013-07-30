@@ -766,6 +766,7 @@ int main(int argc, char *argv[]) {
     } else if (!onlyUnlabeled){
         readOperators(stdin);
         readInvariantsValues(stdin);
+        if(verbose) printInvariantValues(stderr);
     }
     
     generateTree(unary, binary);
