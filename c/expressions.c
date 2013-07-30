@@ -587,6 +587,24 @@ void readInvariantsValues(FILE *f){
     }
 }
 
+void printInvariantValues(FILE *f){
+    int i, j;
+    //header row
+    fprintf(f, "     ");
+    for(j=0; j<invariantCount; j++){
+        fprintf(f, "Invariant %2d  ", j+1);
+    }
+    fprintf(f, "\n");
+    //table
+    for(i=0; i<entityCount; i++){
+        fprintf(f, "%3d) ", i+1);
+        for(j=0; j<invariantCount; j++){
+            fprintf(f, "%11.6lf   ", invariantValues[i][j]);
+        }
+        fprintf(f, "\n");
+    }
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
