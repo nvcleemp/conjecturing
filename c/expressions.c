@@ -265,13 +265,7 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
 //------ Stop generation -------
 
 boolean shouldGenerationProcessBeTerminated(){
-    if(timeOutReached){
-        return TRUE;
-    }
-    if(userInterrupted){
-        return TRUE;
-    }
-    if(terminationSignalReceived){
+    if(timeOutReached || userInterrupted || terminationSignalReceived){
         return TRUE;
     }
     
