@@ -15,9 +15,8 @@
 #include <signal.h>
 #include <unistd.h>
 
-#define BAILOUT(msg) fprintf(stderr, msg " -- exiting!\n"); exit(EXIT_FAILURE);
-
 #include "datatypes.h"
+#include "util.h"
 
 #define INVARIANT_LABEL 0
 #define UNARY_LABEL 1
