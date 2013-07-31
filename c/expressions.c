@@ -254,6 +254,12 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
     }
 }
 
+//------ Stop generation -------
+
+boolean shouldGenerationProcessBeTerminated(){
+    return FALSE;
+}
+
 //------ Expression operations -------
 
 double handleUnaryOperator(int id, double value){
@@ -411,12 +417,18 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
                     generateLabeledTree(tree, orderedNodes, pos+1);
                     invariantsUsed[i] = FALSE;
                 }
+                if(shouldGenerationProcessBeTerminated()){
+                    return;
+                }
             }
         } else if (currentNode->type == 1){
             currentNode->contentLabel[0] = UNARY_LABEL;
             for (i=0; i<unaryOperatorCount; i++){
                 currentNode->contentLabel[1] = unaryOperators[i];
                 generateLabeledTree(tree, orderedNodes, pos+1);
+                if(shouldGenerationProcessBeTerminated()){
+                    return;
+                }
             }
         } else { // currentNode->type == 2
             //first try non-commutative binary operators
@@ -424,6 +436,9 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
             for (i=0; i<nonCommBinaryOperatorCount; i++){
                 currentNode->contentLabel[1] = nonCommBinaryOperators[i];
                 generateLabeledTree(tree, orderedNodes, pos+1);
+                if(shouldGenerationProcessBeTerminated()){
+                    return;
+                }
             }
             
             //then try commutative binary operators
@@ -432,6 +447,9 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
                 for (i=0; i<commBinaryOperatorCount; i++){
                     currentNode->contentLabel[1] = commBinaryOperators[i];
                     generateLabeledTree(tree, orderedNodes, pos+1);
+                    if(shouldGenerationProcessBeTerminated()){
+                        return;
+                    }
                 }
             }
         }
@@ -483,6 +501,9 @@ void generateTreeImpl(TREE *tree){
         addChildToNodeInTree(tree, parent);
         generateTreeImpl(tree);
         removeChildFromNodeInTree(tree, parent);
+        if(shouldGenerationProcessBeTerminated()){
+            return;
+        }
     }
     
     for(i=0; i<tree->levelWidth[tree->depth]; i++){
@@ -490,6 +511,9 @@ void generateTreeImpl(TREE *tree){
         addChildToNodeInTree(tree, parent);
         generateTreeImpl(tree);
         removeChildFromNodeInTree(tree, parent);
+        if(shouldGenerationProcessBeTerminated()){
+            return;
+        }
     }
 }
 
