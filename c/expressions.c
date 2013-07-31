@@ -12,6 +12,8 @@
 #include <math.h>
 #include <ctype.h>
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
 
 #define BAILOUT(msg) fprintf(stderr, msg " -- exiting!\n"); exit(EXIT_FAILURE);
 
@@ -88,6 +90,9 @@ int entityCount = 0;
 
 unsigned long int treeCount = 0;
 unsigned long int labeledTreeCount = 0;
+
+unsigned long int timeOut = 0;
+boolean timeOutReached = FALSE;
 
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
@@ -257,7 +262,19 @@ void removeChildFromNodeInTree(TREE *tree, NODE *parent){
 //------ Stop generation -------
 
 boolean shouldGenerationProcessBeTerminated(){
+    if(timeOutReached){
+        return TRUE;
+    }
+    
     return FALSE;
+}
+
+void handleAlarmSignal(int sig){
+    if(sig==SIGALRM){
+        timeOutReached = TRUE;
+    } else {
+        fprintf(stderr, "Handler called with wrong signal -- ignoring!\n");
+    }
 }
 
 //------ Expression operations -------
@@ -685,6 +702,9 @@ void help(char *name){
     fprintf(stderr, "    --example\n");
     fprintf(stderr, "       Print an example of an input file for the operators. It is advised to\n");
     fprintf(stderr, "       use this example as a starting point for your own file.\n");
+    fprintf(stderr, "    --time t\n");
+    fprintf(stderr, "       Stops the generation after t seconds. Zero seconds means that the\n");
+    fprintf(stderr, "       generation won't be stopped. The default is 0.\n");
 }
 
 void usage(char *name){
@@ -703,6 +723,7 @@ int processOptions(int argc, char **argv) {
         {"commutative", required_argument, NULL, 0},
         {"non-commutative", required_argument, NULL, 0},
         {"example", no_argument, NULL, 0},
+        {"time", required_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -729,6 +750,9 @@ int processOptions(int argc, char **argv) {
                         writeCommutativeBinaryOperatorExample(stdout);
                         writeNonCommutativeBinaryOperatorExample(stdout);
                         return EXIT_SUCCESS;
+                        break;
+                    case 4:
+                        timeOut = strtoul(optarg, NULL, 10);
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
@@ -800,6 +824,12 @@ int main(int argc, char *argv[]) {
         readInvariantsValues(stdin);
         if(verbose) printInvariantValues(stderr);
     }
+    
+    //register handler for signal
+    signal(SIGALRM, handleAlarmSignal);
+    
+    //if timeOut is non-zero: start alarm
+    if(timeOut) alarm(timeOut);
     
     generateTree(unary, binary);
     
