@@ -17,23 +17,7 @@
 
 #define BAILOUT(msg) fprintf(stderr, msg " -- exiting!\n"); exit(EXIT_FAILURE);
 
-typedef int boolean;
-#define TRUE 1
-#define FALSE 0
-
-#define MAX_UNARY_COUNT 10
-#define MAX_BINARY_COUNT 10
-
-#define MAX_TREE_DEPTH MAX_UNARY_COUNT + MAX_BINARY_COUNT
-#define MAX_TREE_LEVEL_WIDTH MAX_BINARY_COUNT + 1
-#define MAX_NODES_USED MAX_UNARY_COUNT + 2*MAX_BINARY_COUNT + 1
-
-#define MAX_INVARIANT_COUNT 100
-#define MAX_UNARY_OPERATORS 20
-#define MAX_COMM_BINARY_OPERATORS 20
-#define MAX_NCOMM_BINARY_OPERATORS 20
-
-#define MAX_ENTITY_COUNT 1000
+#include "datatypes.h"
 
 #define INVARIANT_LABEL 0
 #define UNARY_LABEL 1
@@ -99,35 +83,6 @@ boolean terminationSignalReceived = FALSE;
 
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
-
-//------ Datatypes -------
-
-typedef struct node {
-    struct node *left;
-    struct node *right;
-    
-    int type; //i.e., number of children
-    int depth;
-    
-    int pos;
-    
-    int contentLabel[2];
-    char *content;
-} NODE;
-
-typedef struct tree {
-    struct node *root;
-    
-    struct node *unusedStack[MAX_NODES_USED - 1]; //-1 because root is never unused
-    int unusedStackSize;
-    
-    struct node *nodesAtDepth[MAX_TREE_DEPTH+1][MAX_TREE_LEVEL_WIDTH];
-    int levelWidth[MAX_TREE_DEPTH+1];
-    int depth;
-    
-    int unaryCount;
-    int binaryCount;
-} TREE;
 
 //------ Node operations -------
 
