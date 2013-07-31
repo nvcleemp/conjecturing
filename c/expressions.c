@@ -95,6 +95,7 @@ unsigned long int timeOut = 0;
 boolean timeOutReached = FALSE;
 
 boolean userInterrupted = FALSE;
+boolean terminationSignalReceived = FALSE;
 
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
@@ -270,6 +271,9 @@ boolean shouldGenerationProcessBeTerminated(){
     if(userInterrupted){
         return TRUE;
     }
+    if(terminationSignalReceived){
+        return TRUE;
+    }
     
     return FALSE;
 }
@@ -285,6 +289,14 @@ void handleAlarmSignal(int sig){
 void handleInterruptSignal(int sig){
     if(sig==SIGINT){
         userInterrupted = TRUE;
+    } else {
+        fprintf(stderr, "Handler called with wrong signal -- ignoring!\n");
+    }
+}
+
+void handleTerminationSignal(int sig){
+    if(sig==SIGTERM){
+        terminationSignalReceived = TRUE;
     } else {
         fprintf(stderr, "Handler called with wrong signal -- ignoring!\n");
     }
@@ -841,6 +853,7 @@ int main(int argc, char *argv[]) {
     //register handlers for signals
     signal(SIGALRM, handleAlarmSignal);
     signal(SIGINT, handleInterruptSignal);
+    signal(SIGTERM, handleTerminationSignal);
     
     //if timeOut is non-zero: start alarm
     if(timeOut) alarm(timeOut);
@@ -849,6 +862,9 @@ int main(int argc, char *argv[]) {
     
     if(userInterrupted){
         fprintf(stderr, "Generation process was interrupted by user.\n");
+    }
+    if(terminationSignalReceived){
+        fprintf(stderr, "Generation process was killed.\n");
     }
     
     if(onlyUnlabeled){
