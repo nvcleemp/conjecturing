@@ -94,6 +94,8 @@ unsigned long int labeledTreeCount = 0;
 unsigned long int timeOut = 0;
 boolean timeOutReached = FALSE;
 
+boolean userInterrupted = FALSE;
+
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
 
@@ -265,6 +267,9 @@ boolean shouldGenerationProcessBeTerminated(){
     if(timeOutReached){
         return TRUE;
     }
+    if(userInterrupted){
+        return TRUE;
+    }
     
     return FALSE;
 }
@@ -272,6 +277,14 @@ boolean shouldGenerationProcessBeTerminated(){
 void handleAlarmSignal(int sig){
     if(sig==SIGALRM){
         timeOutReached = TRUE;
+    } else {
+        fprintf(stderr, "Handler called with wrong signal -- ignoring!\n");
+    }
+}
+
+void handleInterruptSignal(int sig){
+    if(sig==SIGINT){
+        userInterrupted = TRUE;
     } else {
         fprintf(stderr, "Handler called with wrong signal -- ignoring!\n");
     }
@@ -825,13 +838,18 @@ int main(int argc, char *argv[]) {
         if(verbose) printInvariantValues(stderr);
     }
     
-    //register handler for signal
+    //register handlers for signals
     signal(SIGALRM, handleAlarmSignal);
+    signal(SIGINT, handleInterruptSignal);
     
     //if timeOut is non-zero: start alarm
     if(timeOut) alarm(timeOut);
     
     generateTree(unary, binary);
+    
+    if(userInterrupted){
+        fprintf(stderr, "Generation process was interrupted by user.\n");
+    }
     
     if(onlyUnlabeled){
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
