@@ -85,6 +85,7 @@ boolean terminationSignalReceived = FALSE;
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
 boolean generateExpressions = FALSE;
+boolean doConjecturing = FALSE;
 
 /* 
  * Returns non-zero value if the tree satisfies the current target counts
@@ -547,6 +548,8 @@ void help(char *name){
     fprintf(stderr, " %s [options] -e unary binary\n", name);
     fprintf(stderr, "       Generates valid expressions with the given number of unary and\n");
     fprintf(stderr, "       binary operators.\n");
+    fprintf(stderr, " %s [options] -c\n", name);
+    fprintf(stderr, "       Use heuristics to make conjectures.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Valid options\n=============\n");
     fprintf(stderr, "* Generated types (exactly one of these three should be used)\n");
@@ -556,6 +559,8 @@ void help(char *name){
     fprintf(stderr, "       Generate labeled expression trees.\n");
     fprintf(stderr, "    -e, --expressions\n");
     fprintf(stderr, "       Generate true expressions.\n");
+    fprintf(stderr, "    -c, --conjecture\n");
+    fprintf(stderr, "       Use heuristics to make conjectures.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "* Parameters\n");
     fprintf(stderr, "    --unary n\n");
@@ -605,11 +610,12 @@ int processOptions(int argc, char **argv) {
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
         {"labeled", no_argument, NULL, 'l'},
-        {"expressions", no_argument, NULL, 'e'}
+        {"expressions", no_argument, NULL, 'e'},
+        {"conjecture", no_argument, NULL, 'c'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hvule", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvulec", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 //handle long option with no alternative
@@ -653,6 +659,9 @@ int processOptions(int argc, char **argv) {
             case 'e':
                 generateExpressions = TRUE;
                 break;
+            case 'c':
+                doConjecturing = TRUE;
+                break;
             case '?':
                 usage(name);
                 return EXIT_FAILURE;
@@ -663,7 +672,8 @@ int processOptions(int argc, char **argv) {
         }
     }
     
-    if(onlyLabeled + onlyUnlabeled + generateExpressions != TRUE){
+    if(onlyLabeled + onlyUnlabeled +
+            generateExpressions + doConjecturing != TRUE){
         fprintf(stderr, "Please select one type to be generated.\n");
         usage(name);
         return EXIT_FAILURE;
