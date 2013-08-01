@@ -9,10 +9,6 @@
 #ifndef LIMITS_H
 #define	LIMITS_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
 #define MAX_UNARY_COUNT 10
 #define MAX_BINARY_COUNT 10
 
@@ -26,10 +22,6 @@ extern "C" {
 #define MAX_NCOMM_BINARY_OPERATORS 20
 
 #define MAX_ENTITY_COUNT 1000
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* LIMITS_H */
 

@@ -8,10 +8,6 @@
 
 #ifndef DATATYPES_H
 #define	DATATYPES_H
-
-#ifdef	__cplusplus
-extern "C" {
-#endif
     
 #include "limits.h"
 
@@ -46,10 +42,6 @@ typedef struct tree {
     int binaryCount;
 } TREE;
 
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* DATATYPES_H */
 
