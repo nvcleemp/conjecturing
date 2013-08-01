@@ -544,6 +544,9 @@ void help(char *name){
     fprintf(stderr, " %s [options] -l unary binary invariants\n", name);
     fprintf(stderr, "       Generates labeled expression trees with the given number of unary\n");
     fprintf(stderr, "       and binary operators and the given number of invariants.\n");
+    fprintf(stderr, " %s [options] -e unary binary\n", name);
+    fprintf(stderr, "       Generates valid expressions with the given number of unary and\n");
+    fprintf(stderr, "       binary operators.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Valid options\n=============\n");
     fprintf(stderr, "* Generated types (exactly one of these three should be used)\n");
