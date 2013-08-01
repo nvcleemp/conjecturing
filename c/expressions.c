@@ -711,27 +711,27 @@ int main(int argc, char *argv[]) {
         if(onlyLabeled) {
             invariantCount = strtol(argv[optind+2], NULL, 10);
         }
-
-        //set the operator labels
-        if(onlyLabeled) {
-            int i;
-            for (i=0; i<unaryOperatorCount; i++) {
-                unaryOperators[i] = i;
-            }
-            for (i=0; i<commBinaryOperatorCount; i++) {
-                commBinaryOperators[i] = i;
-            }
-            for (i=0; i<nonCommBinaryOperatorCount; i++) {
-                nonCommBinaryOperators[i] = i;
-            }
-        } else if (!onlyUnlabeled){
-            readOperators(stdin);
-            readInvariantsValues(stdin);
-            if(verbose) printInvariantValues(stderr);
-        }
     } else if(argc - optind == 2) {
         unary = strtol(argv[optind], NULL, 10);
         binary = strtol(argv[optind+1], NULL, 10);
+    }
+
+    //set the operator labels
+    if(onlyLabeled) {
+        int i;
+        for (i=0; i<unaryOperatorCount; i++) {
+            unaryOperators[i] = i;
+        }
+        for (i=0; i<commBinaryOperatorCount; i++) {
+            commBinaryOperators[i] = i;
+        }
+        for (i=0; i<nonCommBinaryOperatorCount; i++) {
+            nonCommBinaryOperators[i] = i;
+        }
+    } else if (!onlyUnlabeled){
+        readOperators(stdin);
+        readInvariantsValues(stdin);
+        if(verbose) printInvariantValues(stderr);
     }
     
     //register handlers for signals
