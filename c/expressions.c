@@ -74,6 +74,7 @@ int entityCount = 0;
 
 unsigned long int treeCount = 0;
 unsigned long int labeledTreeCount = 0;
+unsigned long int validExpressionsCount = 0;
 
 unsigned long int timeOut = 0;
 boolean timeOutReached = FALSE;
@@ -83,6 +84,7 @@ boolean terminationSignalReceived = FALSE;
 
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
+boolean generateExpressions = FALSE;
 
 /* 
  * Returns non-zero value if the tree satisfies the current target counts
@@ -134,6 +136,10 @@ void printExpression(TREE *tree, FILE *f){
     fprintf(f, " ");
     printNode(tree->root, f);
     fprintf(f, "\n");
+}
+
+void handleExpression(TREE *tree){
+    validExpressionsCount++;
 }
 
 double handleUnaryOperator(int id, double value){
@@ -243,10 +249,19 @@ boolean evaluateTree(TREE *tree){
     return TRUE;
 }
 
+void checkExpression(TREE *tree){
+    if (evaluateTree(tree)){
+        handleExpression(tree);
+    }
+}
+
 //------ Labeled tree generation -------
 
 void handleLabeledTree(TREE *tree){
     labeledTreeCount++;
+    if(generateExpressions){
+        checkExpression(tree);
+    }
 }
 
 boolean leftSideBiggest(NODE *node, NODE **orderedNodes){
@@ -536,6 +551,8 @@ void help(char *name){
     fprintf(stderr, "       Generate unlabeled expression trees.\n");
     fprintf(stderr, "    -l, --labeled\n");
     fprintf(stderr, "       Generate labeled expression trees.\n");
+    fprintf(stderr, "    -e, --expressions\n");
+    fprintf(stderr, "       Generate true expressions.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "* Parameters\n");
     fprintf(stderr, "    --unary n\n");
@@ -584,11 +601,12 @@ int processOptions(int argc, char **argv) {
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
-        {"labeled", no_argument, NULL, 'l'}
+        {"labeled", no_argument, NULL, 'l'},
+        {"expressions", no_argument, NULL, 'e'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hvul", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvule", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 //handle long option with no alternative
@@ -628,6 +646,9 @@ int processOptions(int argc, char **argv) {
                 break;
             case 'l':
                 onlyLabeled = TRUE;
+                break;
+            case 'e':
+                generateExpressions = TRUE;
                 break;
             case '?':
                 usage(name);
@@ -704,6 +725,10 @@ int main(int argc, char *argv[]) {
     } else if(onlyLabeled) {
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
+    } else if(generateExpressions) {
+        fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
+        fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
+        fprintf(stderr, "Found %lu valid expressions.\n", validExpressionsCount);
     }
     
     return 0;
