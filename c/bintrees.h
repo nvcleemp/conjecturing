@@ -57,12 +57,6 @@ void initTree(TREE *tree);
 
 void freeTree(TREE *tree);
 
-/* 
- * Returns non-zero value if the tree satisfies the current target counts
- * for unary and binary operators. Returns 0 in all other cases.
- */
-boolean isComplete(TREE *tree);
-
 void addChildToNodeInTree(TREE *tree, NODE *parent);
 
 void removeChildFromNodeInTree(TREE *tree, NODE *parent);
