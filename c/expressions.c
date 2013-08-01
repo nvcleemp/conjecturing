@@ -17,6 +17,7 @@
 
 #include "bintrees.h"
 #include "util.h"
+#include "printing.h"
 
 #define INVARIANT_LABEL 0
 #define UNARY_LABEL 1
@@ -126,6 +127,14 @@ void handleTerminationSignal(int sig){
 }
 
 //------ Expression operations -------
+
+void printExpression(TREE *tree, FILE *f){
+    fprintf(f, "I%d ", mainInvariant + 1);
+    printComparator(inequality, f);
+    fprintf(f, " ");
+    printNode(tree->root, f);
+    fprintf(f, "\n");
+}
 
 double handleUnaryOperator(int id, double value){
     if(id==0){

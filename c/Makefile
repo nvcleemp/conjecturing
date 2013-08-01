@@ -15,8 +15,8 @@ CC32 = gcc
 CC64 = gcc 
 CFLAGS = -O4 -Wall
 COMPLETE = build/expressions build/expressions-64 build/expressions-profile build/expressions-debug
-SOURCES = expressions.c bintrees.c datatypes.h limits.h util.h Makefile COPYRIGHT.txt LICENSE.txt
-CONJECTURING_SOURCES = expressions.c bintrees.c
+SOURCES = expressions.c bintrees.c printing.c printing.h datatypes.h limits.h util.h Makefile COPYRIGHT.txt LICENSE.txt
+CONJECTURING_SOURCES = expressions.c bintrees.c printing.c
 
 all : 32bit
 
