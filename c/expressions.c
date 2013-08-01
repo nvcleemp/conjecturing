@@ -791,11 +791,9 @@ int main(int argc, char *argv[]) {
     
     if(timeOutReached){
         fprintf(stderr, "Generation process was stopped because the maximum time was reached.\n");
-    }
-    if(userInterrupted){
+    } else if(userInterrupted){
         fprintf(stderr, "Generation process was interrupted by user.\n");
-    }
-    if(terminationSignalReceived){
+    } else if(terminationSignalReceived){
         fprintf(stderr, "Generation process was killed.\n");
     }
     
