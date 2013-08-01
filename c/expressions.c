@@ -690,7 +690,7 @@ int processOptions(int argc, char **argv) {
         return EXIT_FAILURE;
     }
     
-    if (doConjecturing && ((argc != optind) || (argc - optind != 2))) {
+    if (doConjecturing && !((argc == optind) || (argc - optind == 2))) {
         usage(name);
         return EXIT_FAILURE;
     }
