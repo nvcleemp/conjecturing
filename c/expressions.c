@@ -548,7 +548,7 @@ void help(char *name){
     fprintf(stderr, " %s [options] -e unary binary\n", name);
     fprintf(stderr, "       Generates valid expressions with the given number of unary and\n");
     fprintf(stderr, "       binary operators.\n");
-    fprintf(stderr, " %s [options] -c\n", name);
+    fprintf(stderr, " %s [options] -c [unary binary]\n", name);
     fprintf(stderr, "       Use heuristics to make conjectures.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Valid options\n=============\n");
@@ -690,6 +690,11 @@ int processOptions(int argc, char **argv) {
         return EXIT_FAILURE;
     }
     
+    if (doConjecturing && ((argc != optind) || (argc - optind != 2))) {
+        usage(name);
+        return EXIT_FAILURE;
+    }
+    
     return -1;
 }
 
@@ -698,28 +703,35 @@ int main(int argc, char *argv[]) {
     int po = processOptions(argc, argv);
     if(po != -1) return po;
     
-    int unary = strtol(argv[optind], NULL, 10);
-    int binary = strtol(argv[optind+1], NULL, 10);
-    if(onlyLabeled) {
-        invariantCount = strtol(argv[optind+2], NULL, 10);
-    }
-    
-    //set the operator labels
-    if(onlyLabeled) {
-        int i;
-        for (i=0; i<unaryOperatorCount; i++) {
-            unaryOperators[i] = i;
+    int unary = 0;
+    int binary = 0;
+    if(!doConjecturing){
+        unary = strtol(argv[optind], NULL, 10);
+        binary = strtol(argv[optind+1], NULL, 10);
+        if(onlyLabeled) {
+            invariantCount = strtol(argv[optind+2], NULL, 10);
         }
-        for (i=0; i<commBinaryOperatorCount; i++) {
-            commBinaryOperators[i] = i;
+
+        //set the operator labels
+        if(onlyLabeled) {
+            int i;
+            for (i=0; i<unaryOperatorCount; i++) {
+                unaryOperators[i] = i;
+            }
+            for (i=0; i<commBinaryOperatorCount; i++) {
+                commBinaryOperators[i] = i;
+            }
+            for (i=0; i<nonCommBinaryOperatorCount; i++) {
+                nonCommBinaryOperators[i] = i;
+            }
+        } else if (!onlyUnlabeled){
+            readOperators(stdin);
+            readInvariantsValues(stdin);
+            if(verbose) printInvariantValues(stderr);
         }
-        for (i=0; i<nonCommBinaryOperatorCount; i++) {
-            nonCommBinaryOperators[i] = i;
-        }
-    } else if (!onlyUnlabeled){
-        readOperators(stdin);
-        readInvariantsValues(stdin);
-        if(verbose) printInvariantValues(stderr);
+    } else if(argc - optind == 2) {
+        unary = strtol(argv[optind], NULL, 10);
+        binary = strtol(argv[optind+1], NULL, 10);
     }
     
     //register handlers for signals
