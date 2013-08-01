@@ -412,6 +412,10 @@ void generateTreeImpl(TREE *tree){
 }
 
 void generateTree(int unary, int binary){
+    if(verbose){
+        fprintf(stderr, "Generating trees with %d unary node%s and %d binary node%s.\n",
+                unary, unary == 1 ? "" : "s", binary, binary == 1 ? "" : "s");
+    }
     TREE tree;
     targetUnary = unary;
     targetBinary = binary;
