@@ -436,6 +436,13 @@ void generateTree(int unary, int binary){
     }
     
     freeTree(&tree);
+    
+    if(verbose && doConjecturing){
+        fprintf(stderr, "Status: %lu unlabeled tree%s, %lu labeled tree%s, %lu expression%s\n",
+                treeCount, treeCount==1 ? "" : "s",
+                labeledTreeCount, labeledTreeCount==1 ? "" : "s",
+                validExpressionsCount, validExpressionsCount==1 ? "" : "s");
+    }
 }
 
 //------ Various functions -------
