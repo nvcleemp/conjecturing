@@ -663,7 +663,7 @@ int processOptions(int argc, char **argv) {
         }
     }
     
-    if(onlyLabeled + onlyUnlabeled + generateExpressions != 1){
+    if(onlyLabeled + onlyUnlabeled + generateExpressions != TRUE){
         fprintf(stderr, "Please select one type to be generated.\n");
         usage(name);
         return EXIT_FAILURE;
