@@ -8,6 +8,7 @@
 #ifndef UTIL_H
 #define	UTIL_H
 
+#include <stdlib.h>
 #include <stdio.h>
 
 #define BAILOUT(msg) fprintf(stderr, msg " -- exiting!\n"); exit(EXIT_FAILURE);
