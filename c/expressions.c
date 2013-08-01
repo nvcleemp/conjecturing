@@ -539,9 +539,10 @@ void readInvariantsValues(FILE *f){
     
     //first read number of invariants and number of entities
     if(fgets(line, sizeof(line), f)){
-        if(sscanf(line, "%d %d", &entityCount, &invariantCount) != 2) {
+        if(sscanf(line, "%d %d %d", &entityCount, &invariantCount, &mainInvariant) != 3) {
             BAILOUT("Error while reading invariants")
         }
+        mainInvariant--; //internally we work zero-based
     } else {
         BAILOUT("Error while reading invariants")
     }
