@@ -87,6 +87,10 @@ boolean onlyLabeled = FALSE;
 boolean generateExpressions = FALSE;
 boolean doConjecturing = FALSE;
 
+#define GRINVIN_NEXT_OPERATOR_COUNT 0
+
+int nextOperatorCountMethod = GRINVIN_NEXT_OPERATOR_COUNT;
+
 /* 
  * Returns non-zero value if the tree satisfies the current target counts
  * for unary and binary operators. Returns 0 in all other cases.
@@ -260,7 +264,7 @@ void checkExpression(TREE *tree){
 
 void handleLabeledTree(TREE *tree){
     labeledTreeCount++;
-    if(generateExpressions){
+    if(generateExpressions || doConjecturing){
         checkExpression(tree);
     }
 }
@@ -422,6 +426,39 @@ void generateTree(int unary, int binary){
     }
     
     freeTree(&tree);
+}
+
+//------ Various functions -------
+
+void getNextOperatorCount(int *unary, int *binary){
+    if(nextOperatorCountMethod == GRINVIN_NEXT_OPERATOR_COUNT){
+        if((*binary)==0){
+            if((*unary)%2==0){
+                (*binary) = (*unary)/2;
+                (*unary) = 1;
+            } else {
+                (*binary) = (*unary + 1)/2;
+                (*unary) = 0;
+            }
+        } else {
+            (*binary)--;
+            (*unary)+=2;
+        }
+    } else {
+        BAILOUT("Unknown method to determine next operator count")
+    }
+}
+
+void conjecture(int startUnary, int startBinary){
+    int unary = startUnary;
+    int binary = startBinary;
+    
+    generateTree(unary, binary);
+    getNextOperatorCount(&unary, &binary);
+    while(!shouldGenerationProcessBeTerminated()) {
+        generateTree(unary, binary);
+        getNextOperatorCount(&unary, &binary);
+    }
 }
 
 //------ Various functions -------
@@ -742,7 +779,11 @@ int main(int argc, char *argv[]) {
     //if timeOut is non-zero: start alarm
     if(timeOut) alarm(timeOut);
     
-    generateTree(unary, binary);
+    if(doConjecturing){
+        conjecture(unary, binary);
+    } else {
+        generateTree(unary, binary);
+    }
     
     if(userInterrupted){
         fprintf(stderr, "Generation process was interrupted by user.\n");
@@ -756,7 +797,7 @@ int main(int argc, char *argv[]) {
     } else if(onlyLabeled) {
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
-    } else if(generateExpressions) {
+    } else if(generateExpressions || doConjecturing) {
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
         fprintf(stderr, "Found %lu valid expressions.\n", validExpressionsCount);
