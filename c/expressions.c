@@ -34,6 +34,8 @@ boolean invariantsUsed[MAX_INVARIANT_COUNT];
 
 int mainInvariant;
 
+boolean allowMainInvariantInExpressions = FALSE;
+
 #define LEQ 0 // i.e., MI <= expression
 #define LESS 1 // i.e., MI < expression
 #define GEQ 2 // i.e., MI >= expression
@@ -368,6 +370,10 @@ void handleTree(TREE *tree){
         invariantsUsed[i] = FALSE;
     }
     
+    if(!allowMainInvariantInExpressions){
+        invariantsUsed[mainInvariant] = TRUE;
+    }
+    
     generateLabeledTree(tree, orderedNodes, 0);
 }
 
@@ -616,6 +622,8 @@ void help(char *name){
     fprintf(stderr, "       The number of non-commutative binary operators used during the\n");
     fprintf(stderr, "       generation of labeled expression trees. This value is ignored when\n");
     fprintf(stderr, "       generating valid expressions.\n");
+    fprintf(stderr, "    --allow-main-invariant\n");
+    fprintf(stderr, "       Allow the main invariant to appear in the generated expressions.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "* Various options\n");
     fprintf(stderr, "    -h, --help\n");
@@ -647,6 +655,7 @@ int processOptions(int argc, char **argv) {
         {"non-commutative", required_argument, NULL, 0},
         {"example", no_argument, NULL, 0},
         {"time", required_argument, NULL, 0},
+        {"allow-main-invariant", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -678,6 +687,9 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 4:
                         timeOut = strtoul(optarg, NULL, 10);
+                        break;
+                    case 5:
+                        allowMainInvariantInExpressions = TRUE;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
