@@ -687,7 +687,7 @@ int main(int argc, char *argv[]) {
     
     int unary = strtol(argv[optind], NULL, 10);
     int binary = strtol(argv[optind+1], NULL, 10);
-    if(!onlyUnlabeled) {
+    if(onlyLabeled) {
         invariantCount = strtol(argv[optind+2], NULL, 10);
     }
     
