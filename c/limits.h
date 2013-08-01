@@ -1,8 +1,9 @@
-/* 
- * File:   limits.h
- * Author: nvcleemp
- *
- * Created on July 31, 2013, 4:12 PM
+/*
+ * Main developer: Nico Van Cleemput
+ * In collaboration with: Craig Larson
+ * 
+ * Copyright (C) 2013 Ghent University.
+ * Licensed under the GNU GPL, read the file LICENSE.txt for details.
  */
 
 #ifndef LIMITS_H
