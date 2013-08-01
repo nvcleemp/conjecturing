@@ -546,7 +546,7 @@ void help(char *name){
     fprintf(stderr, "       and binary operators and the given number of invariants.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Valid options\n=============\n");
-    fprintf(stderr, "* Generated types\n");
+    fprintf(stderr, "* Generated types (exactly one of these three should be used)\n");
     fprintf(stderr, "    -u, --unlabeled\n");
     fprintf(stderr, "       Generate unlabeled expression trees.\n");
     fprintf(stderr, "    -l, --labeled\n");
@@ -658,6 +658,12 @@ int processOptions(int argc, char **argv) {
                 usage(name);
                 return EXIT_FAILURE;
         }
+    }
+    
+    if(onlyLabeled + onlyUnlabeled + generateExpressions != 1){
+        fprintf(stderr, "Please select one type to be generated.\n");
+        usage(name);
+        return EXIT_FAILURE;
     }
     
     // check the non-option arguments
