@@ -15,7 +15,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "datatypes.h"
+#include "bintrees.h"
 #include "util.h"
 
 #define INVARIANT_LABEL 0
@@ -363,7 +363,7 @@ boolean evaluateTree(TREE *tree){
 
 void handleLabeledTree(TREE *tree){
     labeledTreeCount++;
-}
+    }
 
 boolean leftSideBiggest(NODE *node, NODE **orderedNodes){
     NODE *leftMost = node->left;
