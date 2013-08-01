@@ -6,8 +6,8 @@
  * Licensed under the GNU GPL, read the file LICENSE.txt for details.
  */
 
-#ifndef DATATYPES_H
-#define	DATATYPES_H
+#ifndef BINTREES_H
+#define	BINTREES_H
     
 #include "limits.h"
 
@@ -67,5 +67,5 @@ void addChildToNodeInTree(TREE *tree, NODE *parent);
 
 void removeChildFromNodeInTree(TREE *tree, NODE *parent);
 
-#endif	/* DATATYPES_H */
+#endif	/* BINTREES_H */
 
