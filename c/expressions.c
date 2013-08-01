@@ -680,7 +680,7 @@ int processOptions(int argc, char **argv) {
     }
     
     // check the non-option arguments
-    if (onlyUnlabeled && argc - optind != 2) {
+    if ((onlyUnlabeled || generateExpressions) && argc - optind != 2) {
         usage(name);
         return EXIT_FAILURE;
     }
