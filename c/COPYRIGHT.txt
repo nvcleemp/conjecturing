@@ -1,0 +1,12 @@
+The conjecturing project is Copyright 2013 Universiteit Gent and is licensed
+under the terms of the GNU General Public License - see the file LICENSE.txt.
+
+Main developer: Nicolas Van Cleemput
+In collaboration with: Craig Larson
+
+Research Group CAAGT
+Department of Applied Mathematics, Computer Science and Statistics
+Ghent University
+Krijgslaan 281-S9
+B-9000 Ghent
+Belgium
