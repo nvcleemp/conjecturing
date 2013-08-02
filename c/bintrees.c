@@ -70,7 +70,6 @@ void initTree(TREE *tree){
         tree->unusedStack[i]->left = tree->unusedStack[i]->right = NULL;
         tree->unusedStack[i]->depth = 0;
         tree->unusedStack[i]->type = 0;
-        tree->unusedStack[i]->content = NULL;
     }
     tree->unusedStackSize = MAX_NODES_USED - 1;
     
@@ -86,7 +85,6 @@ void initTree(TREE *tree){
     root->left = root->right = NULL;
     root->depth = 0;
     root->type = 0;
-    root->content = NULL;
     
     //set the root
     tree->root = root;

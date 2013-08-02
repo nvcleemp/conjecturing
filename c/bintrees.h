@@ -25,7 +25,6 @@ typedef struct node {
     int pos;
     
     int contentLabel[2];
-    char *content;
 } NODE;
 
 typedef struct tree {
