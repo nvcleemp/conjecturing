@@ -445,7 +445,7 @@ void generateTree(int unary, int binary){
     }
 }
 
-//------ Various functions -------
+//------ conjecturing functions -------
 
 void getNextOperatorCount(int *unary, int *binary){
     if(nextOperatorCountMethod == GRINVIN_NEXT_OPERATOR_COUNT){
