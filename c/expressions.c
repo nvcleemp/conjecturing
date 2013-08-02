@@ -36,6 +36,10 @@ boolean invariantsUsed[MAX_INVARIANT_COUNT];
 int mainInvariant;
 
 boolean allowMainInvariantInExpressions = FALSE;
+boolean useInvariantNames = FALSE;
+
+char invariantNames[MAX_INVARIANT_COUNT][1024];
+char *invariantNamesPointers[MAX_INVARIANT_COUNT];
 
 #define LEQ 0 // i.e., MI <= expression
 #define LESS 1 // i.e., MI < expression
@@ -210,10 +214,15 @@ void handleTerminationSignal(int sig){
 //------ Expression operations -------
 
 void printExpression(TREE *tree, FILE *f){
-    fprintf(f, "I%d ", mainInvariant + 1);
+    if(useInvariantNames){
+        fprintf(f, "%s ", invariantNames[mainInvariant]);
+    } else {
+        fprintf(f, "I%d ", mainInvariant + 1);
+    }
     printComparator(inequality, f);
     fprintf(f, " ");
-    printNode(tree->root, f);
+    printNode(tree->root, f, 
+            useInvariantNames ? invariantNamesPointers : NULL);
     fprintf(f, "\n");
 }
 
@@ -644,6 +653,19 @@ void readInvariantsValues(){
         BAILOUT("Error while reading invariants")
     }
     
+    //maybe read invariant names
+    if(useInvariantNames){
+        for(j=0; j<invariantCount; j++){
+            if(fgets(line, sizeof(line), invariantsFile)){
+                char *name = trim(line);
+                strcpy(invariantNames[j], name);
+                invariantNamesPointers[j] = invariantNames[j];
+            } else {
+                BAILOUT("Error while reading invariant names")
+            }
+        }
+    }
+    
     //start reading the individual values
     for(i=0; i<objectCount; i++){
         for(j=0; j<invariantCount; j++){
@@ -767,6 +789,7 @@ int processOptions(int argc, char **argv) {
         {"all-operators", no_argument, NULL, 0},
         {"dalmatian", no_argument, NULL, 0},
         {"grinvin", no_argument, NULL, 0},
+        {"invariant-names", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -813,6 +836,9 @@ int processOptions(int argc, char **argv) {
                         grinvinHeuristicInit();
                         heuristicStopConditionReached = grinvinHeuristicStopConditionReached;
                         heuristicPostProcessing = grinvinHeuristicPostProcessing;
+                        break;
+                    case 9:
+                        useInvariantNames = TRUE;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
