@@ -93,6 +93,9 @@ boolean doConjecturing = FALSE;
 
 int nextOperatorCountMethod = GRINVIN_NEXT_OPERATOR_COUNT;
 
+FILE *operatorFile = NULL;
+FILE *invariantsFile = NULL;
+
 /* 
  * Returns non-zero value if the tree satisfies the current target counts
  * for unary and binary operators. Returns 0 in all other cases.
@@ -484,7 +487,7 @@ void conjecture(int startUnary, int startBinary){
 
 //------ Various functions -------
 
-void readOperators(FILE *f){
+void readOperators(){
     //set operator counts to zero
     unaryOperatorCount = commBinaryOperatorCount = nonCommBinaryOperatorCount = 0;
     
@@ -492,7 +495,7 @@ void readOperators(FILE *f){
     int i;
     int operatorCount = 0;
     char line[1024]; //array to temporarily store a line
-    if(fgets(line, sizeof(line), f)){
+    if(fgets(line, sizeof(line), operatorFile)){
         if(sscanf(line, "%d", &operatorCount) != 1) {
             BAILOUT("Error while reading operators")
         }
@@ -500,7 +503,7 @@ void readOperators(FILE *f){
         BAILOUT("Error while reading operators")
     }
     for(i=0; i<operatorCount; i++){
-        if(fgets(line, sizeof(line), f)){
+        if(fgets(line, sizeof(line), operatorFile)){
             //read operator
             char operatorType = 'E'; //E for Error
             int operatorNumber = -1;
@@ -544,12 +547,12 @@ char *trim(char *str){
     return str;
 }
 
-void readInvariantsValues(FILE *f){
+void readInvariantsValues(){
     int i,j;
     char line[1024]; //array to temporarily store a line
     
     //first read number of invariants and number of entities
-    if(fgets(line, sizeof(line), f)){
+    if(fgets(line, sizeof(line), invariantsFile)){
         if(sscanf(line, "%d %d %d", &entityCount, &invariantCount, &mainInvariant) != 3) {
             BAILOUT("Error while reading invariants")
         }
@@ -561,7 +564,7 @@ void readInvariantsValues(FILE *f){
     //start reading the individual values
     for(i=0; i<entityCount; i++){
         for(j=0; j<invariantCount; j++){
-            if(fgets(line, sizeof(line), f)){
+            if(fgets(line, sizeof(line), invariantsFile)){
                 double value = 0.0;
                 if(sscanf(line, "%lf", &value) != 1) {
                     BAILOUT("Error while reading invariants")
@@ -765,6 +768,9 @@ int processOptions(int argc, char **argv) {
 
 int main(int argc, char *argv[]) {
     
+    operatorFile = stdin;
+    invariantsFile = stdin;
+    
     int po = processOptions(argc, argv);
     if(po != -1) return po;
     
@@ -794,8 +800,8 @@ int main(int argc, char *argv[]) {
             nonCommBinaryOperators[i] = i;
         }
     } else if (!onlyUnlabeled){
-        readOperators(stdin);
-        readInvariantsValues(stdin);
+        readOperators();
+        readInvariantsValues();
         if(verbose) printInvariantValues(stderr);
     }
     
