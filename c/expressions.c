@@ -469,11 +469,13 @@ void getNextOperatorCount(int *unary, int *binary){
 void conjecture(int startUnary, int startBinary){
     int unary = startUnary;
     int binary = startBinary;
+    int availableInvariants = invariantCount - (allowMainInvariantInExpressions ? 0 : 1);
     
     generateTree(unary, binary);
     getNextOperatorCount(&unary, &binary);
     while(!shouldGenerationProcessBeTerminated()) {
-        generateTree(unary, binary);
+        if(availableInvariants >= binary+1)
+            generateTree(unary, binary);
         getNextOperatorCount(&unary, &binary);
     }
 }
