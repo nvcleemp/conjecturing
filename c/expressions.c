@@ -14,6 +14,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <float.h>
 
 #include "bintrees.h"
 #include "util.h"
@@ -84,6 +85,8 @@ boolean timeOutReached = FALSE;
 boolean userInterrupted = FALSE;
 boolean terminationSignalReceived = FALSE;
 
+boolean heuristicStoppedGeneration = FALSE;
+
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
 boolean generateExpressions = FALSE;
@@ -96,6 +99,19 @@ int nextOperatorCountMethod = GRINVIN_NEXT_OPERATOR_COUNT;
 FILE *operatorFile = NULL;
 FILE *invariantsFile = NULL;
 
+#define NO_HEURISTIC -1
+#define DALMATIAN_HEURISTIC 0
+#define GRINVIN_HEURISTIC 1
+
+int selectedHeuristic = NO_HEURISTIC;
+
+boolean (*heuristicStopConditionReached)() = NULL;
+void (*heuristicPostProcessing)() = NULL;
+
+//function declarations
+
+void printExpression(TREE *tree, FILE *f);
+
 /* 
  * Returns non-zero value if the tree satisfies the current target counts
  * for unary and binary operators. Returns 0 in all other cases.
@@ -104,9 +120,62 @@ boolean isComplete(TREE *tree){
     return tree->unaryCount == targetUnary && tree->binaryCount == targetBinary;
 }
 
+//----------- Heuristics -------------
+
+//dalmatian heuristic
+
+void dalmatianHeuristic(TREE *tree, double *values){
+    //just a stub at the moment
+    
+}
+
+//grinvin heuristic
+
+double grinvinBestError = DBL_MAX;
+TREE grinvinBestExpression;
+
+double grinvinValueError(double *values){
+    double result = 0.0;
+    int i;
+    
+    for(i=0; i<objectCount; i++){
+        double diff = values[i] - invariantValues[mainInvariant][i];
+        result += (diff*diff);
+    }
+    return result;
+}
+
+void grinvinHeuristic(TREE *tree, double *values){
+    //this heuristic assumes the expression was true for all objects
+    double valueError = grinvinValueError(values);
+    if(valueError < grinvinBestError){
+        grinvinBestError = valueError;
+        copyTree(tree, &grinvinBestExpression);
+    }
+}
+
+boolean grinvinHeuristicStopConditionReached(){
+    return (1 << (2*targetBinary + targetUnary)) * objectCount >= grinvinBestError;
+}
+
+void grinvinHeuristicInit(){
+    initTree(&grinvinBestExpression);
+}
+
+void grinvinHeuristicPostProcessing(){
+    printExpression(&grinvinBestExpression, stdout);
+    freeTree(&grinvinBestExpression);
+}
+
 //------ Stop generation -------
 
 boolean shouldGenerationProcessBeTerminated(){
+    if(heuristicStopConditionReached!=NULL){
+        if(heuristicStopConditionReached()){
+            heuristicStoppedGeneration = TRUE;
+            return TRUE;
+        }
+    }
     if(timeOutReached || userInterrupted || terminationSignalReceived){
         return TRUE;
     }
@@ -150,6 +219,13 @@ void printExpression(TREE *tree, FILE *f){
 
 void handleExpression(TREE *tree, double *values, int calculatedValues, int hitCount){
     validExpressionsCount++;
+    if(doConjecturing){
+        if(selectedHeuristic==DALMATIAN_HEURISTIC){
+            
+        } else if(selectedHeuristic==GRINVIN_HEURISTIC){
+            grinvinHeuristic(tree, values);
+        }
+    }
 }
 
 double handleUnaryOperator(int id, double value){
@@ -651,6 +727,12 @@ void help(char *name){
     fprintf(stderr, "       generating expressions or when in conjecturing mode. The result is\n");
     fprintf(stderr, "       that no operators are read from the input.\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "* Heuristics\n");
+    fprintf(stderr, "    --dalmatian\n");
+    fprintf(stderr, "       Use the dalmatian heuristic to make conjectures.\n");
+    fprintf(stderr, "    --grinvin\n");
+    fprintf(stderr, "       Use the heuristic from Grinvin to make conjectures.\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "* Various options\n");
     fprintf(stderr, "    -h, --help\n");
     fprintf(stderr, "       Print this help and return.\n");
@@ -683,6 +765,8 @@ int processOptions(int argc, char **argv) {
         {"time", required_argument, NULL, 0},
         {"allow-main-invariant", no_argument, NULL, 0},
         {"all-operators", no_argument, NULL, 0},
+        {"dalmatian", no_argument, NULL, 0},
+        {"grinvin", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -721,6 +805,15 @@ int processOptions(int argc, char **argv) {
                     case 6:
                         operatorFile = NULL;
                         break;
+                    case 7:
+                        //not yet supported
+                        break;
+                    case 8:
+                        selectedHeuristic = GRINVIN_HEURISTIC;
+                        grinvinHeuristicInit();
+                        heuristicStopConditionReached = grinvinHeuristicStopConditionReached;
+                        heuristicPostProcessing = grinvinHeuristicPostProcessing;
+                        break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
                         usage(name);
@@ -758,6 +851,12 @@ int processOptions(int argc, char **argv) {
     if(onlyLabeled + onlyUnlabeled +
             generateExpressions + doConjecturing != TRUE){
         fprintf(stderr, "Please select one type to be generated.\n");
+        usage(name);
+        return EXIT_FAILURE;
+    }
+    
+    if(doConjecturing && selectedHeuristic==NO_HEURISTIC){
+        fprintf(stderr, "Please select a heuristic to make conjectures.\n");
         usage(name);
         return EXIT_FAILURE;
     }
@@ -847,7 +946,9 @@ int main(int argc, char *argv[]) {
         generateTree(unary, binary);
     }
     
-    if(timeOutReached){
+    if(heuristicStoppedGeneration){
+        fprintf(stderr, "Generation process was stopped by the conjecturing heuristic.\n");
+    } else if(timeOutReached){
         fprintf(stderr, "Generation process was stopped because the maximum time was reached.\n");
     } else if(userInterrupted){
         fprintf(stderr, "Generation process was interrupted by user.\n");
@@ -864,6 +965,10 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
         fprintf(stderr, "Found %lu valid expressions.\n", validExpressionsCount);
+    }
+    
+    if(heuristicPostProcessing!=NULL){
+        heuristicPostProcessing();
     }
     
     return 0;
