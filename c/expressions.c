@@ -639,6 +639,10 @@ void help(char *name){
     fprintf(stderr, "       generating valid expressions.\n");
     fprintf(stderr, "    --allow-main-invariant\n");
     fprintf(stderr, "       Allow the main invariant to appear in the generated expressions.\n");
+    fprintf(stderr, "    --all-operators\n");
+    fprintf(stderr, "       Use all the available operators. This flag will only be used when\n");
+    fprintf(stderr, "       generating expressions or when in conjecturing mode. The result is\n");
+    fprintf(stderr, "       that no operators are read from the input.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "* Various options\n");
     fprintf(stderr, "    -h, --help\n");
@@ -671,6 +675,7 @@ int processOptions(int argc, char **argv) {
         {"example", no_argument, NULL, 0},
         {"time", required_argument, NULL, 0},
         {"allow-main-invariant", no_argument, NULL, 0},
+        {"all-operators", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -705,6 +710,9 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 5:
                         allowMainInvariantInExpressions = TRUE;
+                        break;
+                    case 6:
+                        operatorFile = NULL;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
@@ -800,7 +808,20 @@ int main(int argc, char *argv[]) {
             nonCommBinaryOperators[i] = i;
         }
     } else if (!onlyUnlabeled){
-        readOperators();
+        if(operatorFile==NULL){
+            int i;
+            for (i=0; i<unaryOperatorCount; i++) {
+                unaryOperators[i] = i;
+            }
+            for (i=0; i<commBinaryOperatorCount; i++) {
+                commBinaryOperators[i] = i;
+            }
+            for (i=0; i<nonCommBinaryOperatorCount; i++) {
+                nonCommBinaryOperators[i] = i;
+            }
+        } else {
+            readOperators();
+        }
         readInvariantsValues();
         if(verbose) printInvariantValues(stderr);
     }
