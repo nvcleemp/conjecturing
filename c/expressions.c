@@ -474,7 +474,9 @@ void conjecture(int startUnary, int startBinary){
     generateTree(unary, binary);
     getNextOperatorCount(&unary, &binary);
     while(!shouldGenerationProcessBeTerminated()) {
-        if(availableInvariants >= binary+1)
+        if(unary <= MAX_UNARY_COUNT && 
+           binary <= MAX_BINARY_COUNT &&
+           availableInvariants >= binary+1)
             generateTree(unary, binary);
         getNextOperatorCount(&unary, &binary);
     }
