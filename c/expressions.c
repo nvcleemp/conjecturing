@@ -70,9 +70,9 @@ int nonCommBinaryOperatorCount = 3;
  */
 int nonCommBinaryOperators[MAX_NCOMM_BINARY_OPERATORS];
 
-double invariantValues[MAX_ENTITY_COUNT][MAX_INVARIANT_COUNT];
+double invariantValues[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
 
-int entityCount = 0;
+int objectCount = 0;
 
 unsigned long int treeCount = 0;
 unsigned long int labeledTreeCount = 0;
@@ -229,17 +229,17 @@ boolean handleComparator(double left, double right, int id){
     }
 }
 
-double evaluateNode(NODE *node, int entity){
+double evaluateNode(NODE *node, int object){
     if (node->contentLabel[0]==INVARIANT_LABEL) {
-        return invariantValues[entity][node->contentLabel[1]];
+        return invariantValues[object][node->contentLabel[1]];
     } else if (node->contentLabel[0]==UNARY_LABEL) {
-        return handleUnaryOperator(node->contentLabel[1], evaluateNode(node->left, entity));
+        return handleUnaryOperator(node->contentLabel[1], evaluateNode(node->left, object));
     } else if (node->contentLabel[0]==NON_COMM_BINARY_LABEL){
         return handleNonCommutativeBinaryOperator(node->contentLabel[1],
-                evaluateNode(node->left, entity), evaluateNode(node->right, entity));
+                evaluateNode(node->left, object), evaluateNode(node->right, object));
     } else if (node->contentLabel[0]==COMM_BINARY_LABEL){
         return handleCommutativeBinaryOperator(node->contentLabel[1],
-                evaluateNode(node->left, entity), evaluateNode(node->right, entity));
+                evaluateNode(node->left, object), evaluateNode(node->right, object));
     } else {
         BAILOUT("Unknown content label type")
     }
@@ -248,7 +248,7 @@ double evaluateNode(NODE *node, int entity){
 boolean evaluateTree(TREE *tree){
     int i;
     int hitCount = 0;
-    for(i=0; i<entityCount; i++){
+    for(i=0; i<objectCount; i++){
         double expression = evaluateNode(tree->root, i);
         if(!handleComparator(invariantValues[i][mainInvariant], expression, inequality)){
             return FALSE;
@@ -553,7 +553,7 @@ void readInvariantsValues(){
     
     //first read number of invariants and number of entities
     if(fgets(line, sizeof(line), invariantsFile)){
-        if(sscanf(line, "%d %d %d", &entityCount, &invariantCount, &mainInvariant) != 3) {
+        if(sscanf(line, "%d %d %d", &objectCount, &invariantCount, &mainInvariant) != 3) {
             BAILOUT("Error while reading invariants")
         }
         mainInvariant--; //internally we work zero-based
@@ -562,7 +562,7 @@ void readInvariantsValues(){
     }
     
     //start reading the individual values
-    for(i=0; i<entityCount; i++){
+    for(i=0; i<objectCount; i++){
         for(j=0; j<invariantCount; j++){
             if(fgets(line, sizeof(line), invariantsFile)){
                 double value = 0.0;
@@ -586,7 +586,7 @@ void printInvariantValues(FILE *f){
     }
     fprintf(f, "\n");
     //table
-    for(i=0; i<entityCount; i++){
+    for(i=0; i<objectCount; i++){
         fprintf(f, "%3d) ", i+1);
         for(j=0; j<invariantCount; j++){
             fprintf(f, "%11.6lf   ", invariantValues[i][j]);
