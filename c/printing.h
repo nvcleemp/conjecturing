@@ -10,7 +10,7 @@
 #define	PRINTING_H
 
 void printComparator(int id, FILE *f);
-void printNode(NODE *node, FILE *f);
+void printNode(NODE *node, FILE *f, char **invariantNamePointers);
 
 #endif	/* PRINTING_H */
 

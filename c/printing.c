@@ -113,26 +113,30 @@ void printNonCommutativeBinaryOperator_right(int id, FILE *f){
     }
 }
 
-void printNode(NODE *node, FILE *f){
+void printNode(NODE *node, FILE *f, char **invariantNamePointers){
     int type = node->contentLabel[0];
     int id = node->contentLabel[1];
     if (type==INVARIANT_LABEL) {
-        fprintf(f, "(I%d)", id + 1);
+        if(invariantNamePointers==NULL){
+            fprintf(f, "(I%d)", id + 1);
+        } else {
+            fprintf(f, "(%s)", invariantNamePointers[id]);
+        }
     } else if (type==UNARY_LABEL) {
         printUnaryOperator_left(id, f);
-        printNode(node->left, f);
+        printNode(node->left, f, invariantNamePointers);
         printUnaryOperator_right(id, f);
     } else if (type==NON_COMM_BINARY_LABEL){
         printNonCommutativeBinaryOperator_left(id, f);
-        printNode(node->left, f);
+        printNode(node->left, f, invariantNamePointers);
         printNonCommutativeBinaryOperator_middle(id, f);
-        printNode(node->right, f);
+        printNode(node->right, f, invariantNamePointers);
         printNonCommutativeBinaryOperator_right(id, f);
     } else if (type==COMM_BINARY_LABEL){
         printCommutativeBinaryOperator_left(id, f);
-        printNode(node->left, f);
+        printNode(node->left, f, invariantNamePointers);
         printCommutativeBinaryOperator_middle(id, f);
-        printNode(node->right, f);
+        printNode(node->right, f, invariantNamePointers);
         printCommutativeBinaryOperator_right(id, f);
     } else {
         BAILOUT("Unknown content label type")
