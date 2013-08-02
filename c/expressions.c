@@ -148,7 +148,7 @@ void printExpression(TREE *tree, FILE *f){
     fprintf(f, "\n");
 }
 
-void handleExpression(TREE *tree){
+void handleExpression(TREE *tree, double *values, int calculatedValues, int hitCount){
     validExpressionsCount++;
 }
 
@@ -245,23 +245,30 @@ double evaluateNode(NODE *node, int object){
     }
 }
 
-boolean evaluateTree(TREE *tree){
+boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hits){
     int i;
     int hitCount = 0;
     for(i=0; i<objectCount; i++){
         double expression = evaluateNode(tree->root, i);
+        values[i] = expression;
         if(!handleComparator(invariantValues[i][mainInvariant], expression, inequality)){
+            *calculatedValues = i+1;
+            *hits = hitCount;
             return FALSE;
         } else if(expression==invariantValues[i][mainInvariant]) {
             hitCount++;
         }
     }
+    *hits = hitCount;
     return TRUE;
 }
 
 void checkExpression(TREE *tree){
-    if (evaluateTree(tree)){
-        handleExpression(tree);
+    double values[MAX_OBJECT_COUNT];
+    int calculatedValues = 0;
+    int hitCount = 0;
+    if (evaluateTree(tree, values, &calculatedValues, &hitCount)){
+        handleExpression(tree, values, objectCount, hitCount);
     }
 }
 
