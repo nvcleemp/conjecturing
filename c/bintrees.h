@@ -54,6 +54,8 @@ void getOrderedNodes(NODE *node, NODE **orderedNodes, int *currentPosition);
 
 void initTree(TREE *tree);
 
+void copyTree(TREE *tree, TREE *copy);
+
 void freeTree(TREE *tree);
 
 void addChildToNodeInTree(TREE *tree, NODE *parent);

@@ -7,6 +7,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "bintrees.h"
 #include "util.h"
 
@@ -90,6 +91,49 @@ void initTree(TREE *tree){
     tree->root = root;
     tree->levelWidth[0] = 1;
     tree->nodesAtDepth[0][0] = tree->root;
+}
+
+void copyNode_(NODE *original, NODE *copy, TREE *copyTree){
+    //copy fields
+    copy->depth = original->depth;
+    copy->pos = original->pos;
+    copy->type = original->type;
+    copy->contentLabel[0] = original->contentLabel[0];
+    copy->contentLabel[1] = original->contentLabel[1];
+    
+    //copy children
+    if(original->left == NULL){
+        copy->left = NULL;
+    } else {
+        (copyTree->unusedStackSize)--;
+        copy->left = copyTree->unusedStack[copyTree->unusedStackSize];
+        copyNode_(original->left, copy->left, copyTree);
+    }
+    if(original->right == NULL){
+        copy->right = NULL;
+    } else {
+        (copyTree->unusedStackSize)--;
+        copy->right = copyTree->unusedStack[copyTree->unusedStackSize];
+        copyNode_(original->right, copy->right, copyTree);
+    }
+    
+}
+
+void copyTree(TREE *tree, TREE *copy){
+    //copy fields
+    copy->depth = tree->depth;
+    copy->unaryCount = tree->unaryCount;
+    copy->binaryCount = tree->binaryCount;
+    memcpy(copy->levelWidth, tree->levelWidth, sizeof(int)*(MAX_TREE_DEPTH+1));
+    
+    //copy structures
+    copy->unusedStackSize = MAX_NODES_USED - 1;
+    copyNode_(tree->root, copy->root, copy);
+    
+    //check that unusedStack size is the same
+    if(tree->unusedStackSize != copy->unusedStackSize){
+        BAILOUT("Error while copying tree")
+    }
 }
 
 void freeTree(TREE *tree){
