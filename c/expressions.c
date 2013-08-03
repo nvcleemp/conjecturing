@@ -116,6 +116,7 @@ void (*heuristicPostProcessing)() = NULL;
 //function declarations
 
 void printExpression(TREE *tree, FILE *f);
+boolean handleComparator(double left, double right, int id);
 
 /* 
  * Returns non-zero value if the tree satisfies the current target counts
@@ -129,11 +130,131 @@ boolean isComplete(TREE *tree){
 
 //dalmatian heuristic
 
-void dalmatianHeuristic(TREE *tree, double *values){
-    //just a stub at the moment
+boolean dalmatianFirst = TRUE;
+
+double dalmatianCurrentConjectureValues[MAX_OBJECT_COUNT][MAX_OBJECT_COUNT];
+
+int dalmatianBestConjectureForObject[MAX_OBJECT_COUNT];
+
+boolean dalmatianConjectureInUse[MAX_OBJECT_COUNT] = {FALSE};
+
+TREE dalmatianConjectures[MAX_OBJECT_COUNT];
+
+int dalmatianHitCount = 0;
+
+inline void dalmatianUpdateHitCount(){
+    dalmatianHitCount = 0;
+    int i;
+    for(i=0; i<objectCount; i++){
+        double currentBest = 
+        dalmatianCurrentConjectureValues[dalmatianBestConjectureForObject[i]][i];
+        if(currentBest == invariantValues[i][mainInvariant]){
+            dalmatianHitCount++;
+        }
+    }
     
 }
+
+void dalmatianHeuristic(TREE *tree, double *values){
+    int i;
+    //this heuristic assumes the expression was true for all objects
     
+    //if this is the first conjecture, we just store it and return
+    if(dalmatianFirst){
+        if(verbose){
+            fprintf(stderr, "Saving expression\n");
+            printExpression(tree, stderr);
+        }
+        memcpy(dalmatianCurrentConjectureValues[0], values, 
+                sizeof(double)*(MAX_OBJECT_COUNT));
+        for(i=0; i<objectCount; i++){
+            dalmatianBestConjectureForObject[i] = 0;
+        }
+        dalmatianConjectureInUse[0] = TRUE;
+        copyTree(tree, dalmatianConjectures + 0);
+        dalmatianFirst = FALSE;
+        dalmatianUpdateHitCount();
+        return;
+    }
+    
+    //check the significance
+    //----------------------
+    
+    //find the objects for which this bound is better
+    boolean isMoreSignificant = FALSE;
+    int conjectureFrequency[MAX_OBJECT_COUNT] = {0};
+    for(i=0; i<objectCount; i++){
+        double currentBest = 
+        dalmatianCurrentConjectureValues[dalmatianBestConjectureForObject[i]][i];
+        if(handleComparator(currentBest, values[i], inequality)){
+            conjectureFrequency[dalmatianBestConjectureForObject[i]]++;
+        } else {
+            dalmatianBestConjectureForObject[i] = MAX_OBJECT_COUNT;
+            isMoreSignificant = TRUE;
+        }
+    }
+    
+    //check if there is at least one object for which this bound is more significant
+    if(!isMoreSignificant) return;
+
+    if(verbose){
+        fprintf(stderr, "Saving expression\n");
+        printExpression(tree, stderr);
+    }
+    
+    //if we get here, then the current bound is at least for one object more significant
+    //we store the values and that conjecture
+    int smallestAvailablePosition = 0;
+    
+    while(smallestAvailablePosition < objectCount &&
+            conjectureFrequency[smallestAvailablePosition]>0){
+        smallestAvailablePosition++;
+    }
+    if(smallestAvailablePosition == objectCount){
+        BAILOUT("Error when handling dalmatian heuristic")
+    }
+    
+    for(i=smallestAvailablePosition+1; i<objectCount; i++){
+        if(conjectureFrequency[i]==0){
+            dalmatianConjectureInUse[i] = FALSE;
+        }
+    }
+    
+    memcpy(dalmatianCurrentConjectureValues[smallestAvailablePosition], values, 
+            sizeof(double)*(MAX_OBJECT_COUNT));
+    for(i=0; i<objectCount; i++){
+        if(dalmatianBestConjectureForObject[i] == MAX_OBJECT_COUNT){
+            dalmatianBestConjectureForObject[i] = smallestAvailablePosition;
+        }
+    }
+    copyTree(tree, dalmatianConjectures + smallestAvailablePosition);
+    dalmatianConjectureInUse[smallestAvailablePosition] = TRUE;
+    
+    dalmatianUpdateHitCount();
+    
+}
+
+boolean dalmatianHeuristicStopConditionReached(){
+    return dalmatianHitCount == objectCount;
+}
+
+void dalmatianHeuristicInit(){
+    int i;
+    for(i=0;i<objectCount;i++){
+        initTree(dalmatianConjectures+i);
+    }
+}
+
+void dalmatianHeuristicPostProcessing(){
+    int i;
+    for(i=0;i<objectCount;i++){
+        if(dalmatianConjectureInUse[i]){
+            printExpression(dalmatianConjectures+i, stdout);
+        }
+        freeTree(dalmatianConjectures+i);
+    }
+}
+
 //grinvin heuristic
 
 double grinvinBestError = DBL_MAX;
@@ -231,7 +352,7 @@ void handleExpression(TREE *tree, double *values, int calculatedValues, int hitC
     validExpressionsCount++;
     if(doConjecturing){
         if(selectedHeuristic==DALMATIAN_HEURISTIC){
-            
+            dalmatianHeuristic(tree, values);
         } else if(selectedHeuristic==GRINVIN_HEURISTIC){
             grinvinHeuristic(tree, values);
         }
@@ -830,7 +951,10 @@ int processOptions(int argc, char **argv) {
                         operatorFile = NULL;
                         break;
                     case 7:
-                        //not yet supported
+                        selectedHeuristic = DALMATIAN_HEURISTIC;
+                        heuristicInit = dalmatianHeuristicInit;
+                        heuristicStopConditionReached = dalmatianHeuristicStopConditionReached;
+                        heuristicPostProcessing = dalmatianHeuristicPostProcessing;
                         break;
                     case 8:
                         selectedHeuristic = GRINVIN_HEURISTIC;
