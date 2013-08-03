@@ -110,6 +110,7 @@ FILE *invariantsFile = NULL;
 int selectedHeuristic = NO_HEURISTIC;
 
 boolean (*heuristicStopConditionReached)() = NULL;
+void (*heuristicInit)() = NULL;
 void (*heuristicPostProcessing)() = NULL;
 
 //function declarations
@@ -132,7 +133,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
     //just a stub at the moment
     
 }
-
+    
 //grinvin heuristic
 
 double grinvinBestError = DBL_MAX;
@@ -833,7 +834,7 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 8:
                         selectedHeuristic = GRINVIN_HEURISTIC;
-                        grinvinHeuristicInit();
+                        heuristicInit = grinvinHeuristicInit;
                         heuristicStopConditionReached = grinvinHeuristicStopConditionReached;
                         heuristicPostProcessing = grinvinHeuristicPostProcessing;
                         break;
@@ -956,6 +957,11 @@ int main(int argc, char *argv[]) {
         }
         readInvariantsValues();
         if(verbose) printInvariantValues(stderr);
+    }
+    
+    //do heuristic initialisation
+    if(heuristicInit!=NULL){
+        heuristicInit();
     }
     
     //register handlers for signals
