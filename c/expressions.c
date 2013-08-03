@@ -101,7 +101,9 @@ boolean doConjecturing = FALSE;
 int nextOperatorCountMethod = GRINVIN_NEXT_OPERATOR_COUNT;
 
 FILE *operatorFile = NULL;
+boolean closeOperatorFile = FALSE;
 FILE *invariantsFile = NULL;
+boolean closeInvariantsFile = FALSE;
 
 #define NO_HEURISTIC -1
 #define DALMATIAN_HEURISTIC 0
@@ -888,6 +890,12 @@ void help(char *name){
     fprintf(stderr, "    --time t\n");
     fprintf(stderr, "       Stops the generation after t seconds. Zero seconds means that the\n");
     fprintf(stderr, "       generation won't be stopped. The default is 0.\n");
+    fprintf(stderr, "    --operators filename\n");
+    fprintf(stderr, "       Specifies the file containing the operators to be used. Defaults to\n");
+    fprintf(stderr, "       stdin.\n");
+    fprintf(stderr, "    --invariants filename\n");
+    fprintf(stderr, "       Specifies the file containing the invariant values. Defaults to\n");
+    fprintf(stderr, "       stdin.\n");
 }
 
 void usage(char *name){
@@ -912,6 +920,8 @@ int processOptions(int argc, char **argv) {
         {"dalmatian", no_argument, NULL, 0},
         {"grinvin", no_argument, NULL, 0},
         {"invariant-names", no_argument, NULL, 0},
+        {"operators", required_argument, NULL, 0},
+        {"invariants", required_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -949,6 +959,7 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 6:
                         operatorFile = NULL;
+                        closeOperatorFile = FALSE;
                         break;
                     case 7:
                         selectedHeuristic = DALMATIAN_HEURISTIC;
@@ -964,6 +975,14 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 9:
                         useInvariantNames = TRUE;
+                        break;
+                    case 10:
+                        operatorFile = fopen(optarg, "r");
+                        closeOperatorFile = TRUE;
+                        break;
+                    case 11:
+                        invariantsFile = fopen(optarg, "r");
+                        closeInvariantsFile = TRUE;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
@@ -1081,6 +1100,13 @@ int main(int argc, char *argv[]) {
         }
         readInvariantsValues();
         if(verbose) printInvariantValues(stderr);
+    }
+    
+    if(closeOperatorFile){
+        fclose(operatorFile);
+    }
+    if(closeInvariantsFile){
+        fclose(invariantsFile);
     }
     
     //do heuristic initialisation
