@@ -829,7 +829,7 @@ void printInvariantValues(FILE *f){
 //===================================================================
 void help(char *name){
     fprintf(stderr, "The program %s constructs expressions based on provided parameters.\n\n", name);
-    fprintf(stderr, "Usage\n=====\n");
+    fprintf(stderr, "\e[1mUsage\n=====\e[21m\n");
     fprintf(stderr, " %s [options] -u unary binary\n", name);
     fprintf(stderr, "       Generates expression trees with the given number of unary and\n");
     fprintf(stderr, "       binary operators.\n");
@@ -842,8 +842,8 @@ void help(char *name){
     fprintf(stderr, " %s [options] -c [unary binary]\n", name);
     fprintf(stderr, "       Use heuristics to make conjectures.\n");
     fprintf(stderr, "\n\n");
-    fprintf(stderr, "Valid options\n=============\n");
-    fprintf(stderr, "* Generated types (exactly one of these three should be used)\n");
+    fprintf(stderr, "\e[1mValid options\n=============\e[21m\n");
+    fprintf(stderr, "\e[1m* Generated types\e[21m (exactly one of these three should be used)\n");
     fprintf(stderr, "    -u, --unlabeled\n");
     fprintf(stderr, "       Generate unlabeled expression trees.\n");
     fprintf(stderr, "    -l, --labeled\n");
@@ -853,7 +853,7 @@ void help(char *name){
     fprintf(stderr, "    -c, --conjecture\n");
     fprintf(stderr, "       Use heuristics to make conjectures.\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "* Parameters\n");
+    fprintf(stderr, "\e[1m* Parameters\e[21m\n");
     fprintf(stderr, "    --unary n\n");
     fprintf(stderr, "       The number of unary operators used during the generation of labeled\n");
     fprintf(stderr, "       expression trees. This value is ignored when generating valid\n");
@@ -873,13 +873,13 @@ void help(char *name){
     fprintf(stderr, "       generating expressions or when in conjecturing mode. The result is\n");
     fprintf(stderr, "       that no operators are read from the input.\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "* Heuristics\n");
+    fprintf(stderr, "\e[1m* Heuristics\e[21m\n");
     fprintf(stderr, "    --dalmatian\n");
     fprintf(stderr, "       Use the dalmatian heuristic to make conjectures.\n");
     fprintf(stderr, "    --grinvin\n");
     fprintf(stderr, "       Use the heuristic from Grinvin to make conjectures.\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "* Various options\n");
+    fprintf(stderr, "\e[1m* Various options\e[21m\n");
     fprintf(stderr, "    -h, --help\n");
     fprintf(stderr, "       Print this help and return.\n");
     fprintf(stderr, "    -v, --verbose\n");
