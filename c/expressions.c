@@ -894,8 +894,7 @@ void help(char *name){
     fprintf(stderr, "       Specifies the file containing the operators to be used. Defaults to\n");
     fprintf(stderr, "       stdin.\n");
     fprintf(stderr, "    --invariants filename\n");
-    fprintf(stderr, "       Specifies the file containing the invariant values. Defaults to\n");
-    fprintf(stderr, "       stdin.\n");
+    fprintf(stderr, "       Specifies the file containing the invariant values. Defaults to stdin.\n");
 }
 
 void usage(char *name){
