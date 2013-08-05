@@ -872,6 +872,19 @@ void help(char *name){
     fprintf(stderr, "       Use all the available operators. This flag will only be used when\n");
     fprintf(stderr, "       generating expressions or when in conjecturing mode. The result is\n");
     fprintf(stderr, "       that no operators are read from the input.\n");
+    fprintf(stderr, "    --leq\n");
+    fprintf(stderr, "       Use the comparator <= when constructing conjectures. The conjectures will\n");
+    fprintf(stderr, "       be of the form 'main invariant <= f(invariants)'. This is the default\n");
+    fprintf(stderr, "       comparator.\n");
+    fprintf(stderr, "    --less\n");
+    fprintf(stderr, "       Use the comparator < when constructing conjectures. The conjectures will\n");
+    fprintf(stderr, "       be of the form 'main invariant < f(invariants)'.\n");
+    fprintf(stderr, "    --geq\n");
+    fprintf(stderr, "       Use the comparator >= when constructing conjectures. The conjectures will\n");
+    fprintf(stderr, "       be of the form 'main invariant >= f(invariants)'.\n");
+    fprintf(stderr, "    --greater\n");
+    fprintf(stderr, "       Use the comparator > when constructing conjectures. The conjectures will\n");
+    fprintf(stderr, "       be of the form 'main invariant > f(invariants)'.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "\e[1m* Heuristics\e[21m\n");
     fprintf(stderr, "    --dalmatian\n");
@@ -974,6 +987,10 @@ int processOptions(int argc, char **argv) {
         {"invariant-names", no_argument, NULL, 0},
         {"operators", required_argument, NULL, 0},
         {"invariants", required_argument, NULL, 0},
+        {"leq", no_argument, NULL, 0},
+        {"less", no_argument, NULL, 0},
+        {"geq", no_argument, NULL, 0},
+        {"greater", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -1035,6 +1052,18 @@ int processOptions(int argc, char **argv) {
                     case 11:
                         invariantsFile = fopen(optarg, "r");
                         closeInvariantsFile = TRUE;
+                        break;
+                    case 12:
+                        inequality = LEQ;
+                        break;
+                    case 13:
+                        inequality = LESS;
+                        break;
+                    case 14:
+                        inequality = GEQ;
+                        break;
+                    case 15:
+                        inequality = GREATER;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
