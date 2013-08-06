@@ -11,6 +11,7 @@
 
 void printComparator(int id, FILE *f);
 void printNode(NODE *node, FILE *f, char **invariantNamePointers);
+void printSingleNode(NODE *node, FILE *f, char **invariantNamePointers);
 
 #endif	/* PRINTING_H */
 

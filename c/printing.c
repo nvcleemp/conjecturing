@@ -142,3 +142,65 @@ void printNode(NODE *node, FILE *f, char **invariantNamePointers){
         BAILOUT("Unknown content label type")
     }
 }
+
+void printUnaryOperator_single(int id, FILE *f){
+    if(id==0){
+        fprintf(f, "-1");
+    } else if(id==1){
+        fprintf(f, "+1");
+    } else if(id==2){
+        fprintf(f, "*2");
+    } else if(id==3){
+        fprintf(f, "/2");
+    } else if(id==4){
+        fprintf(f, "^2");
+    } else if(id==5){
+        fprintf(f, "-()");
+    } else if(id==6){
+        fprintf(f, "1/");
+    } else {
+        BAILOUT("Unknown unary operator ID")
+    }
+}
+
+void printCommutativeBinaryOperator_single(int id, FILE *f){
+    if(id==0){
+        fprintf(f, "+");
+    } else if(id==1){
+        fprintf(f, "*");
+    } else {
+        BAILOUT("Unknown commutative binary operator ID")
+    }
+}
+
+void printNonCommutativeBinaryOperator_single(int id, FILE *f){
+    if(id==0){
+        fprintf(f, "-");
+    } else if(id==1){
+        fprintf(f, "/");
+    } else if(id==2){
+        fprintf(f, "^");
+    } else {
+        BAILOUT("Unknown commutative binary operator ID")
+    }
+}
+
+void printSingleNode(NODE *node, FILE *f, char **invariantNamePointers){
+    int type = node->contentLabel[0];
+    int id = node->contentLabel[1];
+    if (type==INVARIANT_LABEL) {
+        if(invariantNamePointers==NULL){
+            fprintf(f, "I%d", id + 1);
+        } else {
+            fprintf(f, "%s", invariantNamePointers[id]);
+        }
+    } else if (type==UNARY_LABEL) {
+        printUnaryOperator_single(id, f);
+    } else if (type==NON_COMM_BINARY_LABEL){
+        printNonCommutativeBinaryOperator_single(id, f);
+    } else if (type==COMM_BINARY_LABEL){
+        printCommutativeBinaryOperator_single(id, f);
+    } else {
+        BAILOUT("Unknown content label type")
+    }
+}
