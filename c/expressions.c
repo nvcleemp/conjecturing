@@ -27,6 +27,8 @@
 
 int verbose = FALSE;
 
+char outputType = 'h';
+
 int targetUnary; //number of unary nodes in the generated trees
 int targetBinary; //number of binary nodes in the generated trees
 
@@ -117,7 +119,7 @@ void (*heuristicPostProcessing)() = NULL;
 
 //function declarations
 
-void printExpression(TREE *tree, FILE *f);
+void outputExpression(TREE *tree, FILE *f);
 boolean handleComparator(double left, double right, int id);
 
 /* 
@@ -165,7 +167,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
     if(dalmatianFirst){
         if(verbose){
             fprintf(stderr, "Saving expression\n");
-            printExpression(tree, stderr);
+            outputExpression(tree, stderr);
         }
         memcpy(dalmatianCurrentConjectureValues[0], values, 
                 sizeof(double)*(MAX_OBJECT_COUNT));
@@ -201,7 +203,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
 
     if(verbose){
         fprintf(stderr, "Saving expression\n");
-        printExpression(tree, stderr);
+        outputExpression(tree, stderr);
     }
     
     //if we get here, then the current bound is at least for one object more significant
@@ -251,7 +253,7 @@ void dalmatianHeuristicPostProcessing(){
     int i;
     for(i=0;i<objectCount;i++){
         if(dalmatianConjectureInUse[i]){
-            printExpression(dalmatianConjectures+i, stdout);
+            outputExpression(dalmatianConjectures+i, stdout);
         }
         freeTree(dalmatianConjectures+i);
     }
@@ -291,7 +293,7 @@ void grinvinHeuristicInit(){
 }
 
 void grinvinHeuristicPostProcessing(){
-    printExpression(&grinvinBestExpression, stdout);
+    outputExpression(&grinvinBestExpression, stdout);
     freeTree(&grinvinBestExpression);
 }
 
@@ -337,6 +339,29 @@ void handleTerminationSignal(int sig){
 
 //------ Expression operations -------
 
+void outputExpressionStack(TREE *tree, FILE *f){
+    int i, length;
+    if(useInvariantNames){
+        fprintf(f, "%s\n", invariantNames[mainInvariant]);
+    } else {
+        fprintf(f, "I%d\n", mainInvariant + 1);
+    }
+    
+    //start by ordering nodes
+    NODE *orderedNodes[tree->unaryCount + 2*(tree->binaryCount) + 1];
+    
+    length = 0;
+    getOrderedNodes(tree->root, orderedNodes, &length);
+    
+    for(i=0; i<length; i++){
+        printSingleNode(orderedNodes[i], f, 
+            useInvariantNames ? invariantNamesPointers : NULL);
+        fprintf(f, "\n");
+    }
+    printComparator(inequality, f);
+    fprintf(f, "\n\n");
+}
+
 void printExpression(TREE *tree, FILE *f){
     if(useInvariantNames){
         fprintf(f, "%s ", invariantNames[mainInvariant]);
@@ -348,6 +373,14 @@ void printExpression(TREE *tree, FILE *f){
     printNode(tree->root, f, 
             useInvariantNames ? invariantNamesPointers : NULL);
     fprintf(f, "\n");
+}
+
+void outputExpression(TREE *tree, FILE *f){
+    if(outputType=='h'){
+        printExpression(tree, f);
+    } else if(outputType=='s'){
+        outputExpressionStack(tree, f);
+    }
 }
 
 void handleExpression(TREE *tree, double *values, int calculatedValues, int hitCount){
@@ -996,11 +1029,12 @@ int processOptions(int argc, char **argv) {
         {"unlabeled", no_argument, NULL, 'u'},
         {"labeled", no_argument, NULL, 'l'},
         {"expressions", no_argument, NULL, 'e'},
-        {"conjecture", no_argument, NULL, 'c'}
+        {"conjecture", no_argument, NULL, 'c'},
+        {"output", required_argument, NULL, 'o'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hvulec", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvuleco:", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 //handle long option with no alternative
@@ -1088,6 +1122,18 @@ int processOptions(int argc, char **argv) {
                 break;
             case 'c':
                 doConjecturing = TRUE;
+                break;
+            case 'o':
+                switch(optarg[0]) {
+                    case 's':
+                    case 'h':
+                        outputType = optarg[0];
+                        break;
+                    default:
+                        fprintf(stderr, "Illegal output type %s.\n", optarg);
+                        usage(name);
+                        return EXIT_FAILURE;
+                }
                 break;
             case '?':
                 usage(name);
