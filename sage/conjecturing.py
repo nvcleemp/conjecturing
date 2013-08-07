@@ -125,7 +125,7 @@ def _getSpecialOperators(op):
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
-def conjecture(objects, invariants, mainInvariant, variableName='x'):
+def conjecture(objects, invariants, mainInvariant, variableName='x', time=5):
     
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
@@ -145,7 +145,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x'):
         names.append(name)
 
     # call the conjecturing program
-    command = './expressions -c --dalmatian --all-operators --time 5 --invariant-names --output stack'
+    command = './expressions -c --dalmatian --all-operators --time {} --invariant-names --output stack'.format(time)
 
     import subprocess
     sp = subprocess.Popen(command, shell=True,
