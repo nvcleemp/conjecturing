@@ -50,7 +50,7 @@ char *invariantNamesPointers[MAX_INVARIANT_COUNT];
 
 int inequality = LEQ;
 
-int unaryOperatorCount = 7;
+int unaryOperatorCount = 10;
 /* 
  * 1: x - 1
  * 2: x + 1
@@ -59,6 +59,9 @@ int unaryOperatorCount = 7;
  * 5: x ** 2
  * 6: x * (-1)
  * 7: x ** (-1)
+ * 8: sqrt(x)
+ * 9: ln(x)
+ * 10: log_10(x)
  */
 int unaryOperators[MAX_UNARY_OPERATORS];
 
@@ -409,6 +412,12 @@ double handleUnaryOperator(int id, double value){
         return -value;
     } else if(id==6){
         return 1/value;
+    } else if(id==7){
+        return sqrt(value);
+    } else if(id==8){
+        return log(value);
+    } else if(id==9){
+        return log10(value);
     } else {
         BAILOUT("Unknown unary operator ID")
     }
@@ -422,6 +431,9 @@ void writeUnaryOperatorExample(FILE *f){
     fprintf(f, "U 4    x ^ 2\n");
     fprintf(f, "U 5    -x\n");
     fprintf(f, "U 6    1 / x\n");
+    fprintf(f, "U 7    sqrt(x)\n");
+    fprintf(f, "U 8    ln(x)\n");
+    fprintf(f, "U 9    log_10(x)\n");
 }
 
 double handleCommutativeBinaryOperator(int id, double left, double right){

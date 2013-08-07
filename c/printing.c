@@ -36,6 +36,12 @@ void printUnaryOperator_left(int id, FILE *f){
         fprintf(f, "(-");
     } else if(id==6){
         fprintf(f, "(1 / ");
+    } else if(id==7){
+        fprintf(f, "(sqrt");
+    } else if(id==8){
+        fprintf(f, "(ln");
+    } else if(id==9){
+        fprintf(f, "(log10");
     } else {
         BAILOUT("Unknown unary operator ID")
     }
@@ -52,7 +58,7 @@ void printUnaryOperator_right(int id, FILE *f){
         fprintf(f, " / 2)");
     } else if(id==4){
         fprintf(f, " ^ 2)");
-    } else if(id==5 || id==6){
+    } else if(id==5 || id==6 || id==7 || id==8 || id==9){
         fprintf(f, ")");
     } else {
         BAILOUT("Unknown unary operator ID")
@@ -158,6 +164,12 @@ void printUnaryOperator_single(int id, FILE *f){
         fprintf(f, "-()");
     } else if(id==6){
         fprintf(f, "1/");
+    } else if(id==7){
+        fprintf(f, "sqrt");
+    } else if(id==8){
+        fprintf(f, "ln");
+    } else if(id==9){
+        fprintf(f, "log10");
     } else {
         BAILOUT("Unknown unary operator ID")
     }
