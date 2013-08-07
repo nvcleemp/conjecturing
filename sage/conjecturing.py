@@ -127,6 +127,7 @@ def _getSpecialOperators(op):
 
 def conjecture(objects, invariants, mainInvariant, variableName='x'):
     
+    # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
     
@@ -143,7 +144,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x'):
         invariantsDict[name] = invariant
         names.append(name)
 
-
+    # call the conjecturing program
     command = './expressions -c --dalmatian --all-operators --time 5 --invariant-names --output stack'
 
     import subprocess
@@ -160,6 +161,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x'):
         for invariant in names:
             stdin.write('{}\n'.format(invariantsDict[invariant](o)))
     
+    # process the output
     out = sp.stdout
     
     variable = var(variableName)
