@@ -3,7 +3,129 @@ sys.path.append(".") # Needed to pass Sage's automated testing
 
 from sage.all import *
 
-def conjecture(objects, invariants, mainInvariant):
+
+class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberProject
+
+    def __init__(self, stack, expression, invariantsDict):
+        """Constructs a new Conjecture from the given stack of functions."""
+        self.stack = stack
+        self.expression = expression
+        self.invariantsDict = invariantsDict
+        super(Conjecture, self).__init__()
+
+    def __eq__(self, other):
+        return self.stack == other.stack and self.expression == other.expression
+
+    def _repr_(self):
+        return repr(self.expression)
+
+    def _latex_(self):
+        return latex(self.expression)
+
+    def evaluate(self, g):
+        stack = []
+        for op, opType, opName in self.stack:
+            if opType==0:
+	        import types
+	        if type(self.invariantsDict[opName]) in (types.BuiltinMethodType, types.MethodType):
+	            def f(obj):
+	                methodToCall = getattr(obj, self.invariantsDict[opName].__name__)
+	                return methodToCall()
+	        else:
+	            def f(obj):
+	                return self.invariantsDict[opName](obj)
+                stack.append(f(g))
+            elif opType==1:
+                stack.append(op(stack.pop()))
+            elif opType==2:
+	        right = stack.pop()
+	        left = stack.pop()
+                stack.append(op(left, right))
+        
+        return stack.pop()
+
+def _makeConjecture(inputList, variable, invariantsDict):
+    import operator
+
+    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/'}
+
+    unaryOperators = {}
+    binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow}
+    comparators = {'<': operator.lt, '<=': operator.le, '>': operator.gt, '>=': operator.ge}
+    expressionStack = []
+    operatorStack = []
+
+    for op in inputList:
+        if op in invariantsDict:
+            import types
+            if type(invariantsDict[op]) in (types.BuiltinMethodType, types.MethodType):
+                def f(obj):
+                    methodToCall = getattr(obj, invariantsDict[op].__name__)
+                    return methodToCall()
+            else:
+                def f(obj):
+                    return invariantsDict[op](obj)
+            expressionStack.append(function(op, variable, evalf_func=f))
+            operatorStack.append((f,0,op))
+        elif op in specials:
+            _handleSpecialOperators(expressionStack, op)
+            operatorStack.append(_getSpecialOperators(op))
+        elif op in unaryOperators:
+            expressionStack.append(unaryOperators[op](expressionStack.pop()))
+            operatorStack.append((unaryOperators[op],1,op))
+        elif op in binaryOperators:
+            right = expressionStack.pop()
+            left = expressionStack.pop()
+            expressionStack.append(binaryOperators[op](left, right))
+            operatorStack.append((binaryOperators[op],2,op))
+        elif op in comparators:
+            right = expressionStack.pop()
+            left = expressionStack.pop()
+            expressionStack.append(comparators[op](left, right))
+            operatorStack.append((comparators[op],2,op))
+        else:
+            raise ValueError("Error while reading output from expressions. Unknown element: {}".format(op))
+
+    return Conjecture(operatorStack, expressionStack.pop(), invariantsDict)
+
+def _handleSpecialOperators(stack, op):
+    if op == '-1':
+        stack.append(stack.pop()-1)
+    elif op == '+1':
+        stack.append(stack.pop()+1)
+    elif op == '*2':
+        stack.append(stack.pop()*2)
+    elif op == '/2':
+        stack.append(stack.pop()/2)
+    elif op == '^2':
+        x = stack.pop()
+        stack.append(x*x)
+    elif op == '-()':
+        stack.append(-stack.pop())
+    elif op == '1/':
+        stack.append(1/stack.pop())
+    else:
+        raise ValueError("Unknown operator: {}".format(op))
+
+def _getSpecialOperators(op):
+    if op == '-1':
+        return (lambda x: x-1), 1, '-1'
+    elif op == '+1':
+        return (lambda x: x+1), 1, '+1'
+    elif op == '*2':
+        return (lambda x: x*2), 1, '*2'
+    elif op == '/2':
+        return (lambda x: x*0.5), 1, '/2'
+    elif op == '^2':
+        return (lambda x: x*x), 1, '^2'
+    elif op == '-()':
+        return (lambda x: -x), 1, '-()'
+    elif op == '1/':
+        return (lambda x: 1.0/x), 1, '1/'
+    else:
+        raise ValueError("Unknown operator: {}".format(op))
+
+def conjecture(objects, invariants, mainInvariant, variableName='x'):
     
     invariantsDict = {}
     names = []
@@ -22,7 +144,7 @@ def conjecture(objects, invariants, mainInvariant):
         names.append(name)
 
 
-    command = './expressions -c --dalmatian --all-operators --time 5 --invariant-names'
+    command = './expressions -c --dalmatian --all-operators --time 5 --invariant-names --output stack'
 
     import subprocess
     sp = subprocess.Popen(command, shell=True,
@@ -40,6 +162,17 @@ def conjecture(objects, invariants, mainInvariant):
     
     out = sp.stdout
     
+    variable = var(variableName)
+    
+    conjectures = []
+    inputList = []
+    
     for l in out:
-        print l.rstrip()
-
+        op = l.strip()
+        if op:
+            inputList.append(op)
+        else:
+            conjectures.append(_makeConjecture(inputList, variable, invariantsDict))
+            inputList = []
+    
+    return conjectures
