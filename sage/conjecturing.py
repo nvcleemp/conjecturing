@@ -47,9 +47,9 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
 def _makeConjecture(inputList, variable, invariantsDict):
     import operator
 
-    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/'}
+    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10'}
 
-    unaryOperators = {}
+    unaryOperators = {'sqrt': sqrt, 'ln': log}
     binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow}
     comparators = {'<': operator.lt, '<=': operator.le, '>': operator.gt, '>=': operator.ge}
     expressionStack = []
@@ -104,6 +104,8 @@ def _handleSpecialOperators(stack, op):
         stack.append(-stack.pop())
     elif op == '1/':
         stack.append(1/stack.pop())
+    elif op == 'log10':
+        stack.append(log(stack.pop(),10))
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
@@ -122,6 +124,8 @@ def _getSpecialOperators(op):
         return (lambda x: -x), 1, '-()'
     elif op == '1/':
         return (lambda x: 1.0/x), 1, '1/'
+    elif op == 'log10':
+        return (lambda x: log(x,10)), 1, 'log10'
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
