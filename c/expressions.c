@@ -123,6 +123,7 @@ void (*heuristicPostProcessing)() = NULL;
 //function declarations
 
 void outputExpression(TREE *tree, FILE *f);
+void printExpression(TREE *tree, FILE *f);
 boolean handleComparator(double left, double right, int id);
 
 /* 
@@ -170,7 +171,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
     if(dalmatianFirst){
         if(verbose){
             fprintf(stderr, "Saving expression\n");
-            outputExpression(tree, stderr);
+            printExpression(tree, stderr);
         }
         memcpy(dalmatianCurrentConjectureValues[0], values, 
                 sizeof(double)*(MAX_OBJECT_COUNT));
@@ -206,7 +207,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
 
     if(verbose){
         fprintf(stderr, "Saving expression\n");
-        outputExpression(tree, stderr);
+        printExpression(tree, stderr);
     }
     
     //if we get here, then the current bound is at least for one object more significant
