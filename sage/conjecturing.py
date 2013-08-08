@@ -26,15 +26,7 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
         stack = []
         for op, opType, opName in self.stack:
             if opType==0:
-	        import types
-	        if type(self.invariantsDict[opName]) in (types.BuiltinMethodType, types.MethodType):
-	            def f(obj):
-	                methodToCall = getattr(obj, self.invariantsDict[opName].__name__)
-	                return methodToCall()
-	        else:
-	            def f(obj):
-	                return self.invariantsDict[opName](obj)
-                stack.append(f(g))
+                stack.append(op(g))
             elif opType==1:
                 stack.append(op(stack.pop()))
             elif opType==2:
@@ -43,6 +35,12 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                 stack.append(op(left, right))
         
         return stack.pop()
+
+def wrapUnboundMethod(op, invariantsDict):
+    return lambda obj: getattr(obj, invariantsDict[op].__name__)()
+
+def wrapBoundMethod(op, invariantsDict):
+    return lambda obj: invariantsDict[op](obj)
 
 def _makeConjecture(inputList, variable, invariantsDict):
     import operator
@@ -59,12 +57,9 @@ def _makeConjecture(inputList, variable, invariantsDict):
         if op in invariantsDict:
             import types
             if type(invariantsDict[op]) in (types.BuiltinMethodType, types.MethodType):
-                def f(obj):
-                    methodToCall = getattr(obj, invariantsDict[op].__name__)
-                    return methodToCall()
+                f = wrapUnboundMethod(op, invariantsDict)
             else:
-                def f(obj):
-                    return invariantsDict[op](obj)
+                f = wrapBoundMethod(op, invariantsDict)
             expressionStack.append(function(op, variable, evalf_func=f))
             operatorStack.append((f,0,op))
         elif op in specials:
