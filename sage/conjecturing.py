@@ -45,7 +45,7 @@ def wrapBoundMethod(op, invariantsDict):
 def _makeConjecture(inputList, variable, invariantsDict):
     import operator
 
-    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10'}
+    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10', 'max', 'min'}
 
     unaryOperators = {'sqrt': sqrt, 'ln': log}
     binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow}
@@ -101,6 +101,10 @@ def _handleSpecialOperators(stack, op):
         stack.append(1/stack.pop())
     elif op == 'log10':
         stack.append(log(stack.pop(),10))
+    elif op == 'max':
+        stack.append(function('max',stack.pop(),stack.pop(), evalf_func=lambda x,y: max(x,y)))
+    elif op == 'min':
+        stack.append(function('min',stack.pop(),stack.pop(), evalf_func=lambda x,y: min(x,y)))
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
@@ -121,6 +125,10 @@ def _getSpecialOperators(op):
         return (lambda x: 1.0/x), 1, '1/'
     elif op == 'log10':
         return (lambda x: log(x,10)), 1, 'log10'
+    elif op == 'max':
+        return max, 2, 'max'
+    elif op == 'min':
+        return min, 2, 'min'
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
