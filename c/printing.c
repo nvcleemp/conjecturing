@@ -33,15 +33,15 @@ void printUnaryOperator_left(int id, FILE *f){
     if(id==0 || id==1 || id==2 || id==3 || id==4){
         fprintf(f, "(");
     } else if(id==5){
-        fprintf(f, "(-");
+        fprintf(f, "-(");
     } else if(id==6){
-        fprintf(f, "(1 / ");
+        fprintf(f, "1 / (");
     } else if(id==7){
-        fprintf(f, "(sqrt");
+        fprintf(f, "sqrt(");
     } else if(id==8){
-        fprintf(f, "(ln");
+        fprintf(f, "ln(");
     } else if(id==9){
-        fprintf(f, "(log10");
+        fprintf(f, "log10(");
     } else {
         BAILOUT("Unknown unary operator ID")
     }
@@ -49,15 +49,15 @@ void printUnaryOperator_left(int id, FILE *f){
 
 void printUnaryOperator_right(int id, FILE *f){
     if(id==0){
-        fprintf(f, " - 1)");
+        fprintf(f, ") - 1");
     } else if(id==1){
-        fprintf(f, " + 1)");
+        fprintf(f, ") + 1");
     } else if(id==2){
-        fprintf(f, " * 2)");
+        fprintf(f, ") * 2");
     } else if(id==3){
-        fprintf(f, " / 2)");
+        fprintf(f, ") / 2");
     } else if(id==4){
-        fprintf(f, " ^ 2)");
+        fprintf(f, ") ^ 2");
     } else if(id==5 || id==6 || id==7 || id==8 || id==9){
         fprintf(f, ")");
     } else {
@@ -69,9 +69,9 @@ void printCommutativeBinaryOperator_left(int id, FILE *f){
     if(id==0 || id==1){
         fprintf(f, "(");
     } else if(id==2){
-        fprintf(f, "(max(");
+        fprintf(f, "max(");
     } else if(id==3){
-        fprintf(f, "(min(");
+        fprintf(f, "min(");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -79,9 +79,9 @@ void printCommutativeBinaryOperator_left(int id, FILE *f){
 
 void printCommutativeBinaryOperator_middle(int id, FILE *f){
     if(id==0){
-        fprintf(f, " + ");
+        fprintf(f, ") + (");
     } else if(id==1){
-        fprintf(f, " * ");
+        fprintf(f, ") * (");
     } else if(id==2 || id==3){
         fprintf(f, ", ");
     } else {
@@ -93,7 +93,7 @@ void printCommutativeBinaryOperator_right(int id, FILE *f){
     if(id==0 || id==1){
         fprintf(f, ")");
     } else if(id==2 || id==3){
-        fprintf(f, "))");
+        fprintf(f, ")");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -109,11 +109,11 @@ void printNonCommutativeBinaryOperator_left(int id, FILE *f){
 
 void printNonCommutativeBinaryOperator_middle(int id, FILE *f){
     if(id==0){
-        fprintf(f, " - ");
+        fprintf(f, ") - (");
     } else if(id==1){
-        fprintf(f, " / ");
+        fprintf(f, ") / (");
     } else if(id==2){
-        fprintf(f, " ^ ");
+        fprintf(f, ") ^ (");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -132,9 +132,9 @@ void printNode(NODE *node, FILE *f, char **invariantNamePointers){
     int id = node->contentLabel[1];
     if (type==INVARIANT_LABEL) {
         if(invariantNamePointers==NULL){
-            fprintf(f, "(I%d)", id + 1);
+            fprintf(f, "I%d", id + 1);
         } else {
-            fprintf(f, "(%s)", invariantNamePointers[id]);
+            fprintf(f, "%s", invariantNamePointers[id]);
         }
     } else if (type==UNARY_LABEL) {
         printUnaryOperator_left(id, f);
