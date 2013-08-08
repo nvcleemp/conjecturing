@@ -65,10 +65,12 @@ int unaryOperatorCount = 10;
  */
 int unaryOperators[MAX_UNARY_OPERATORS];
 
-int commBinaryOperatorCount = 2;
+int commBinaryOperatorCount = 4;
 /* 
  * 1: x + y
  * 2: x * y
+ * 3: max(x,y)
+ * 4: min(x,y)
  */
 int commBinaryOperators[MAX_COMM_BINARY_OPERATORS];
 
@@ -442,6 +444,10 @@ double handleCommutativeBinaryOperator(int id, double left, double right){
         return left + right;
     } else if(id==1){
         return left*right;
+    } else if(id==2){
+        return left < right ? right : left;
+    } else if(id==3){
+        return left < right ? left : right;
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -450,6 +456,8 @@ double handleCommutativeBinaryOperator(int id, double left, double right){
 void writeCommutativeBinaryOperatorExample(FILE *f){
     fprintf(f, "C 0    x + y\n");
     fprintf(f, "C 1    x * y\n");
+    fprintf(f, "C 2    max(x,y)\n");
+    fprintf(f, "C 3    min(x,y)\n");
 }
 
 double handleNonCommutativeBinaryOperator(int id, double left, double right){

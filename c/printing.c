@@ -68,6 +68,10 @@ void printUnaryOperator_right(int id, FILE *f){
 void printCommutativeBinaryOperator_left(int id, FILE *f){
     if(id==0 || id==1){
         fprintf(f, "(");
+    } else if(id==2){
+        fprintf(f, "(max(");
+    } else if(id==3){
+        fprintf(f, "(min(");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -78,6 +82,8 @@ void printCommutativeBinaryOperator_middle(int id, FILE *f){
         fprintf(f, " + ");
     } else if(id==1){
         fprintf(f, " * ");
+    } else if(id==2 || id==3){
+        fprintf(f, ", ");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -86,6 +92,8 @@ void printCommutativeBinaryOperator_middle(int id, FILE *f){
 void printCommutativeBinaryOperator_right(int id, FILE *f){
     if(id==0 || id==1){
         fprintf(f, ")");
+    } else if(id==2 || id==3){
+        fprintf(f, "))");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -180,6 +188,10 @@ void printCommutativeBinaryOperator_single(int id, FILE *f){
         fprintf(f, "+");
     } else if(id==1){
         fprintf(f, "*");
+    } else if(id==2){
+        fprintf(f, "max");
+    } else if(id==3){
+        fprintf(f, "min");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
