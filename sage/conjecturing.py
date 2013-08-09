@@ -6,11 +6,10 @@ from sage.all import *
 
 class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberProject
 
-    def __init__(self, stack, expression, invariantsDict):
+    def __init__(self, stack, expression):
         """Constructs a new Conjecture from the given stack of functions."""
         self.stack = stack
         self.expression = expression
-        self.invariantsDict = invariantsDict
         super(Conjecture, self).__init__()
 
     def __eq__(self, other):
@@ -81,7 +80,7 @@ def _makeConjecture(inputList, variable, invariantsDict):
         else:
             raise ValueError("Error while reading output from expressions. Unknown element: {}".format(op))
 
-    return Conjecture(operatorStack, expressionStack.pop(), invariantsDict)
+    return Conjecture(operatorStack, expressionStack.pop())
 
 def _handleSpecialOperators(stack, op):
     if op == '-1':
