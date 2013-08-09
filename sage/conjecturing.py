@@ -60,7 +60,7 @@ def _makeConjecture(inputList, variable, invariantsDict):
                 f = wrapUnboundMethod(op, invariantsDict)
             else:
                 f = wrapBoundMethod(op, invariantsDict)
-            expressionStack.append(function(op, variable, evalf_func=f))
+            expressionStack.append(function(op, variable))
             operatorStack.append((f,0,op))
         elif op in specials:
             _handleSpecialOperators(expressionStack, op)
@@ -102,9 +102,9 @@ def _handleSpecialOperators(stack, op):
     elif op == 'log10':
         stack.append(log(stack.pop(),10))
     elif op == 'max':
-        stack.append(function('max',stack.pop(),stack.pop(), evalf_func=lambda x,y: max(x,y)))
+        stack.append(function('max',stack.pop(),stack.pop()))
     elif op == 'min':
-        stack.append(function('min',stack.pop(),stack.pop(), evalf_func=lambda x,y: min(x,y)))
+        stack.append(function('min',stack.pop(),stack.pop()))
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
