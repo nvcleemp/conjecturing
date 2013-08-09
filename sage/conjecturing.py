@@ -101,9 +101,9 @@ def _handleSpecialOperators(stack, op):
     elif op == 'log10':
         stack.append(log(stack.pop(),10))
     elif op == 'max':
-        stack.append(function('max',stack.pop(),stack.pop()))
+        stack.append(function('maximum',stack.pop(),stack.pop()))
     elif op == 'min':
-        stack.append(function('min',stack.pop(),stack.pop()))
+        stack.append(function('minimum',stack.pop(),stack.pop()))
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
