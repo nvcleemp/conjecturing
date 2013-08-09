@@ -24,7 +24,7 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
 
     def evaluate(self, g):
         stack = []
-        for op, opType, opName in self.stack:
+        for op, opType in self.stack:
             if opType==0:
                 stack.append(op(g))
             elif opType==1:
@@ -61,23 +61,23 @@ def _makeConjecture(inputList, variable, invariantsDict):
             else:
                 f = wrapBoundMethod(op, invariantsDict)
             expressionStack.append(function(op, variable))
-            operatorStack.append((f,0,op))
+            operatorStack.append((f,0))
         elif op in specials:
             _handleSpecialOperators(expressionStack, op)
             operatorStack.append(_getSpecialOperators(op))
         elif op in unaryOperators:
             expressionStack.append(unaryOperators[op](expressionStack.pop()))
-            operatorStack.append((unaryOperators[op],1,op))
+            operatorStack.append((unaryOperators[op],1))
         elif op in binaryOperators:
             right = expressionStack.pop()
             left = expressionStack.pop()
             expressionStack.append(binaryOperators[op](left, right))
-            operatorStack.append((binaryOperators[op],2,op))
+            operatorStack.append((binaryOperators[op],2))
         elif op in comparators:
             right = expressionStack.pop()
             left = expressionStack.pop()
             expressionStack.append(comparators[op](left, right))
-            operatorStack.append((comparators[op],2,op))
+            operatorStack.append((comparators[op],2))
         else:
             raise ValueError("Error while reading output from expressions. Unknown element: {}".format(op))
 
@@ -110,25 +110,25 @@ def _handleSpecialOperators(stack, op):
 
 def _getSpecialOperators(op):
     if op == '-1':
-        return (lambda x: x-1), 1, '-1'
+        return (lambda x: x-1), 1
     elif op == '+1':
-        return (lambda x: x+1), 1, '+1'
+        return (lambda x: x+1), 1
     elif op == '*2':
-        return (lambda x: x*2), 1, '*2'
+        return (lambda x: x*2), 1
     elif op == '/2':
-        return (lambda x: x*0.5), 1, '/2'
+        return (lambda x: x*0.5), 1
     elif op == '^2':
-        return (lambda x: x*x), 1, '^2'
+        return (lambda x: x*x), 1
     elif op == '-()':
-        return (lambda x: -x), 1, '-()'
+        return (lambda x: -x), 1
     elif op == '1/':
-        return (lambda x: 1.0/x), 1, '1/'
+        return (lambda x: 1.0/x), 1
     elif op == 'log10':
-        return (lambda x: log(x,10)), 1, 'log10'
+        return (lambda x: log(x,10)), 1
     elif op == 'max':
-        return max, 2, 'max'
+        return max, 2
     elif op == 'min':
-        return min, 2, 'min'
+        return min, 2
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
