@@ -31,8 +31,15 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
             elif opType==2:
 	        right = stack.pop()
 	        left = stack.pop()
-                stack.append(op(left, right))
-        
+                if op == operator.truediv and right == 0:
+                    if left > 0:
+                        stack.append(float('inf'))
+                    elif left < 0:
+                        stack.append(float('-inf'))
+                    else:
+                        stack.append(float('NaN'))
+                else:
+                    stack.append(op(left, right))
         return stack.pop()
 
 def wrapUnboundMethod(op, invariantsDict):
@@ -121,7 +128,7 @@ def _getSpecialOperators(op):
     elif op == '-()':
         return (lambda x: -x), 1
     elif op == '1/':
-        return (lambda x: 1.0/x), 1
+        return (lambda x: float('inf') if x==0 else 1.0/x), 1
     elif op == 'log10':
         return (lambda x: log(x,10)), 1
     elif op == 'max':
