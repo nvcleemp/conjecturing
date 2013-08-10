@@ -141,8 +141,13 @@ def _getSpecialOperators(op):
 def allOperators():
     return { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10', '+', '*', 'max', 'min', '-', '/', '^'}
 
-def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, upperBound=True):
-    
+def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, upperBound=True,
+                                                   operators=None):
+
+    operatorDict = { '-1' : 'U 0', '+1' : 'U 1', '*2' : 'U 2', '/2' : 'U 3', '^2' : 'U 4', '-()' : 'U 5', '1/' : 'U 6',
+                     'sqrt' : 'U 7', 'ln' : 'U 8', 'log10' : 'U 9', '+' : 'C 0', '*' : 'C 1', 'max' : 'C 2', 'min' : 'C 3',
+                     '-' : 'N 0', '/' : 'N 1', '^' : 'N 2'}
+
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
@@ -161,14 +166,20 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -c{} --dalmatian --all-operators --time {} --invariant-names --output stack {}'
-    command = command.format('v' if verbose and debug else '', time, '--leq' if upperBound else '--geq')
+    command = 'expressions -c{} --dalmatian {}--time {} --invariant-names --output stack {}'
+    command = command.format('v' if verbose and debug else '', '--all-operators ' if operators is None else '',
+                             time, '--leq' if upperBound else '--geq')
 
     import subprocess
     sp = subprocess.Popen(command, shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, close_fds=True)
     stdin = sp.stdin
+
+    if operators is not None:
+        stdin.write('{}\n'.format(len(operators)))
+        for op in operators:
+            stdin.write('{}\n'.format(operatorDict[op]))
 
     stdin.write('{} {} {}\n'.format(len(objects), len(invariants), mainInvariant))
 
