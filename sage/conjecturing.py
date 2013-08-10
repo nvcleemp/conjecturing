@@ -138,6 +138,9 @@ def _getSpecialOperators(op):
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
+def allOperators():
+    return { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10', '+', '*', 'max', 'min', '-', '/', '^'}
+
 def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, upperBound=True):
     
     # prepare the invariants to be used in conjecturing
