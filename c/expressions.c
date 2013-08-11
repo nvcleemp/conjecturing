@@ -1284,12 +1284,14 @@ int main(int argc, char *argv[]) {
     //if timeOut is non-zero: start alarm
     if(timeOut) alarm(timeOut);
     
+    //start actual generation process
     if(doConjecturing){
         conjecture(unary, binary);
     } else {
         generateTree(unary, binary);
     }
     
+    //give information about the reason why the program halted
     if(heuristicStoppedGeneration){
         fprintf(stderr, "Generation process was stopped by the conjecturing heuristic.\n");
     } else if(timeOutReached){
@@ -1300,6 +1302,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Generation process was killed.\n");
     }
     
+    //print some statistics
     if(onlyUnlabeled){
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
     } else if(onlyLabeled) {
@@ -1311,6 +1314,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Found %lu valid expressions.\n", validExpressionsCount);
     }
     
+    //do some heuristic-specific post-processing like outputting the conjectures
     if(heuristicPostProcessing!=NULL){
         heuristicPostProcessing();
     }
