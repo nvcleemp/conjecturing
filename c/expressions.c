@@ -968,6 +968,9 @@ void help(char *name){
     fprintf(stderr, "    --example\n");
     fprintf(stderr, "       Print an example of an input file for the operators. It is advised to\n");
     fprintf(stderr, "       use this example as a starting point for your own file.\n");
+    fprintf(stderr, "    --limits name\n");
+    fprintf(stderr, "       Print the limit for the given name to stdout. Possible names are: \n");
+    fprintf(stderr, "       MAX_OBJECT_COUNT, MAX_INVARIANT_COUNT.\n");
     fprintf(stderr, "    --time t\n");
     fprintf(stderr, "       Stops the generation after t seconds. Zero seconds means that the\n");
     fprintf(stderr, "       generation won't be stopped. The default is 0.\n");
@@ -1059,6 +1062,7 @@ int processOptions(int argc, char **argv) {
         {"less", no_argument, NULL, 0},
         {"geq", no_argument, NULL, 0},
         {"greater", no_argument, NULL, 0},
+        {"limits", required_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -1133,6 +1137,17 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 15:
                         inequality = GREATER;
+                        break;
+                    case 16:
+                        if(strcmp(optarg, "MAX_OBJECT_COUNT")==0){
+                            fprintf(stdout, "%d\n", MAX_OBJECT_COUNT);
+                        } else if(strcmp(optarg, "MAX_INVARIANT_COUNT")==0){
+                            fprintf(stdout, "%d\n", MAX_INVARIANT_COUNT);
+                        } else {
+                            fprintf(stderr, "Unknown limit: %s\n", optarg);
+                            return EXIT_FAILURE;
+                        }
+                        return EXIT_SUCCESS;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
