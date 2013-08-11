@@ -838,6 +838,13 @@ void readInvariantsValues(){
         exit(EXIT_FAILURE);
     }
     
+    if(invariantCount > MAX_INVARIANT_COUNT){
+        fprintf(stderr, "Recompile with a higher value for MAX_INVARIANT_COUNT to handle this many invariants.\n");
+        fprintf(stderr, "Number of invariants is %d.\n", invariantCount);
+        fprintf(stderr, "Value of MAX_INVARIANT_COUNT is %d.\n", MAX_INVARIANT_COUNT);
+        exit(EXIT_FAILURE);
+    }
+    
     //maybe read invariant names
     if(useInvariantNames){
         for(j=0; j<invariantCount; j++){
