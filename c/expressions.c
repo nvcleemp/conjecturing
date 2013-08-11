@@ -831,6 +831,13 @@ void readInvariantsValues(){
         BAILOUT("Error while reading invariants")
     }
     
+    if(objectCount > MAX_OBJECT_COUNT){
+        fprintf(stderr, "Recompile with a higher value for MAX_OBJECT_COUNT to handle this many objects.\n");
+        fprintf(stderr, "Number of objects is %d.\n", objectCount);
+        fprintf(stderr, "Value of MAX_OBJECT_COUNT is %d.\n", MAX_OBJECT_COUNT);
+        exit(EXIT_FAILURE);
+    }
+    
     //maybe read invariant names
     if(useInvariantNames){
         for(j=0; j<invariantCount; j++){
