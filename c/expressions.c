@@ -969,7 +969,7 @@ void help(char *name){
     fprintf(stderr, "       Print an example of an input file for the operators. It is advised to\n");
     fprintf(stderr, "       use this example as a starting point for your own file.\n");
     fprintf(stderr, "    --limits name\n");
-    fprintf(stderr, "       Print the limit for the given name to stdout. Possible names are: \n");
+    fprintf(stderr, "       Print the limit for the given name to stdout. Possible names are: all,\n");
     fprintf(stderr, "       MAX_OBJECT_COUNT, MAX_INVARIANT_COUNT.\n");
     fprintf(stderr, "    --time t\n");
     fprintf(stderr, "       Stops the generation after t seconds. Zero seconds means that the\n");
