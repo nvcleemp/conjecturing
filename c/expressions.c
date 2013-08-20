@@ -1032,6 +1032,28 @@ void help(char *name){
     fprintf(stderr, "   \e[22m\n");
     fprintf(stderr, "   The example above assumes you are using the option \e[4m--invariant-names\e[24m. If this\n");
     fprintf(stderr, "   is not the case, then you can skip the second until fifth line.\n");
+    fprintf(stderr, "\n\n");
+    fprintf(stderr, "\e[1mHeuristics\n==========\e[21m\n");
+    fprintf(stderr, "This program allows the heuristic used to select bounds to be altered. Currently\n");
+    fprintf(stderr, "there are two heuristics implemented. We will give a brief description of each\n");
+    fprintf(stderr, "of the heuristics.\n");
+    fprintf(stderr, "\e[1m* Dalmatian\e[21m\n");
+    fprintf(stderr, "   The Dalmatian heuristic, developed by Siemion Fajtlowicz, is used in Graffiti\n");
+    fprintf(stderr, "   and Graffiti.pc. It selects bounds based on truth and significance.\n");
+    fprintf(stderr, "   A bound is accepted if it is true for all objects in the considered database\n");
+    fprintf(stderr, "   and if it is tighter than all the other bounds for at least one object in the\n");
+    fprintf(stderr, "   considered database. This implies that there are at most as many bounds as\n");
+    fprintf(stderr, "   there are objects in the considered database.\n");
+    fprintf(stderr, "\e[1m* Grinvin\e[21m\n");
+    fprintf(stderr, "   This is the heuristic that is used by default in Grinvin. It selects bounds\n");
+    fprintf(stderr, "   based on truth and relative complexity.\n");
+    fprintf(stderr, "   A bound is accepted if it is true for all objects in the considered database\n");
+    fprintf(stderr, "   and if it has the smallest value error. The value error is defined as the sum\n");
+    fprintf(stderr, "   of the squares of the differences between the values and the bounds for all\n");
+    fprintf(stderr, "   objects in the database. This heuristic keeps generating expressions while\n");
+    fprintf(stderr, "   the product of the number of objects in the considered database and two to\n");
+    fprintf(stderr, "   the power number of unary plus twice the number of binary operators is less\n");
+    fprintf(stderr, "   than the best value error up to that point.\n");
 }
 
 void usage(char *name){
