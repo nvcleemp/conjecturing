@@ -1054,6 +1054,8 @@ void help(char *name){
     fprintf(stderr, "   the product of the number of objects in the considered database and two to\n");
     fprintf(stderr, "   the power number of unary plus twice the number of binary operators is less\n");
     fprintf(stderr, "   than the best value error up to that point.\n");
+    fprintf(stderr, "\n\n");
+    fprintf(stderr, "Please mail  \e[4mnico [DOT] vancleemput [AT] gmail [DOT] com\e[24m in case of trouble.\n");
 }
 
 void usage(char *name){
