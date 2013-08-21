@@ -148,6 +148,17 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
                      'sqrt' : 'U 7', 'ln' : 'U 8', 'log10' : 'U 9', '+' : 'C 0', '*' : 'C 1', 'max' : 'C 2', 'min' : 'C 3',
                      '-' : 'N 0', '/' : 'N 1', '^' : 'N 2'}
 
+    # check whether number of invariants and objects falls within the allowed bounds
+    import subprocess
+    sp = subprocess.Popen('expressions --limits all', shell=True,
+                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, close_fds=True)
+
+    limits = {key:int(value) for key, value in (l.split(':') for l in sp.stdout)}
+
+    assert len(objects) <= limits['MAX_OBJECT_COUNT'], 'This version of expressions does not support that many objects.'
+    assert len(invariants) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many invariants.'
+
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
@@ -170,7 +181,6 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
     command = command.format('v' if verbose and debug else '', '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
 
-    import subprocess
     sp = subprocess.Popen(command, shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, close_fds=True)
