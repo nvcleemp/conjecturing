@@ -511,13 +511,16 @@ double evaluateNode(NODE *node, int object){
 boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hits){
     int i;
     int hitCount = 0;
+    int skipCount = 0;
     for(i=0; i<objectCount; i++){
         if(isnan(invariantValues[i][mainInvariant])){
+            skipCount++;
             continue; //skip NaN
         }
         double expression = evaluateNode(tree->root, i);
         values[i] = expression;
         if(isnan(expression)){
+            skipCount++;
             continue; //skip NaN
         }
         if(!handleComparator(invariantValues[i][mainInvariant], expression, inequality)){
@@ -529,6 +532,10 @@ boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hit
         }
     }
     *hits = hitCount;
+    *calculatedValues = objectCount;
+    if(skipCount == objectCount){
+        return FALSE;
+    }
     return TRUE;
 }
 
