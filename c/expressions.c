@@ -1111,6 +1111,7 @@ int processOptions(int argc, char **argv) {
         {"geq", no_argument, NULL, 0},
         {"greater", no_argument, NULL, 0},
         {"limits", required_argument, NULL, 0},
+        {"allowed-skips", required_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -1199,6 +1200,9 @@ int processOptions(int argc, char **argv) {
                             return EXIT_FAILURE;
                         }
                         return EXIT_SUCCESS;
+                        break;
+                    case 17:
+                        allowedPercentageOfSkips = strtof(optarg, NULL);
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
