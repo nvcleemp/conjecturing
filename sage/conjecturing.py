@@ -201,7 +201,10 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         stdin.write('{}\n'.format(invariant))
     for o in objects:
         for invariant in names:
-            stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
+            try:
+                stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
+            except:
+                stdin.write('NaN\n')
     
     if debug:
         for l in sp.stderr:
