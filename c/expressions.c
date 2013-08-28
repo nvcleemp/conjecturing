@@ -40,6 +40,8 @@ int mainInvariant;
 boolean allowMainInvariantInExpressions = FALSE;
 boolean useInvariantNames = FALSE;
 
+float allowedPercentageOfSkips = 0.75f;
+
 char invariantNames[MAX_INVARIANT_COUNT][1024];
 char *invariantNamesPointers[MAX_INVARIANT_COUNT];
 
@@ -389,12 +391,18 @@ void outputExpression(TREE *tree, FILE *f){
     }
 }
 
-void handleExpression(TREE *tree, double *values, int calculatedValues, int hitCount){
+void handleExpression(TREE *tree, double *values, int calculatedValues, int hitCount, int skipCount){
     validExpressionsCount++;
     if(doConjecturing){
         if(selectedHeuristic==DALMATIAN_HEURISTIC){
+            if(skipCount > allowedPercentageOfSkips * objectCount){
+                return;
+            }
             dalmatianHeuristic(tree, values);
         } else if(selectedHeuristic==GRINVIN_HEURISTIC){
+            if(skipCount > allowedPercentageOfSkips * objectCount){
+                return;
+            }
             grinvinHeuristic(tree, values);
         }
     }
@@ -508,7 +516,7 @@ double evaluateNode(NODE *node, int object){
     }
 }
 
-boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hits){
+boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hits, int *skips){
     int i;
     int hitCount = 0;
     int skipCount = 0;
@@ -526,12 +534,14 @@ boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hit
         if(!handleComparator(invariantValues[i][mainInvariant], expression, inequality)){
             *calculatedValues = i+1;
             *hits = hitCount;
+            *skips = skipCount;
             return FALSE;
         } else if(expression==invariantValues[i][mainInvariant]) {
             hitCount++;
         }
     }
     *hits = hitCount;
+    *skips = skipCount;
     *calculatedValues = objectCount;
     if(skipCount == objectCount){
         return FALSE;
@@ -543,8 +553,9 @@ void checkExpression(TREE *tree){
     double values[MAX_OBJECT_COUNT];
     int calculatedValues = 0;
     int hitCount = 0;
-    if (evaluateTree(tree, values, &calculatedValues, &hitCount)){
-        handleExpression(tree, values, objectCount, hitCount);
+    int skipCount = 0;
+    if (evaluateTree(tree, values, &calculatedValues, &hitCount, &skipCount)){
+        handleExpression(tree, values, objectCount, hitCount, skipCount);
     }
 }
 
