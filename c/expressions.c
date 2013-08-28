@@ -512,8 +512,14 @@ boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hit
     int i;
     int hitCount = 0;
     for(i=0; i<objectCount; i++){
+        if(isnan(invariantValues[i][mainInvariant])){
+            continue; //skip NaN
+        }
         double expression = evaluateNode(tree->root, i);
         values[i] = expression;
+        if(isnan(expression)){
+            continue; //skip NaN
+        }
         if(!handleComparator(invariantValues[i][mainInvariant], expression, inequality)){
             *calculatedValues = i+1;
             *hits = hitCount;
