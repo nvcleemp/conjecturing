@@ -40,7 +40,7 @@ int mainInvariant;
 boolean allowMainInvariantInExpressions = FALSE;
 boolean useInvariantNames = FALSE;
 
-float allowedPercentageOfSkips = 0.75f;
+float allowedPercentageOfSkips = 0.2f;
 
 char invariantNames[MAX_INVARIANT_COUNT][1024];
 char *invariantNamesPointers[MAX_INVARIANT_COUNT];
