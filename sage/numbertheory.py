@@ -44,7 +44,35 @@ def mertens(x):
         n += 1
     return m
 
-invariants = [goldbach, ('prime_pi',prime_pi), ('euler_phi', euler_phi), number, digits10, digits2, ('sigma', sigma), count_divisors, next_prime, previous_prime, count_quadratic_residues]
+def reciprocal_prime_sum(x):
+    return sum(1/p for p in prime_range(2, x+1))
+
+def max_prime_divisor(x):
+    return max(p for p,_ in factor(x))
+
+def prime_product(x):
+    prod = 1
+    for p in prime_range(2, x+1):
+        prod *= p
+    return prod
+
+invariants = [goldbach, 
+              ('prime_pi',prime_pi),
+              ('euler_phi', euler_phi),
+              number,
+              digits10,
+              digits2,
+              ('sigma', sigma),
+              count_divisors,
+              next_prime,
+              previous_prime,
+              count_quadratic_residues,
+              mertens,
+              li,
+              zeta,
+              reciprocal_prime_sum,
+              max_prime_divisor,
+              prime_product]
 
 def automatedSearch(objects, invariants, universe, upperBound=True, steps=10, mainInvariant=1):
     for _ in range(steps):
