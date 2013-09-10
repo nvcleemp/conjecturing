@@ -22,4 +22,4 @@ An example run might look like this:
     sage: objects = [5, 10]
     sage: conjecture(objects, invariants, 1)
 
-Note that loading the file `numbertheory` sets the variable `invariants` to a list of invariants used in number theory.
+Note that loading the file `numbertheory.py` sets the variable `invariants` to a list of invariants used in number theory.
