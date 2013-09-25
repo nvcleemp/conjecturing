@@ -26,3 +26,5 @@ _objects = [5, 12, 30, 50, 7, 16, 24, 48, 17, 3, 8, 6, 11, 19, 23, 29, 31, 32, 4
 objects = [Integer(n) for n in _objects]
 
 conjectures = conjecture(objects, invariants, 1)
+
+print("The conjectures are stored in the variable conjectures.")
