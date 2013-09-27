@@ -22,7 +22,9 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
 
 objects = [graphs.CompleteGraph(3)]
 
-invariants.remove(matching_number)
+knownUpperBounds = [matching_number, annihilation_number, fractional_alpha]
+for bound in knownUpperBounds:
+    invariants.remove(bound)
 mainInvariant = invariants.index(dominationNumber) + 1
 
 conjectures = automatedGraphSearch(objects, invariants, 3, 10, mainInvariant=mainInvariant, steps=100)
