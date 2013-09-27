@@ -10,7 +10,7 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
         for i in range(minimumVertices, maximumVertices+1):
             for g in graphs.nauty_geng('-c {}'.format(i)):
                 if any([not c.evaluate(g) for c in l]):
-                    print "Adding {}".format(g)
+                    print "Adding {}: {}".format(g, g.graph6_string())
                     objects.append(g)
                     noCounterExample = False
                     break
