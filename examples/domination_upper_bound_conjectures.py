@@ -35,13 +35,13 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
                 print("Looking for counterexamples with {} {}".format(i, "vertex" if i==1 else "vertices"))
             for g in graphs.nauty_geng('-c {}'.format(i)):
                 if any([not c.evaluate(g) for c in l]):
-                    print "Adding {}: {}".format(g, g.graph6_string())
+                    print("Adding {}: {}".format(g, g.graph6_string()))
                     objects.append(g)
                     noCounterExample = False
                     break
             if not noCounterExample: break
         if noCounterExample:
-            print "No counterexample found"
+            print("No counterexample found")
             break
     return l
 
