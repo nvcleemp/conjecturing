@@ -8,7 +8,7 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
         print("Starting with these objects:")
         for g in objects:
             print("    {}: {}".format(g, g.graph6_string()))
-        print()
+        print("")
         print("Available invariants:")
         for pos, invariant in enumerate(invariants):
             if type(invariant) == tuple:
@@ -21,14 +21,14 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
                 print(" *  {}".format(name))
             else:
                 print("    {}".format(name))
-        print()
+        print("")
     for _ in range(steps):
         l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
         if verbose:
             print("Found the following conjectures:")
             for c in l:
                 print("    {}".format(c))
-            print()
+            print("")
         noCounterExample = True
         for i in range(minimumVertices, maximumVertices+1):
             if verbose:
