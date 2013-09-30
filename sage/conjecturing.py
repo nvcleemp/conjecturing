@@ -181,7 +181,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -c{} --dalmatian {}--time {} --invariant-names --output stack {}'
+    command = 'expressions -c{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
     command = command.format('v' if verbose and debug else '', '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
 
