@@ -38,6 +38,20 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                         stack.append(float('-inf'))
                     else:
                         stack.append(float('NaN'))
+                elif op == operator.pow and (right == Infinity or right == float('inf')):
+                    if left < -1 or left > 1:
+                        stack.append(float('inf'))
+                    elif -1 < left < 1:
+                        stack.append(0)
+                    else:
+                        stack.append(1)
+                elif op == operator.pow and (right == -Infinity or right == float('-inf')):
+                    if left < -1 or left > 1:
+                        stack.append(0)
+                    elif -1 < left < 1:
+                        stack.append(float('inf'))
+                    else:
+                        stack.append(1)
                 else:
                     stack.append(op(left, right))
         return stack.pop()
