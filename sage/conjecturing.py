@@ -52,6 +52,8 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                         stack.append(float('inf'))
                     else:
                         stack.append(1)
+                elif op == operator.pow and left == 0 and right < 0:
+                    stack.append(float('inf'))
                 else:
                     stack.append(op(left, right))
         return stack.pop()
