@@ -38,6 +38,20 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                         stack.append(float('-inf'))
                     else:
                         stack.append(float('NaN'))
+                elif op == operator.pow and (right == Infinity or right == float('inf')):
+                    if left < -1 or left > 1:
+                        stack.append(float('inf'))
+                    elif -1 < left < 1:
+                        stack.append(0)
+                    else:
+                        stack.append(1)
+                elif op == operator.pow and (right == -Infinity or right == float('-inf')):
+                    if left < -1 or left > 1:
+                        stack.append(0)
+                    elif -1 < left < 1:
+                        stack.append(float('inf'))
+                    else:
+                        stack.append(1)
                 else:
                     stack.append(op(left, right))
         return stack.pop()
@@ -181,7 +195,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -c{} --dalmatian {}--time {} --invariant-names --output stack {}'
+    command = 'expressions -c{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
     command = command.format('v' if verbose and debug else '', '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
 
