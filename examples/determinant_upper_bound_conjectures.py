@@ -93,6 +93,6 @@ objects = [matrix([[1,1],[1,1]])]
 
 mainInvariant = invariants.index(determinant) + 1
 
-conjectures = automatedGraphSearch(objects, invariants, 2, 4, steps=10, verbose=True)
+conjectures = automatedGraphSearch(objects, invariants, 2, 4, steps=100, verbose=True, mainInvariant=mainInvariant)
 
 print("The conjectures are stored in the variable conjectures.")
