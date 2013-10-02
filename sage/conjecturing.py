@@ -54,6 +54,10 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                         stack.append(1)
                 elif op == operator.pow and left == 0 and right < 0:
                     stack.append(float('inf'))
+                elif op in {operator.le, operator.lt, operator.ge, operator.gt}:
+                    left = round(left, 6)
+                    right = round(right, 6)
+                    stack.append(op(left, right))
                 else:
                     stack.append(op(left, right))
         return stack.pop()
