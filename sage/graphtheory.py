@@ -5,7 +5,7 @@ def min_degree(g):
     return min(g.degree())
 
 def max_degree(g):
-    return min(g.degree())
+    return max(g.degree())
 
 def matching_number(g):
     return int(g.matching(value_only=True, use_edge_labels=False))
