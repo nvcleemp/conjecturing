@@ -86,4 +86,4 @@ def cvetkovic(g):
 
     return zero + min([positive, negative])
 
-invariants = [dominationNumber, Graph.average_distance, Graph.diameter, Graph.radius, Graph.girth,Graph.order, Graph.size, Graph.szeged_index, Graph.wiener_index, Graph.average_degree, min_degree, max_degree, matching_number, residue, annihilation_number, fractional_alpha, lovasz_theta, cvetkovic]
+invariants = [dominationNumber, Graph.average_distance, Graph.diameter, Graph.radius, Graph.girth,Graph.order, Graph.size, Graph.szeged_index, Graph.wiener_index, min_degree, max_degree, Graph.average_degree, matching_number, residue, annihilation_number, fractional_alpha, lovasz_theta, cvetkovic]
