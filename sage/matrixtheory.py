@@ -47,7 +47,9 @@ def max_column_sum(m):
 
 def ratio_min_max_absolute_eigenvalues(m):
     aevs = [abs(ev) for ev in m.eigenvalues()]
-    return float(max(aevs)/min(aevs))
+    Maevs = max(aevs)
+    maevs = min(aevs)
+    return float(Maevs/maevs) if maevs != 0 else float('inf')
 
 def separator(m):
     sevs = sorted(m.eigenvalues())
