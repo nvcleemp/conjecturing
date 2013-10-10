@@ -56,6 +56,8 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                     stack.append(float('inf'))
                 elif op == operator.pow and left == -Infinity and right not in ZZ: #mimic C function pow
                     stack.append(float('inf'))
+                elif op == operator.pow and left < 0 and right not in ZZ: #mimic C function pow
+                    stack.append(float('nan'))
                 elif op in {operator.le, operator.lt, operator.ge, operator.gt}:
                     left = round(left, 6)
                     right = round(right, 6)
