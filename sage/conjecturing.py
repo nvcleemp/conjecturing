@@ -31,6 +31,10 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
             elif opType==2:
 	        right = stack.pop()
 	        left = stack.pop()
+                if type(left) == sage.symbolic.expression.Expression:
+                    left = left.n()
+                if type(right) == sage.symbolic.expression.Expression:
+                    right = right.n()
                 if op == operator.truediv and right == 0:
                     if left > 0:
                         stack.append(float('inf'))
@@ -57,6 +61,8 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                 elif op == operator.pow and left == -Infinity and right not in ZZ: #mimic C function pow
                     stack.append(float('inf'))
                 elif op == operator.pow and left < 0 and right not in ZZ: #mimic C function pow
+                    stack.append(float('nan'))
+                elif op == operator.pow and right > 2147483647: #prevent RuntimeError
                     stack.append(float('nan'))
                 elif op in {operator.le, operator.lt, operator.ge, operator.gt}:
                     left = round(left, 6)
