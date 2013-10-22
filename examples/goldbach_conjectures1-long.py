@@ -48,7 +48,7 @@ universe = [Integer(n) for n in range(4, 1000001, 2)]
 for n in objects:
     universe.remove(n)
 
-mainInvariant = invariants.index(goldbach) + 1
+mainInvariant = invariants.index(goldbach)
 
 conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=200, verbose=True, upperBound=False)
 

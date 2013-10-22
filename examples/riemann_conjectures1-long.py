@@ -63,7 +63,7 @@ invariants.remove(('Li', li))
 invariants.remove(('_prime_pi', prime_pi))
 invariants.remove(goldbach) #only for even numbers
 
-mainInvariant = invariants.index(riemann) + 1
+mainInvariant = invariants.index(riemann)
 
 conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=200, verbose=True, upperBound=True)
 #conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=10, verbose=True, upperBound=True)

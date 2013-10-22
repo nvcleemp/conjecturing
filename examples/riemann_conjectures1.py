@@ -15,7 +15,7 @@ invariants.remove(('li', li))
 invariants.remove(('prime_pi', prime_pi))
 invariants.remove(goldbach) #only for even numbers
 
-mainInvariant = invariants.index(riemann) + 1
+mainInvariant = invariants.index(riemann)
 
 conjectures = conjecture(objects, invariants, mainInvariant, upperBound=True)
 

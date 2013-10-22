@@ -176,7 +176,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
 
     if len(invariants)<2 or len(objects)==0: return
 
-    assert 1 <= mainInvariant <= len(invariants), 'Illegal value for mainInvariant'
+    assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
 
     operatorDict = { '-1' : 'U 0', '+1' : 'U 1', '*2' : 'U 2', '/2' : 'U 3', '^2' : 'U 4', '-()' : 'U 5', '1/' : 'U 6',
                      'sqrt' : 'U 7', 'ln' : 'U 8', 'log10' : 'U 9', '+' : 'C 0', '*' : 'C 1', 'max' : 'C 2', 'min' : 'C 3',
@@ -225,7 +225,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         for op in operators:
             stdin.write('{}\n'.format(operatorDict[op]))
 
-    stdin.write('{} {} {}\n'.format(len(objects), len(invariants), mainInvariant))
+    stdin.write('{} {} {}\n'.format(len(objects), len(invariants), mainInvariant + 1))
 
     for invariant in names:
         stdin.write('{}\n'.format(invariant))

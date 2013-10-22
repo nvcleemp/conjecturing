@@ -67,7 +67,7 @@ objects = [graphs.CompleteGraph(3),
 knownUpperBounds = [matching_number, annihilation_number, fractional_alpha, lovasz_theta, cvetkovic]
 for bound in knownUpperBounds:
     invariants.remove(bound)
-mainInvariant = invariants.index(dominationNumber) + 1
+mainInvariant = invariants.index(dominationNumber)
 
 #switch min and maximum degree
 minPos, maxPos = invariants.index(min_degree), invariants.index(max_degree)

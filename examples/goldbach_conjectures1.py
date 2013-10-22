@@ -5,7 +5,7 @@ and 'numbertheory.py' is loaded.
 
 objects = [Integer(4), Integer(12)]
 
-mainInvariant = invariants.index(goldbach) + 1
+mainInvariant = invariants.index(goldbach)
 
 conjectures = conjecture(objects, invariants, mainInvariant, upperBound=False)
 

@@ -94,7 +94,7 @@ def generateSymmetricMatrices(size):
 
 objects = [matrix([[1,1],[1,1]]), matrix([[-1,1,1],[1,-1,1],[1,1,-1]])]
 
-mainInvariant = invariants.index(determinant) + 1
+mainInvariant = invariants.index(determinant)
 
 conjectures = automatedGraphSearch(objects, invariants, 2, 4, steps=100, verbose=True, mainInvariant=mainInvariant)
 

@@ -22,7 +22,7 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
 
 objects = [graphs.CompleteGraph(3)]
 
-mainInvariant = invariants.index(dominationNumber) + 1
+mainInvariant = invariants.index(dominationNumber)
 
 conjectures = automatedGraphSearch(objects, invariants, 3, 10, mainInvariant=mainInvariant, steps=100, upperBound=False)
 

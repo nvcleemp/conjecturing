@@ -20,7 +20,7 @@ def count_quadratic_residues(n):
 def number(n):
     return n
 
-def automatedSearch(objects, invariants, universe, upperBound=True, steps=10, mainInvariant=1):
+def automatedSearch(objects, invariants, universe, upperBound=True, steps=10, mainInvariant=0):
     for _ in range(steps):
         l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
         noCounterExample = True

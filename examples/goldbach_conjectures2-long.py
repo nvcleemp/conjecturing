@@ -50,7 +50,7 @@ for n in objects:
 
 invariants.remove(digits10)
 
-mainInvariant = invariants.index(goldbach) + 1
+mainInvariant = invariants.index(goldbach)
 
 conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=200, verbose=True, upperBound=False)
 
