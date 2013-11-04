@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Conjecturing by nvcleemp</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Conjecturing</h1>
+        <p></p>
+
+        <p class="view"><a href="https://github.com/nvcleemp/conjecturing">View the Project on GitHub <small>nvcleemp/conjecturing</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/nvcleemp/conjecturing/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/nvcleemp/conjecturing/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/nvcleemp/conjecturing">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h3>
+<a name="conjecturing-for-sage" class="anchor" href="#conjecturing-for-sage"><span class="octicon octicon-link"></span></a>Conjecturing for Sage</h3>
+
+<p>This repository contains the code described in the paper Automated Conjecture-making: Fajtlowicz's Dalmatian Heuristic Revisited.</p>
+
+<h3>
+<a name="quickstart" class="anchor" href="#quickstart"><span class="octicon octicon-link"></span></a>Quickstart</h3>
+
+<p>See the directory <code>spkg</code> for instructions on how to build and install a Sage package containing the expressions program.
+Once you have built and installed such a Sage package, you can use the Python files in the directory <code>sage</code> to interact
+with the package.</p>
+
+<p>Open the directory <code>sage</code> in a terminal window and start Sage. Usually this is done using the following command:</p>
+
+<pre><code>$ sage
+</code></pre>
+
+<p>Once Sage has started, you can load the file <code>conjecturing.py</code>:</p>
+
+<pre><code>sage: attach('conjecturing.py')
+</code></pre>
+
+<p>You can also choose to load any of the other files, but this is not necessary.</p>
+
+<p>An example run might look like this:</p>
+
+<pre><code>sage: attach('conjecturing.py')
+sage: attach('numbertheory.py')
+sage: objects = [5, 10]
+sage: conjecture(objects, invariants, 1)
+</code></pre>
+
+<p>Note that loading the file <code>numbertheory.py</code> sets the variable <code>invariants</code> to a list of invariants used in number theory.</p>
+
+<h3>
+<a name="layout-of-the-repository" class="anchor" href="#layout-of-the-repository"><span class="octicon octicon-link"></span></a>Layout of the repository</h3>
+
+<p>The repository contains four directory:</p>
+
+<ul>
+<li>
+<code>c</code>: this directory contains the code for the program expressions which is used to generate the expressions and conjectures. This program can also be used as a stand-alone program.</li>
+<li>
+<code>spkg</code>: this directory contains the script needed to construct a Sage package of the C program, so that the program can easily be installed.</li>
+<li>
+<code>sage</code>: this directory contains the Python scripts which integrate the C program into Sage.</li>
+<li>
+<code>examples</code>: this directory contains several examples of how the code in this repository can be used.</li>
+</ul><h3>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h3>
+
+<h3>
+<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h3>
+
+<h3>
+<a name="tips" class="anchor" href="#tips"><span class="octicon octicon-link"></span></a>Tips</h3>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/nvcleemp">nvcleemp</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
