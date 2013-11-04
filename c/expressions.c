@@ -105,6 +105,8 @@ boolean onlyLabeled = FALSE;
 boolean generateExpressions = FALSE;
 boolean doConjecturing = FALSE;
 
+boolean printValidExpressions = FALSE;
+
 #define GRINVIN_NEXT_OPERATOR_COUNT 0
 
 int nextOperatorCountMethod = GRINVIN_NEXT_OPERATOR_COUNT;
@@ -393,6 +395,9 @@ void outputExpression(TREE *tree, FILE *f){
 
 void handleExpression(TREE *tree, double *values, int calculatedValues, int hitCount, int skipCount){
     validExpressionsCount++;
+    if(printValidExpressions){
+        printExpression(tree, stderr);
+    }
     if(doConjecturing){
         if(selectedHeuristic==DALMATIAN_HEURISTIC){
             if(skipCount > allowedPercentageOfSkips * objectCount){
@@ -1003,6 +1008,8 @@ void help(char *name){
     fprintf(stderr, "       stdin.\n");
     fprintf(stderr, "    --invariants filename\n");
     fprintf(stderr, "       Specifies the file containing the invariant values. Defaults to stdin.\n");
+    fprintf(stderr, "    --print-valid-expressions\n");
+    fprintf(stderr, "       Causes all valid expressions that are found to be printed to stderr.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "\e[1mInput format\n============\e[21m\n");
     fprintf(stderr, "The operators that should be used and the invariant values are read from an in-\n");
@@ -1112,6 +1119,7 @@ int processOptions(int argc, char **argv) {
         {"greater", no_argument, NULL, 0},
         {"limits", required_argument, NULL, 0},
         {"allowed-skips", required_argument, NULL, 0},
+        {"print-valid-expressions", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -1203,6 +1211,9 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 17:
                         allowedPercentageOfSkips = strtof(optarg, NULL);
+                        break;
+                    case 18:
+                        printValidExpressions = TRUE;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
