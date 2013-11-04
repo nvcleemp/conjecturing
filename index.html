@@ -183,7 +183,20 @@ I2 &lt;= ((I3) ^ 2) + 1
 <code>invariants</code>: the invariants that can appear in the conjectures.</li>
 <li>
 <code>mainInvariant</code>: the main invariant that will appear on the left-hand-side of the comparator.</li>
-</ul><h2>
+</ul><p>These three are sufficient to make conjectures:</p>
+
+<pre><code>sage: def max degree(g):
+....:    return max(g.degree())
+....:
+sage: invariants = [Graph.size, Graph.order, max degree]
+sage: objects = [graphs.CompleteGraph(n) for n in [3,4,5]]
+sage: conjecture(objects, invariants, 0)
+[size(x) &lt;= 2*order(x),
+ size(x) &lt;= max degree(x)^2 - 1,
+ size(x) &lt;= 1/2*order(x)*max degree(x)]
+</code></pre>
+
+<h2>
 <a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
 
 <h2>
