@@ -152,12 +152,12 @@ I2 &lt;= ((I3) ^ 2) + 1
 <h3>
 <a name="making-the-sage-package" class="anchor" href="#making-the-sage-package"><span class="octicon octicon-link"></span></a>Making the Sage Package</h3>
 
-<p>To make the Sage Package, simply go to the directory <code>spkg</code> and use the following command:</p>
+<p>You do not need to make the Sage Package. You can simply install the one we are providing. If you however want to make the Sage Package yourself, simply go to the directory <code>spkg</code> and use the following command:</p>
 
 <pre><code>$ make conjecturing-YYYYMMDD
 </code></pre>
 
-<p>Replace YYYYMMDD by the year, the month and the day respectively. You can then install this newly created package by issueing the following command:</p>
+<p>Replace <code>YYYYMMDD</code> by the year, the month and the day respectively. You can then install this newly created package by issueing the following command:</p>
 
 <pre><code>$ sage -f conjecturing-YYYYMMDD.spkg
 </code></pre>
@@ -167,7 +167,23 @@ I2 &lt;= ((I3) ^ 2) + 1
 <h3>
 <a name="making-conjectures-in-sage" class="anchor" href="#making-conjectures-in-sage"><span class="octicon octicon-link"></span></a>Making conjectures in Sage</h3>
 
-<h2>
+<p>Once you have installed the Sage Package (either by downloading and installing it, or by building it yourself and then installing it), you can load the files in the directory <code>sage</code> to make conjectures within Sage. The most important file is <code>conjecturing.py</code>. This loads the code needed to make conjectures. The remaining files just provide utility methods to make conjectures for graph theory, matrix theory and number theory.</p>
+
+<p>Simply start Sage from the directory <code>sage</code> and once Sage is started, give the following command:</p>
+
+<pre><code>sage: load('conjecturing.py')
+</code></pre>
+
+<p>This is all you need to do. From now on you can use the method <code>conjecture</code> to make conjectures. This method needs three arguments, and can take several additional optional arguments. The arguments that need to be provided are:</p>
+
+<ul>
+<li>
+<code>objects</code>: the objects on which the conjectures will be based.</li>
+<li>
+<code>invariants</code>: the invariants that can appear in the conjectures.</li>
+<li>
+<code>mainInvariant</code>: the main invariant that will appear on the left-hand-side of the comparator.</li>
+</ul><h2>
 <a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
 
 <h2>
