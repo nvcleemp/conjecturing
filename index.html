@@ -185,10 +185,10 @@ I2 &lt;= ((I3) ^ 2) + 1
 <code>mainInvariant</code>: the main invariant that will appear on the left-hand-side of the comparator.</li>
 </ul><p>These three are sufficient to make conjectures:</p>
 
-<pre><code>sage: def max degree(g):
+<pre><code>sage: def max_degree(g):
 ....:    return max(g.degree())
 ....:
-sage: invariants = [Graph.size, Graph.order, max degree]
+sage: invariants = [Graph.size, Graph.order, max_degree]
 sage: objects = [graphs.CompleteGraph(n) for n in [3,4,5]]
 sage: conjecture(objects, invariants, 0)
 [size(x) &lt;= 2*order(x),
@@ -196,11 +196,78 @@ sage: conjecture(objects, invariants, 0)
  size(x) &lt;= 1/2*order(x)*max degree(x)]
 </code></pre>
 
-<h2>
-<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
+<p>The optional arguments are:</p>
 
-<h2>
-<a name="tips" class="anchor" href="#tips"><span class="octicon octicon-link"></span></a>Tips</h2>
+<ul>
+<li>
+<code>upperBound</code>: if <code>True</code>, the conjectures are upper bounds for the main invariant. Default value is <code>True</code>.</li>
+<li>
+<code>time</code>: specifies the amount of seconds after which the heuristic decides to no longer look for new conjectures. Default value is 5.</li>
+<li>
+<code>variableName</code>: specifies the symbol to be used for a general object in the conjectures. Default value is 'x'.</li>
+<li>
+<code>debug</code>: if <code>True</code>, the output of the program <code>expressions</code> to stderr is printed. Default value is <code>False</code>.</li>
+<li>
+<code>verbose</code>: if <code>True</code>, the program <code>expressions</code> is ran in verbose mode. Note that this has no point if <code>debug</code> is <code>False</code>. Default value is <code>False</code>.</li>
+<li>
+<code>operators</code>: specifies a set of operators that can be used. If this is <code>None</code>, then all operators are used. Otherwise only the specified operators are used. It is advised to use the method <code>allOperators</code> to get a set containing all operators and then removing the operators you don't need. Default value is <code>None</code>.</li>
+</ul><h3>
+<a name="running-the-examples" class="anchor" href="#running-the-examples"><span class="octicon octicon-link"></span></a>Running the examples</h3>
+
+<p>Each of the examples in the directory <code>examples</code> specify which files need to be loaded for the example to work. The examples are referred to from the paper. Most of the examples come in two versions: a short and a long version. The short version immediately should give the conjectures as they appear in the paper. Since in most cases the conjecturing is halted by the time limit, in some cases there might be a small discrepancy between the conjectures in the paper and the conjectures you get. The long version repeats the steps we took to produce the conjectures, i.e., start with a small set, generate conjectures, look for counterexamples, add them to the objects, generate conjectures, ... Note that these long versions sometimes take very long (some need multiple days!).</p>
+
+<p>For example, to run the first example of goldbach conjectures, you proceed as follows. Start Sage in the directory <code>examples</code>. Execute the following commands:</p>
+
+<pre><code>sage: load('../sage/conjecturing.py')
+sage: load('../sage/numbertheory.py')   
+sage: load('goldbach_conjectures1.py')
+The conjectures are stored in the variable conjectures.
+sage: conjectures
+[goldbach(x) &gt;= (1/digits10(x)), goldbach(x) &gt;= digits10(x) - 1]
+</code></pre>
+
+<p>If you want to run the long version, then you load the file which has -long appended to the name:</p>
+
+<pre><code>sage: load('../sage/conjecturing.py') 
+sage: load('../sage/numbertheory.py') 
+sage: load('goldbach_conjectures1-long.py')   
+Starting with these objects:
+ 4
+
+Available invariants:
+   goldbach
+   prime_pi
+   euler_phi
+   number
+   digits10
+   digits2
+   sigma
+   count_divisors
+   next_prime
+   previous_prime
+   count_quadratic_residues
+   mertens
+   li
+   zeta
+   reciprocal_prime_sum
+   max_prime_divisor
+   prime_product
+
+Found the following conjectures:
+ goldbach(x) &gt;= digits10(x)
+
+Step 1: Adding 12
+Found the following conjectures:
+ goldbach(x) &gt;= (1/digits10(x))
+ goldbach(x) &gt;= digits10(x) - 1
+
+No counterexample found
+The conjectures are stored in the variable conjectures.
+sage: conjectures
+[goldbach(x) &gt;= (1/digits10(x)), goldbach(x) &gt;= digits10(x) - 1]
+</code></pre>
+
+<p>Note that this will take quite long to verify these two conjectures for all values it checks.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/nvcleemp">nvcleemp</a></p>
