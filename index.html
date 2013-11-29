@@ -272,7 +272,23 @@ sage: conjectures
 <h2>
 <a name="conjecturing-on-the-sagemath-cloud-" class="anchor" href="#conjecturing-on-the-sagemath-cloud-"><span class="octicon octicon-link"></span></a>Conjecturing on The Sagemath Cloud ™</h2>
 
-<p>One easy way to work with Sage is by going to <a href="http://cloud.sagemath.com">http://cloud.sagemath.com</a>. </p>
+<p>One easy way to work with Sage is by going to <a href="http://cloud.sagemath.com">http://cloud.sagemath.com</a>. Of course you can use our code on The Sagemath Cloud ™. By default, however, it is not possible to install additional packages there, so we give some extra explanation below.</p>
+
+<ul>
+<li>Follow the instructions on <a href="https://github.com/sagemath/cloud/wiki/FAQ#wiki-own-sage-bin">https://github.com/sagemath/cloud/wiki/FAQ#wiki-own-sage-bin</a> to set up your own Sage binary.</li>
+<li>Make and install the Sage package in a Terminal:</li>
+</ul><pre><code>~$ echo [ui] &gt; ~/.hgrc
+~$ echo username=x &gt;&gt; ~/.hgrc
+~$ git clone --depth 1 https://github.com/nvcleemp/conjecturing.git .
+~$ cd spkg
+~/spkg$ make conjecturing-1.spkg
+~/spkg$ sage -f conjecturing-1.spkg
+</code></pre>
+
+<ul>
+<li>Restart the Sage Worksheet Server. Go the your project settings and under <strong>Restart</strong> click the button for Sage Worksheet Server.</li>
+<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above.</li>
+</ul>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/nvcleemp">nvcleemp</a></p>
