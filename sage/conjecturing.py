@@ -96,7 +96,7 @@ def _makeConjecture(inputList, variable, invariantsDict):
                 f = wrapUnboundMethod(op, invariantsDict)
             else:
                 f = wrapBoundMethod(op, invariantsDict)
-            expressionStack.append(function(op, variable))
+            expressionStack.append(sage.symbolic.function_factory.function(op, variable))
             operatorStack.append((f,0))
         elif op in specials:
             _handleSpecialOperators(expressionStack, op)
