@@ -43,6 +43,9 @@ def fractional_alpha(g):
     return p.solve()
 
 def lovasz_theta(g):
+    import cvxopt.base
+    import cvxopt.solvers
+
     cvxopt.solvers.options['show_progress'] = False
     cvxopt.solvers.options['abstol'] = float(1e-10)
     cvxopt.solvers.options['reltol'] = float(1e-10)
