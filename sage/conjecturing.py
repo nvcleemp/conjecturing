@@ -21,8 +21,10 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
     def _latex_(self):
         return latex(self.expression)
 
-    def evaluate(self, g):
+    def evaluate(self, g, returnBoundValue=False):
         stack = []
+        if returnBoundValue:
+            assert self.stack[-1][0] in {operator.le, operator.lt, operator.ge, operator.gt}, "Conjecture is not a bound"
         for op, opType in self.stack:
             if opType==0:
                 stack.append(op(g))
@@ -67,7 +69,10 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
                 elif op in {operator.le, operator.lt, operator.ge, operator.gt}:
                     left = round(left, 6)
                     right = round(right, 6)
-                    stack.append(op(left, right))
+                    if returnBoundValue:
+                        stack.append(right)
+                    else:
+                        stack.append(op(left, right))
                 else:
                     stack.append(op(left, right))
         return stack.pop()
