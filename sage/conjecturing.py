@@ -248,7 +248,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
     # process the output
     out = sp.stdout
     
-    variable = var(variableName)
+    variable = SR.var(variableName)
     
     conjectures = []
     inputList = []
