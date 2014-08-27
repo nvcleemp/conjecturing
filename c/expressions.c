@@ -160,8 +160,11 @@ boolean isComplete(TREE *tree){
 boolean dalmatianFirst = TRUE;
 
 double dalmatianCurrentConjectureValues[MAX_OBJECT_COUNT][MAX_OBJECT_COUNT];
+boolean dalmatianCurrentConjectureValues_propertyBased[MAX_OBJECT_COUNT][MAX_OBJECT_COUNT];
 
 int dalmatianBestConjectureForObject[MAX_OBJECT_COUNT];
+
+boolean dalmatianObjectInBoundArea[MAX_OBJECT_COUNT] = {FALSE}; //only for property based conjectures
 
 boolean dalmatianConjectureInUse[MAX_OBJECT_COUNT] = {FALSE};
 
@@ -277,6 +280,147 @@ void dalmatianHeuristicPostProcessing(){
     for(i=0;i<objectCount;i++){
         if(dalmatianConjectureInUse[i]){
             outputExpression(dalmatianConjectures+i, stdout);
+        }
+        freeTree(dalmatianConjectures+i);
+    }
+}
+
+inline void dalmatianUpdateHitCount_propertyBased(){
+    dalmatianHitCount = 0;
+    int i;
+    for(i=0; i<objectCount; i++){
+        if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED){
+            continue;
+        }
+        if(dalmatianObjectInBoundArea[i]){
+            dalmatianHitCount++;
+        }
+    }
+    
+}
+
+void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
+    int i;
+    //this heuristic assumes the expression was true for all objects
+    
+    //if this is the first conjecture, we just store it and return
+    if(dalmatianFirst){
+        if(verbose){
+            fprintf(stderr, "Saving expression\n");
+            printExpression_propertyBased(tree, stderr);
+        }
+        memcpy(dalmatianCurrentConjectureValues_propertyBased[0], values, 
+                sizeof(double)*(MAX_OBJECT_COUNT));
+        for(i=0; i<objectCount; i++){
+            if(values[i] == UNDEFINED){
+                continue;
+            }
+            if(values[i]){
+                dalmatianObjectInBoundArea[i] = TRUE;
+            }
+        }
+        dalmatianConjectureInUse[0] = TRUE;
+        copyTree(tree, dalmatianConjectures + 0);
+        dalmatianFirst = FALSE;
+        dalmatianUpdateHitCount_propertyBased();
+        return;
+    }
+    
+    //check the significance
+    //----------------------
+    
+    //find the objects for which this bound is better
+    boolean isMoreSignificant = FALSE;
+    for(i=0; i<objectCount; i++){
+        if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
+                !(invariantValues_propertyBased[i][mainInvariant])){
+            //we're only looking at object that have the main property to decide
+            //the significance.
+            continue;
+        }
+        
+        if(!handleComparator_propertyBased(values[i], 
+                dalmatianObjectInBoundArea[i], inequality)){
+            isMoreSignificant = TRUE;
+        }
+    }
+    
+    //check if there is at least one object for which this bound is more significant
+    if(!isMoreSignificant) return;
+
+    if(verbose){
+        fprintf(stderr, "Saving expression\n");
+        printExpression(tree, stderr);
+    }
+    
+    //if we get here, then the current bound is at least for one object more significant
+    //we store the values and that conjecture
+    int smallestAvailablePosition = 0;
+    
+    while(smallestAvailablePosition < objectCount &&
+            dalmatianConjectureInUse[smallestAvailablePosition]){
+        smallestAvailablePosition++;
+    }
+    if(smallestAvailablePosition == objectCount){
+        BAILOUT("Error when handling dalmatian heuristic")
+    }
+    
+    memcpy(dalmatianCurrentConjectureValues_propertyBased[smallestAvailablePosition],
+            values, sizeof(boolean)*(MAX_OBJECT_COUNT));    
+    copyTree(tree, dalmatianConjectures + smallestAvailablePosition);
+    dalmatianConjectureInUse[smallestAvailablePosition] = TRUE;
+    
+    //update bounded area
+    if(inequality == SUFFICIENT){
+        for(i = 0; i < objectCount; i++){
+            if(values[i] == UNDEFINED){
+                continue;
+            }
+            dalmatianObjectInBoundArea[i] ||= values[i];
+        }
+    } else if(inequality == NECESSARY){
+        for(i = 0; i < objectCount; i++){
+            if(values[i] == UNDEFINED){
+                continue;
+            }
+            dalmatianObjectInBoundArea[i] &&= values[i];
+        }
+    } else {
+        BAILOUT("Error when handling dalmatian heuristic: unknown inequality")
+    }
+    
+    dalmatianUpdateHitCount_propertyBased();
+}
+
+boolean dalmatianHeuristicStopConditionReached_propertyBased(){
+    int pCount = 0; //i.e., the number of object that have the main property
+    int i;
+    
+    for(i = 0; i < objectCount; i++){
+        if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED){
+            continue;
+        }
+        if(invariantValues_propertyBased[i][mainInvariant]){
+            pCount++;
+        }
+    }
+    
+    /* If we specified sufficient conditions, then the variable dalmatianHitCount
+     * contains the number of objects in the intersection of all conditions.
+     * If we specified necessary conditions, then the variable dalmatianHitCount
+     * contains the number of objects in the union of all conditions.
+     */
+    return dalmatianHitCount == pCount;
+}
+
+void (* const dalmatianHeuristicInit_propertyBased)(void) = 
+        dalmatianHeuristicInit;
+
+void dalmatianHeuristicPostProcessing_propertyBased(){
+    int i;
+    for(i=0;i<objectCount;i++){
+        if(dalmatianConjectureInUse[i]){
+            outputExpression_propertyBased(dalmatianConjectures+i, stdout);
         }
         freeTree(dalmatianConjectures+i);
     }
