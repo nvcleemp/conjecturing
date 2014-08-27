@@ -381,6 +381,29 @@ void outputExpressionStack(TREE *tree, FILE *f){
     fprintf(f, "\n\n");
 }
 
+void outputExpressionStack_propertyBased(TREE *tree, FILE *f){
+    int i, length;
+    if(useInvariantNames){
+        fprintf(f, "%s\n", invariantNames[mainInvariant]);
+    } else {
+        fprintf(f, "I%d\n", mainInvariant + 1);
+    }
+    
+    //start by ordering nodes
+    NODE *orderedNodes[tree->unaryCount + 2*(tree->binaryCount) + 1];
+    
+    length = 0;
+    getOrderedNodes(tree->root, orderedNodes, &length);
+    
+    for(i=0; i<length; i++){
+        printSingleNode_propertyBased(orderedNodes[i], f, 
+            useInvariantNames ? invariantNamesPointers : NULL);
+        fprintf(f, "\n");
+    }
+    printComparator_propertyBased(inequality, f);
+    fprintf(f, "\n\n");
+}
+
 void printExpression(TREE *tree, FILE *f){
     if(useInvariantNames){
         fprintf(f, "%s ", invariantNames[mainInvariant]);
