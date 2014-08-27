@@ -1326,6 +1326,30 @@ void printInvariantValues(FILE *f){
     }
 }
 
+void printInvariantValues_propertyBased(FILE *f){
+    int i, j;
+    //header row
+    fprintf(f, "     ");
+    for(j=0; j<invariantCount; j++){
+        fprintf(f, "Invariant %2d  ", j+1);
+    }
+    fprintf(f, "\n");
+    //table
+    for(i=0; i<objectCount; i++){
+        fprintf(f, "%3d) ", i+1);
+        for(j=0; j<invariantCount; j++){
+            if(invariantValues_propertyBased[i][j] == UNDEFINED){
+                fprintf(f, "  UNDEFINED     ", invariantValues_propertyBased[i][j]);
+            } else if(invariantValues_propertyBased[i][j]){
+                fprintf(f, "    TRUE        ", invariantValues_propertyBased[i][j]);
+            } else {
+                fprintf(f, "    FALSE       ", invariantValues_propertyBased[i][j]);
+            }
+        }
+        fprintf(f, "\n");
+    }
+}
+
 //===================================================================
 // Usage methods
 //===================================================================
