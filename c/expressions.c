@@ -431,10 +431,18 @@ void printExpression_propertyBased(TREE *tree, FILE *f){
 }
 
 void outputExpression(TREE *tree, FILE *f){
-    if(outputType=='h'){
-        printExpression(tree, f);
-    } else if(outputType=='s'){
-        outputExpressionStack(tree, f);
+    if(propertyBased){
+        if(outputType=='h'){
+            printExpression_propertyBased(tree, f);
+        } else if(outputType=='s'){
+            outputExpressionStack_propertyBased(tree, f);
+        }
+    } else {
+        if(outputType=='h'){
+            printExpression(tree, f);
+        } else if(outputType=='s'){
+            outputExpressionStack(tree, f);
+        }
     }
 }
 
