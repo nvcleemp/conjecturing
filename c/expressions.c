@@ -1245,6 +1245,69 @@ void readInvariantsValues(){
     }
 }
 
+void readInvariantsValues_propertyBased(){
+    int i,j;
+    char line[1024]; //array to temporarily store a line
+    
+    //first read number of invariants and number of entities
+    if(fgets(line, sizeof(line), invariantsFile)){
+        if(sscanf(line, "%d %d %d", &objectCount, &invariantCount, &mainInvariant) != 3) {
+            BAILOUT("Error while reading invariants")
+        }
+        mainInvariant--; //internally we work zero-based
+    } else {
+        BAILOUT("Error while reading invariants")
+    }
+    
+    if(objectCount > MAX_OBJECT_COUNT){
+        fprintf(stderr, "Recompile with a higher value for MAX_OBJECT_COUNT to handle this many objects.\n");
+        fprintf(stderr, "Number of objects is %d.\n", objectCount);
+        fprintf(stderr, "Value of MAX_OBJECT_COUNT is %d.\n", MAX_OBJECT_COUNT);
+        exit(EXIT_FAILURE);
+    }
+    
+    if(invariantCount > MAX_INVARIANT_COUNT){
+        fprintf(stderr, "Recompile with a higher value for MAX_INVARIANT_COUNT to handle this many invariants.\n");
+        fprintf(stderr, "Number of invariants is %d.\n", invariantCount);
+        fprintf(stderr, "Value of MAX_INVARIANT_COUNT is %d.\n", MAX_INVARIANT_COUNT);
+        exit(EXIT_FAILURE);
+    }
+    
+    //maybe read invariant names
+    if(useInvariantNames){
+        for(j=0; j<invariantCount; j++){
+            if(fgets(line, sizeof(line), invariantsFile)){
+                char *name = trim(line);
+                strcpy(invariantNames[j], name);
+                invariantNamesPointers[j] = invariantNames[j];
+            } else {
+                BAILOUT("Error while reading invariant names")
+            }
+        }
+    }
+    
+    //start reading the individual values
+    for(i=0; i<objectCount; i++){
+        for(j=0; j<invariantCount; j++){
+            if(fgets(line, sizeof(line), invariantsFile)){
+                boolean value = UNDEFINED;
+                if(sscanf(line, "%d", &value) != 1) {
+                    BAILOUT("Error while reading invariants")
+                }
+                if(value == UNDEFINED ||
+                        value == FALSE ||
+                        value == TRUE){
+                    invariantValues_propertyBased[i][j] = value;
+                } else {
+                    BAILOUT("Error while reading invariants")
+                }
+            } else {
+                BAILOUT("Error while reading invariants")
+            }
+        }
+    }
+}
+
 void printInvariantValues(FILE *f){
     int i, j;
     //header row
