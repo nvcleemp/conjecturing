@@ -26,6 +26,9 @@
 #define COMM_BINARY_LABEL 2
 #define NON_COMM_BINARY_LABEL 3
 
+//UNDEFINED is used for undefined values when making property based conjectures
+#define UNDEFINED -1
+
 int verbose = FALSE;
 
 char outputType = 'h';
@@ -51,7 +54,10 @@ char *invariantNamesPointers[MAX_INVARIANT_COUNT];
 #define GEQ 2 // i.e., MI >= expression
 #define GREATER 3 // i.e., MI > expression
 
-int inequality = LEQ;
+#define SUFFICIENT 0 // i.e., MI <= expression
+#define NECESSARY 2 // i.e., MI => expression
+
+int inequality = LEQ; // == SUFFICIENT
 
 int unaryOperatorCount = 10;
 /* 
@@ -86,6 +92,7 @@ int nonCommBinaryOperatorCount = 3;
 int nonCommBinaryOperators[MAX_NCOMM_BINARY_OPERATORS];
 
 double invariantValues[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
+boolean invariantValues_propertyBased[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
 
 int objectCount = 0;
 
@@ -105,6 +112,7 @@ boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
 boolean generateExpressions = FALSE;
 boolean doConjecturing = FALSE;
+boolean propertyBased = FALSE;
 
 boolean printValidExpressions = FALSE;
 
