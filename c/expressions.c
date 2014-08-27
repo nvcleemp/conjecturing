@@ -394,6 +394,19 @@ void printExpression(TREE *tree, FILE *f){
     fprintf(f, "\n");
 }
 
+void printExpression_propertyBased(TREE *tree, FILE *f){
+    if(useInvariantNames){
+        fprintf(f, "%s ", invariantNames[mainInvariant]);
+    } else {
+        fprintf(f, "I%d ", mainInvariant + 1);
+    }
+    printComparator_propertyBased(inequality, f);
+    fprintf(f, " ");
+    printNode_propertyBased(tree->root, f, 
+            useInvariantNames ? invariantNamesPointers : NULL);
+    fprintf(f, "\n");
+}
+
 void outputExpression(TREE *tree, FILE *f){
     if(outputType=='h'){
         printExpression(tree, f);
