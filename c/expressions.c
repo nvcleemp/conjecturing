@@ -1339,11 +1339,11 @@ void printInvariantValues_propertyBased(FILE *f){
         fprintf(f, "%3d) ", i+1);
         for(j=0; j<invariantCount; j++){
             if(invariantValues_propertyBased[i][j] == UNDEFINED){
-                fprintf(f, "  UNDEFINED     ");
+                fprintf(f, " UNDEFINED    ");
             } else if(invariantValues_propertyBased[i][j]){
-                fprintf(f, "    TRUE        ");
+                fprintf(f, "   TRUE       ");
             } else {
-                fprintf(f, "    FALSE       ");
+                fprintf(f, "   FALSE      ");
             }
         }
         fprintf(f, "\n");
