@@ -913,7 +913,11 @@ void checkExpression_propertyBased(TREE *tree){
 void handleLabeledTree(TREE *tree){
     labeledTreeCount++;
     if(generateExpressions || doConjecturing){
-        checkExpression(tree);
+        if(propertyBased){
+            checkExpression_propertyBased(tree);
+        } else {
+            checkExpression(tree);
+        }
     }
 }
 
