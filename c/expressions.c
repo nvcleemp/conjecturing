@@ -1129,17 +1129,20 @@ int processOptions(int argc, char **argv) {
         {"limits", required_argument, NULL, 0},
         {"allowed-skips", required_argument, NULL, 0},
         {"print-valid-expressions", no_argument, NULL, 0},
+        {"sufficient", no_argument, NULL, 0},
+        {"necessary", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
         {"labeled", no_argument, NULL, 'l'},
         {"expressions", no_argument, NULL, 'e'},
         {"conjecture", no_argument, NULL, 'c'},
-        {"output", required_argument, NULL, 'o'}
+        {"output", required_argument, NULL, 'o'},
+        {"property", required_argument, NULL, 'p'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hvuleco:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvuleco:p", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 //handle long option with no alternative
@@ -1224,6 +1227,12 @@ int processOptions(int argc, char **argv) {
                     case 18:
                         printValidExpressions = TRUE;
                         break;
+                    case 19:
+                        inequality = SUFFICIENT;
+                        break;
+                    case 20:
+                        inequality = NECESSARY;
+                        break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
                         usage(name);
@@ -1259,6 +1268,25 @@ int processOptions(int argc, char **argv) {
                         usage(name);
                         return EXIT_FAILURE;
                 }
+                break;
+            case 'p':
+                propertyBased = TRUE;
+                //heuristic needs to be chosen after switching to property based conjecturing
+                selectedHeuristic = NO_HEURISTIC;
+                unaryOperatorCount = 1;
+                /*
+                 * 1: not
+                 */
+                commBinaryOperatorCount = 3;
+                /*
+                 * 1: and
+                 * 2: or
+                 * 3: xor
+                 */
+                nonCommBinaryOperatorCount = 1;
+                /* 
+                 * 1: implication
+                 */
                 break;
             case '?':
                 usage(name);
@@ -1298,6 +1326,15 @@ int processOptions(int argc, char **argv) {
         usage(name);
         return EXIT_FAILURE;
     }
+    
+    // check comparator for property-based conjectures
+    if (propertyBased && 
+            !((inequality == SUFFICIENT) || (inequality == NECESSARY))){
+        fprintf(stderr, "For property-based conjectures you can only use --sufficient or --necessary.\n");
+        usage(name);
+        return EXIT_FAILURE;
+    }
+    
     
     return -1;
 }
