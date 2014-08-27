@@ -141,6 +141,10 @@ void outputExpression(TREE *tree, FILE *f);
 void printExpression(TREE *tree, FILE *f);
 boolean handleComparator(double left, double right, int id);
 
+void outputExpression_propertyBased(TREE *tree, FILE *f);
+void printExpression_propertyBased(TREE *tree, FILE *f);
+boolean handleComparator_propertyBased(boolean left, boolean right, int id);
+
 /* 
  * Returns non-zero value if the tree satisfies the current target counts
  * for unary and binary operators. Returns 0 in all other cases.
