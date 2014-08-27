@@ -898,6 +898,16 @@ void checkExpression(TREE *tree){
     }
 }
 
+void checkExpression_propertyBased(TREE *tree){
+    boolean values[MAX_OBJECT_COUNT];
+    int calculatedValues = 0;
+    int hitCount = 0;
+    int skipCount = 0;
+    if (evaluateTree_propertyBased(tree, values, &calculatedValues, &hitCount, &skipCount)){
+        handleExpression_propertyBased(tree, values, objectCount, hitCount, skipCount);
+    }
+}
+
 //------ Labeled tree generation -------
 
 void handleLabeledTree(TREE *tree){
