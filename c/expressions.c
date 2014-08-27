@@ -574,6 +574,89 @@ double evaluateNode(NODE *node, int object){
     }
 }
 
+boolean handleUnaryOperator_propertyBased(int id, boolean value){
+    if(value==UNDEFINED){
+        return UNDEFINED;
+    }
+    if(id==0){
+        return !value;
+    } else {
+        BAILOUT("Unknown unary operator ID")
+    }
+}
+
+void writeUnaryOperatorExample_propertyBased(FILE *f){
+    fprintf(f, "U 0    !x\n");
+}
+
+boolean handleCommutativeBinaryOperator_propertyBased(int id, boolean left, boolean right){
+    if(left==UNDEFINED || right==UNDEFINED){
+        return UNDEFINED;
+    }
+    if(id==0){
+        return left && right;
+    } else if(id==1){
+        return left || right;
+    } else if(id==2){
+        return (!left) != (!right); //XOR
+    } else {
+        BAILOUT("Unknown commutative binary operator ID")
+    }
+}
+
+void writeCommutativeBinaryOperatorExample_propertyBased(FILE *f){
+    fprintf(f, "C 0    x & y\n");
+    fprintf(f, "C 1    x | y\n");
+    fprintf(f, "C 2    x ^ y (XOR)\n");
+}
+
+boolean handleNonCommutativeBinaryOperator_propertyBased(int id, boolean left, boolean right){
+    if(left==UNDEFINED || right==UNDEFINED){
+        return UNDEFINED;
+    }
+    if(id==0){
+        return (!left) || right;
+    } else {
+        BAILOUT("Unknown non-commutative binary operator ID")
+    }
+}
+
+void writeNonCommutativeBinaryOperatorExample_propertyBased(FILE *f){
+    fprintf(f, "N 0    x => y\n");
+}
+
+boolean handleComparator_propertyBased(boolean left, boolean right, int id){
+    if(left==UNDEFINED || right==UNDEFINED){
+        return UNDEFINED;
+    }
+    if(id==0){
+        return (!right) || left;
+    } else if(id==2){
+        return (!left) || right;
+    } else {
+        BAILOUT("Unknown comparator ID")
+    }
+}
+
+boolean evaluateNode_propertyBased(NODE *node, int object){
+    if (node->contentLabel[0]==INVARIANT_LABEL) {
+        return invariantValues_propertyBased[object][node->contentLabel[1]];
+    } else if (node->contentLabel[0]==UNARY_LABEL) {
+        return handleUnaryOperator_propertyBased(node->contentLabel[1],
+                evaluateNode_propertyBased(node->left, object));
+    } else if (node->contentLabel[0]==NON_COMM_BINARY_LABEL){
+        return handleNonCommutativeBinaryOperator_propertyBased(node->contentLabel[1],
+                evaluateNode_propertyBased(node->left, object),
+                evaluateNode_propertyBased(node->right, object));
+    } else if (node->contentLabel[0]==COMM_BINARY_LABEL){
+        return handleCommutativeBinaryOperator_propertyBased(node->contentLabel[1],
+                evaluateNode_propertyBased(node->left, object),
+                evaluateNode_propertyBased(node->right, object));
+    } else {
+        BAILOUT("Unknown content label type")
+    }
+}
+
 boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hits, int *skips){
     int i;
     int hitCount = 0;
