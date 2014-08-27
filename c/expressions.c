@@ -690,6 +690,39 @@ boolean evaluateTree(TREE *tree, double *values, int *calculatedValues, int *hit
     return TRUE;
 }
 
+boolean evaluateTree_propertyBased(TREE *tree, boolean *values, int *calculatedValues, int *hits, int *skips){
+    int i;
+    int hitCount = 0;
+    int skipCount = 0;
+    for(i=0; i<objectCount; i++){
+        if(invariantValues_propertyBased[i][mainInvariant]==UNDEFINED){
+            skipCount++;
+            continue; //skip undefined values
+        }
+        boolean expression = evaluateNode_propertyBased(tree->root, i);
+        values[i] = expression;
+        if(expression == UNDEFINED){
+            skipCount++;
+            continue; //skip NaN
+        }
+        if(!handleComparator_propertyBased(invariantValues_propertyBased[i][mainInvariant], expression, inequality)){
+            *calculatedValues = i+1;
+            *hits = hitCount;
+            *skips = skipCount;
+            return FALSE;
+        } else if(!(expression) == !(invariantValues_propertyBased[i][mainInvariant])) {
+            hitCount++;
+        }
+    }
+    *hits = hitCount;
+    *skips = skipCount;
+    *calculatedValues = objectCount;
+    if(skipCount == objectCount){
+        return FALSE;
+    }
+    return TRUE;
+}
+
 void checkExpression(TREE *tree){
     double values[MAX_OBJECT_COUNT];
     int calculatedValues = 0;
