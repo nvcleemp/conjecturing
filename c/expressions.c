@@ -19,6 +19,7 @@
 #include "bintrees.h"
 #include "util.h"
 #include "printing.h"
+#include "printing_pb.h"
 
 #define INVARIANT_LABEL 0
 #define UNARY_LABEL 1
