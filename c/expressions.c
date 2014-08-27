@@ -418,15 +418,8 @@ boolean dalmatianHeuristicStopConditionReached_propertyBased(){
 void (* const dalmatianHeuristicInit_propertyBased)(void) = 
         dalmatianHeuristicInit;
 
-void dalmatianHeuristicPostProcessing_propertyBased(){
-    int i;
-    for(i=0;i<objectCount;i++){
-        if(dalmatianConjectureInUse[i]){
-            outputExpression_propertyBased(dalmatianConjectures+i, stdout);
-        }
-        freeTree(dalmatianConjectures+i);
-    }
-}
+void (* const dalmatianHeuristicPostProcessing_propertyBased)(void) = 
+        dalmatianHeuristicPostProcessing;
 
 //grinvin heuristic
 
