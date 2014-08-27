@@ -1807,8 +1807,13 @@ int main(int argc, char *argv[]) {
         } else {
             readOperators();
         }
-        readInvariantsValues();
-        if(verbose) printInvariantValues(stderr);
+        if(propertyBased){
+            readInvariantsValues_propertyBased();
+            if(verbose) printInvariantValues_propertyBased(stderr);
+        } else {
+            readInvariantsValues();
+            if(verbose) printInvariantValues(stderr);
+        }
     }
     
     if(closeOperatorFile){
