@@ -314,7 +314,7 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
         for(i=0; i<objectCount; i++){
             if(values[i] == UNDEFINED){
                 continue;
-            }
+        }
             if(values[i]){
                 dalmatianObjectInBoundArea[i] = TRUE;
             }
@@ -375,23 +375,23 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
         for(i = 0; i < objectCount; i++){
             if(values[i] == UNDEFINED){
                 continue;
-            }
-            dalmatianObjectInBoundArea[i] ||= values[i];
         }
+            dalmatianObjectInBoundArea[i] ||= values[i];
+    }
     } else if(inequality == NECESSARY){
         for(i = 0; i < objectCount; i++){
             if(values[i] == UNDEFINED){
                 continue;
-            }
-            dalmatianObjectInBoundArea[i] &&= values[i];
         }
+            dalmatianObjectInBoundArea[i] &&= values[i];
+    }
     } else {
         BAILOUT("Error when handling dalmatian heuristic: unknown inequality")
     }
     
     dalmatianUpdateHitCount_propertyBased();
 }
-
+    
 boolean dalmatianHeuristicStopConditionReached_propertyBased(){
     int pCount = 0; //i.e., the number of object that have the main property
     int i;
@@ -399,12 +399,12 @@ boolean dalmatianHeuristicStopConditionReached_propertyBased(){
     for(i = 0; i < objectCount; i++){
         if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED){
             continue;
-        }
+}
         if(invariantValues_propertyBased[i][mainInvariant]){
             pCount++;
         }
     }
-    
+
     /* If we specified sufficient conditions, then the variable dalmatianHitCount
      * contains the number of objects in the intersection of all conditions.
      * If we specified necessary conditions, then the variable dalmatianHitCount
@@ -610,6 +610,23 @@ void handleExpression(TREE *tree, double *values, int calculatedValues, int hitC
                 return;
             }
             grinvinHeuristic(tree, values);
+        }
+    }
+}
+
+void handleExpression_propertyBased(TREE *tree, boolean *values, int calculatedValues, int hitCount, int skipCount){
+    validExpressionsCount++;
+    if(printValidExpressions){
+        printExpression_propertyBased(tree, stderr);
+    }
+    if(doConjecturing){
+        if(selectedHeuristic==DALMATIAN_HEURISTIC){
+            if(skipCount > allowedPercentageOfSkips * objectCount){
+                return;
+            }
+            dalmatianHeuristic_propertyBased(tree, values);
+        } else if(selectedHeuristic==GRINVIN_HEURISTIC){
+            BAILOUT("Grinvin heuristic is not defined for property-based conjectures.")
         }
     }
 }
