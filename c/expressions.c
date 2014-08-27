@@ -1594,9 +1594,15 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 7:
                         selectedHeuristic = DALMATIAN_HEURISTIC;
-                        heuristicInit = dalmatianHeuristicInit;
-                        heuristicStopConditionReached = dalmatianHeuristicStopConditionReached;
-                        heuristicPostProcessing = dalmatianHeuristicPostProcessing;
+                        if(propertyBased){
+                            heuristicInit = dalmatianHeuristicInit_propertyBased;
+                            heuristicStopConditionReached = dalmatianHeuristicStopConditionReached_propertyBased;
+                            heuristicPostProcessing = dalmatianHeuristicPostProcessing_propertyBased;
+                        } else {
+                            heuristicInit = dalmatianHeuristicInit;
+                            heuristicStopConditionReached = dalmatianHeuristicStopConditionReached;
+                            heuristicPostProcessing = dalmatianHeuristicPostProcessing;
+                        }
                         break;
                     case 8:
                         selectedHeuristic = GRINVIN_HEURISTIC;
