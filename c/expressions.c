@@ -1848,8 +1848,6 @@ int main(int argc, char *argv[]) {
     //if timeOut is non-zero: start alarm
     if(timeOut) alarm(timeOut);
     
-    fprintf(stderr, "propertyBased: %d\n", propertyBased);
-    
     //start actual generation process
     if(doConjecturing){
         conjecture(unary, binary);
