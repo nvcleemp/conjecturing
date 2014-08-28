@@ -90,11 +90,10 @@ def wrapBoundMethod(op, invariantsDict):
 def _makeConjecture(inputList, variable, invariantsDict):
     import operator
 
-    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10', 'max', 'min', '==>', '<=='}
+    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10', 'max', 'min'}
 
-    unaryOperators = {'sqrt': sqrt, 'ln': log, '!': operator.not_}
-    binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow,
-                       '&': operator.and_, '|': operator.or_, 'xor': operator.xor}
+    unaryOperators = {'sqrt': sqrt, 'ln': log}
+    binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow}
     comparators = {'<': operator.lt, '<=': operator.le, '>': operator.gt, '>=': operator.ge}
     expressionStack = []
     operatorStack = []
@@ -151,14 +150,6 @@ def _handleSpecialOperators(stack, op):
         stack.append(function('maximum',stack.pop(),stack.pop()))
     elif op == 'min':
         stack.append(function('minimum',stack.pop(),stack.pop()))
-    elif op == '==>':
-        right = stack.pop()
-        left = stack.pop()
-        stack.append(function('==>', left, right))
-    elif op == '<==':
-        right = stack.pop()
-        left = stack.pop()
-        stack.append(function('<==', left, right))
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
@@ -183,10 +174,6 @@ def _getSpecialOperators(op):
         return max, 2
     elif op == 'min':
         return min, 2
-    elif op == '==>':
-        return (lambda x,y: not(x) or y), 2
-    elif op == '<==':
-        return (lambda x,y: x or not(y)), 2
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
@@ -280,15 +267,76 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
     
     return conjectures
 
-def propertyBasedConjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, sufficient=True,
+class PropertyBasedConjecture(SageObject):
+
+    def __init__(self, expression, propertyCalculators, pickling):
+        """Constructs a new Conjecture from the given stack of functions."""
+        self.expression = expression
+        self.propertyCalculators = propertyCalculators
+        self.pickling = pickling
+        super(PropertyBasedConjecture, self).__init__()
+
+    def __eq__(self, other):
+        return self.expression == other.expression
+
+    def __reduce__(self):
+        return (_makePropertyBasedConjecture, self.pickling)
+
+    def _repr_(self):
+        return repr(self.expression)
+
+    def _latex_(self):
+        return latex(self.expression)
+
+    def evaluate(self, g):
+        values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
+        return self.expression.evaluate(values)
+
+def _makePropertyBasedConjecture(inputList, invariantsDict):
+    import operator
+
+    binaryOperators = {'&', '|', '^', '->'}
+
+    expressionStack = []
+    propertyCalculators = {}
+
+    for op in inputList:
+        if op in invariantsDict:
+            import types
+            if type(invariantsDict[op]) in (types.BuiltinMethodType, types.MethodType):
+                f = wrapUnboundMethod(op, invariantsDict)
+            else:
+                f = wrapBoundMethod(op, invariantsDict)
+            prop = ''.join([l for l in op if l.strip()])
+            expressionStack.append(prop)
+            propertyCalculators[prop] = f
+        elif op == '<-':
+            right = expressionStack.pop()
+            left = expressionStack.pop()
+            expressionStack.append('({})->({})'.format(right, left))
+        elif op == '~':
+            expressionStack.append('~({})'.format(expressionStack.pop()))
+        elif op in binaryOperators:
+            right = expressionStack.pop()
+            left = expressionStack.pop()
+            expressionStack.append('({}){}({})'.format(left, op, right))
+        else:
+            raise ValueError("Error while reading output from expressions. Unknown element: {}".format(op))
+
+    import sage.logic.propcalc as propcalc
+    return PropertyBasedConjecture(propcalc.formula(expressionStack.pop()), propertyCalculators, (inputList, invariantsDict))
+
+def allPropertyBasedOperators():
+    return { '~', '&', '|', '^', '->'}
+
+def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=False, verbose=False, sufficient=True,
                                                    operators=None):
 
     if len(invariants)<2 or len(objects)==0: return
 
     assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
 
-    operatorDict = { '!' : 'U 0', '&' : 'C 0', '|' : 'C 1', '^' : 'C 2',
-                     '==>' : 'N 0'}
+    operatorDict = { '~' : 'U 0', '&' : 'C 0', '|' : 'C 1', '^' : 'C 2', '->' : 'N 0'}
 
     # check whether number of invariants and objects falls within the allowed bounds
     import subprocess
@@ -355,8 +403,6 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, variableName='x'
     # process the output
     out = sp.stdout
     
-    variable = SR.var(variableName)
-    
     conjectures = []
     inputList = []
     
@@ -365,7 +411,7 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, variableName='x'
         if op:
             inputList.append(op)
         else:
-            conjectures.append(_makeConjecture(inputList, variable, invariantsDict))
+            conjectures.append(_makePropertyBasedConjecture(inputList, invariantsDict))
             inputList = []
     
     return conjectures
