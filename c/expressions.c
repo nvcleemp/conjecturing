@@ -341,8 +341,8 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
             continue;
         }
         
-        if(!handleComparator_propertyBased(values[i], 
-                dalmatianObjectInBoundArea[i], inequality)){
+        if(!handleComparator_propertyBased(dalmatianObjectInBoundArea[i],
+                values[i], inequality)){
             if(verbose){
                 fprintf(stderr, "Conjecture is more significant for object %d.\n", i+1);
             }
