@@ -17,9 +17,9 @@
 
 void printComparator_propertyBased(int id, FILE *f){
     if(id==0){
-        fprintf(f, "<=");
+        fprintf(f, "<==");
     } else if(id==2){
-        fprintf(f, ">=");
+        fprintf(f, "==>");
     } else {
         BAILOUT("Unknown comparator ID")
     }
@@ -137,7 +137,7 @@ void printCommutativeBinaryOperator_single_propertyBased(int id, FILE *f){
     } else if(id==1){
         fprintf(f, "|"); //OR
     } else if(id==2){
-        fprintf(f, "^"); //XOR
+        fprintf(f, "xor"); //XOR
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
@@ -145,7 +145,7 @@ void printCommutativeBinaryOperator_single_propertyBased(int id, FILE *f){
 
 void printNonCommutativeBinaryOperator_single_propertyBased(int id, FILE *f){
     if(id==0){
-        fprintf(f, "=>");
+        fprintf(f, "==>");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
