@@ -90,10 +90,11 @@ def wrapBoundMethod(op, invariantsDict):
 def _makeConjecture(inputList, variable, invariantsDict):
     import operator
 
-    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10', 'max', 'min'}
+    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10', 'max', 'min', '==>', '<=='}
 
-    unaryOperators = {'sqrt': sqrt, 'ln': log}
-    binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow}
+    unaryOperators = {'sqrt': sqrt, 'ln': log, '!': operator.not_}
+    binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow,
+                       '&': operator.and_, '|': operator.or_, 'xor': operator.xor}
     comparators = {'<': operator.lt, '<=': operator.le, '>': operator.gt, '>=': operator.ge}
     expressionStack = []
     operatorStack = []
@@ -150,6 +151,14 @@ def _handleSpecialOperators(stack, op):
         stack.append(function('maximum',stack.pop(),stack.pop()))
     elif op == 'min':
         stack.append(function('minimum',stack.pop(),stack.pop()))
+    elif op == '==>':
+        right = stack.pop()
+        left = stack.pop()
+        stack.append(function('==>', left, right))
+    elif op == '<==':
+        right = stack.pop()
+        left = stack.pop()
+        stack.append(function('<==', left, right))
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
@@ -174,6 +183,10 @@ def _getSpecialOperators(op):
         return max, 2
     elif op == 'min':
         return min, 2
+    elif op == '==>':
+        return (lambda x,y: not(x) or y), 2
+    elif op == '<==':
+        return (lambda x,y: x or not(y)), 2
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
@@ -244,6 +257,96 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
                 stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
             except:
                 stdin.write('NaN\n')
+    
+    if debug:
+        for l in sp.stderr:
+            print '> ' + l.rstrip()
+    
+    # process the output
+    out = sp.stdout
+    
+    variable = SR.var(variableName)
+    
+    conjectures = []
+    inputList = []
+    
+    for l in out:
+        op = l.strip()
+        if op:
+            inputList.append(op)
+        else:
+            conjectures.append(_makeConjecture(inputList, variable, invariantsDict))
+            inputList = []
+    
+    return conjectures
+
+def propertyBasedConjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, sufficient=True,
+                                                   operators=None):
+
+    if len(invariants)<2 or len(objects)==0: return
+
+    assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
+
+    operatorDict = { '!' : 'U 0', '&' : 'C 0', '|' : 'C 1', '^' : 'C 2',
+                     '==>' : 'N 0'}
+
+    # check whether number of invariants and objects falls within the allowed bounds
+    import subprocess
+    sp = subprocess.Popen('expressions --limits all', shell=True,
+                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, close_fds=True)
+
+    limits = {key:int(value) for key, value in (l.split(':') for l in sp.stdout)}
+
+    assert len(objects) <= limits['MAX_OBJECT_COUNT'], 'This version of expressions does not support that many objects.'
+    assert len(invariants) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many invariants.'
+
+    # prepare the invariants to be used in conjecturing
+    invariantsDict = {}
+    names = []
+    
+    for pos, invariant in enumerate(invariants):
+        if type(invariant) == tuple:
+            name, invariant = invariant
+        elif hasattr(invariant, '__name__'):
+            if invariant.__name__ in invariantsDict:
+                name = '{}_{}'.format(invariant.__name__, pos)
+            else:
+                name = invariant.__name__
+        else:
+            name = 'invariant_{}'.format(pos)
+        invariantsDict[name] = invariant
+        names.append(name)
+
+    # call the conjecturing program
+    command = 'expressions -pc{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = command.format('v' if verbose and debug else '', '--all-operators ' if operators is None else '',
+                             time, '--sufficient' if sufficient else '--necessary')
+
+    if verbose:
+        print('Using the following command')
+        print(command)
+
+    sp = subprocess.Popen(command, shell=True,
+                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, close_fds=True)
+    stdin = sp.stdin
+
+    if operators is not None:
+        stdin.write('{}\n'.format(len(operators)))
+        for op in operators:
+            stdin.write('{}\n'.format(operatorDict[op]))
+
+    stdin.write('{} {} {}\n'.format(len(objects), len(invariants), mainInvariant + 1))
+
+    for invariant in names:
+        stdin.write('{}\n'.format(invariant))
+    for o in objects:
+        for invariant in names:
+            try:
+                stdin.write('{}\n'.format(1 if bool(invariantsDict[invariant](o)) else 0))
+            except:
+                stdin.write('-1\n')
     
     if debug:
         for l in sp.stderr:
