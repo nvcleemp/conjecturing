@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define BAILOUT(msg) fprintf(stderr, msg " -- exiting!\n"); exit(EXIT_FAILURE);
+#define BAILOUT(msg) fprintf(stderr, "%s - %d: " msg " -- exiting!\n", __FILE__, __LINE__); exit(EXIT_FAILURE);
 
 #endif	/* UTIL_H */
 
