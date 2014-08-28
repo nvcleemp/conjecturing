@@ -349,7 +349,7 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
 
     if(verbose){
         fprintf(stderr, "Saving expression\n");
-        printExpression(tree, stderr);
+        printExpression_propertyBased(tree, stderr);
     }
     
     //if we get here, then the current bound is at least for one object more significant
@@ -1841,6 +1841,8 @@ int main(int argc, char *argv[]) {
     
     //if timeOut is non-zero: start alarm
     if(timeOut) alarm(timeOut);
+    
+    fprintf(stderr, "propertyBased: %d\n", propertyBased);
     
     //start actual generation process
     if(doConjecturing){
