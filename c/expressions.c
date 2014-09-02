@@ -113,6 +113,7 @@ boolean onlyLabeled = FALSE;
 boolean generateExpressions = FALSE;
 boolean doConjecturing = FALSE;
 boolean propertyBased = FALSE;
+boolean theoryProvided = FALSE;
 
 boolean printValidExpressions = FALSE;
 
@@ -1574,11 +1575,12 @@ int processOptions(int argc, char **argv) {
         {"expressions", no_argument, NULL, 'e'},
         {"conjecture", no_argument, NULL, 'c'},
         {"output", required_argument, NULL, 'o'},
-        {"property", no_argument, NULL, 'p'}
+        {"property", no_argument, NULL, 'p'},
+        {"theory", no_argument, NULL, 't'}
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hvuleco:p", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvuleco:pt", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 //handle long option with no alternative
@@ -1729,6 +1731,9 @@ int processOptions(int argc, char **argv) {
                 /* 
                  * 1: implication
                  */
+                break;
+            case 't':
+                theoryProvided = TRUE;
                 break;
             case '?':
                 usage(name);
