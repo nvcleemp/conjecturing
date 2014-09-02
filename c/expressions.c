@@ -94,6 +94,9 @@ int nonCommBinaryOperators[MAX_NCOMM_BINARY_OPERATORS];
 double invariantValues[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
 boolean invariantValues_propertyBased[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
 
+double knownTheory[MAX_OBJECT_COUNT];
+boolean knownTheory[MAX_OBJECT_COUNT];
+
 int objectCount = 0;
 
 unsigned long int treeCount = 0;
