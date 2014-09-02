@@ -27,7 +27,7 @@ void printComparator_propertyBased(int id, FILE *f){
 
 void printUnaryOperator_left_propertyBased(int id, FILE *f){
     if(id==0){
-        fprintf(f, "!(");
+        fprintf(f, "~(");
     } else {
         BAILOUT("Unknown unary operator ID")
     }
@@ -79,7 +79,7 @@ void printNonCommutativeBinaryOperator_left_propertyBased(int id, FILE *f){
 
 void printNonCommutativeBinaryOperator_middle_propertyBased(int id, FILE *f){
     if(id==0){
-        fprintf(f, ") => (");
+        fprintf(f, ") -> (");
     } else {
         BAILOUT("Unknown commutative binary operator ID")
     }
