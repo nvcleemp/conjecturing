@@ -1574,7 +1574,7 @@ int processOptions(int argc, char **argv) {
         {"expressions", no_argument, NULL, 'e'},
         {"conjecture", no_argument, NULL, 'c'},
         {"output", required_argument, NULL, 'o'},
-        {"property", required_argument, NULL, 'p'}
+        {"property", no_argument, NULL, 'p'}
     };
     int option_index = 0;
 
