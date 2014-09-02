@@ -1445,6 +1445,9 @@ void printInvariantValues(FILE *f){
     int i, j;
     //header row
     fprintf(f, "     ");
+    if(theoryProvided){
+        fprintf(f, "Known theory  ");
+    }
     for(j=0; j<invariantCount; j++){
         fprintf(f, "Invariant %2d  ", j+1);
     }
@@ -1452,6 +1455,9 @@ void printInvariantValues(FILE *f){
     //table
     for(i=0; i<objectCount; i++){
         fprintf(f, "%3d) ", i+1);
+        if(theoryProvided){
+            fprintf(f, "%11.6lf   ", knownTheory[i]);
+        }
         for(j=0; j<invariantCount; j++){
             fprintf(f, "%11.6lf   ", invariantValues[i][j]);
         }
@@ -1463,6 +1469,9 @@ void printInvariantValues_propertyBased(FILE *f){
     int i, j;
     //header row
     fprintf(f, "     ");
+    if(theoryProvided){
+        fprintf(f, "Known theory  ");
+    }
     for(j=0; j<invariantCount; j++){
         fprintf(f, "Invariant %2d  ", j+1);
     }
@@ -1470,6 +1479,15 @@ void printInvariantValues_propertyBased(FILE *f){
     //table
     for(i=0; i<objectCount; i++){
         fprintf(f, "%3d) ", i+1);
+        if(theoryProvided){
+            if(knownTheory_propertyBased[i] == UNDEFINED){
+                fprintf(f, " UNDEFINED    ");
+            } else if(knownTheory_propertyBased[i]){
+                fprintf(f, "   TRUE       ");
+            } else {
+                fprintf(f, "   FALSE      ");
+            }
+        }
         for(j=0; j<invariantCount; j++){
             if(invariantValues_propertyBased[i][j] == UNDEFINED){
                 fprintf(f, " UNDEFINED    ");
