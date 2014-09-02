@@ -1394,6 +1394,53 @@ void readInvariantsValues_propertyBased(){
     }
 }
 
+boolean checkKnownTheory(){
+    int i;
+    int hitCount = 0;
+    for(i=0; i<objectCount; i++){
+        if(isnan(invariantValues[i][mainInvariant])){
+            continue; //skip NaN
+        }
+        if(isnan(knownTheory[i])){
+            continue; //skip NaN
+        }
+        if(!handleComparator(invariantValues[i][mainInvariant], knownTheory[i], inequality)){
+            return FALSE;
+        } else if(invariantValues[i][mainInvariant] == knownTheory[i]){
+            hitCount++;
+        }
+    }
+    if(hitCount==objectCount){
+        fprintf(stderr, "Warning: can not improve on known theory using these objects.\n");
+    }
+    return TRUE;
+}
+
+boolean checkKnownTheory_propertyBased(){
+    int i;
+    int hitCount = 0;
+    for(i=0; i<objectCount; i++){
+        if(invariantValues_propertyBased[i][mainInvariant]==UNDEFINED){
+            continue; //skip undefined values
+        }
+        if(knownTheory_propertyBased[i] == UNDEFINED){
+            continue; //skip NaN
+        }
+        if(!handleComparator_propertyBased(
+                invariantValues_propertyBased[i][mainInvariant],
+                knownTheory_propertyBased[i], inequality)){
+            return FALSE;
+        } else if(!(knownTheory_propertyBased[i]) ==
+                !(invariantValues_propertyBased[i][mainInvariant])) {
+            hitCount++;
+        }
+    }
+    if(hitCount==objectCount){
+        fprintf(stderr, "Warning: can not improve on known theory using these objects.\n");
+    }
+    return TRUE;
+}
+
 void printInvariantValues(FILE *f){
     int i, j;
     //header row
@@ -1916,9 +1963,15 @@ int main(int argc, char *argv[]) {
         if(propertyBased){
             readInvariantsValues_propertyBased();
             if(verbose) printInvariantValues_propertyBased(stderr);
+            if(!checkKnownTheory_propertyBased()){
+                BAILOUT("Known theory is not consistent with main invariant")
+            }
         } else {
             readInvariantsValues();
             if(verbose) printInvariantValues(stderr);
+            if(!checkKnownTheory()){
+                BAILOUT("Known theory is not consistent with main invariant")
+            }
         }
     }
     
