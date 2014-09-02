@@ -1311,6 +1311,27 @@ void readInvariantsValues_propertyBased(){
         }
     }
     
+    if(theoryProvided){
+        //first read the known theory
+        for(i=0; i<objectCount; i++){
+            if(fgets(line, sizeof(line), invariantsFile)){
+                boolean value = UNDEFINED;
+                if(sscanf(line, "%d", &value) != 1) {
+                    BAILOUT("Error while reading known theory")
+                }
+                if(value == UNDEFINED ||
+                        value == FALSE ||
+                        value == TRUE){
+                    knownTheory_propertyBased[i] = value;
+                } else {
+                    BAILOUT("Error while reading known theory")
+                }
+            } else {
+                BAILOUT("Error while reading known theory")
+            }
+        }
+    }
+    
     //start reading the individual values
     for(i=0; i<objectCount; i++){
         for(j=0; j<invariantCount; j++){
