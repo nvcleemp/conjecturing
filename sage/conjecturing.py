@@ -181,7 +181,7 @@ def allOperators():
     return { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10', '+', '*', 'max', 'min', '-', '/', '^'}
 
 def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, upperBound=True,
-                                                   operators=None):
+                                                   operators=None, theory=None):
 
     if len(invariants)<2 or len(objects)==0: return
 
@@ -220,8 +220,9 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -c{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
-    command = command.format('v' if verbose and debug else '', '--all-operators ' if operators is None else '',
+    command = 'expressions -c{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
+                             '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
 
     sp = subprocess.Popen(command, shell=True,
@@ -238,6 +239,20 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
 
     for invariant in names:
         stdin.write('{}\n'.format(invariant))
+
+    if theory is not None:
+        for o in objects:
+            if upperBound:
+                try:
+                    stdin.write('{}\n'.format(min(float(t(o)) for t in theory)))
+                except:
+                    stdin.write('NaN\n')
+            else:
+                try:
+                    stdin.write('{}\n'.format(max(float(t(o)) for t in theory)))
+                except:
+                    stdin.write('NaN\n')
+
     for o in objects:
         for invariant in names:
             try:
