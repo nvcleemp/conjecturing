@@ -351,8 +351,32 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
     //check the significance
     //----------------------
     
-    //find the objects for which this bound is better
+        //if known theory is provided, we check that first
     boolean isMoreSignificant = FALSE;
+    if(theoryProvided){
+        for(i=0; i<objectCount; i++){
+            if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
+                    !(invariantValues_propertyBased[i][mainInvariant])){
+                //we're only looking at object that have the main property to decide
+                //the significance.
+                continue;
+            }
+            
+            if(!handleComparator_propertyBased(knownTheory_propertyBased[i],
+                values[i], inequality)){
+                if(verbose){
+                    fprintf(stderr, "Conjecture is more significant than known theory for object %d.\n", i+1);
+                }
+                isMoreSignificant = TRUE;
+            }
+        }
+
+        //check if there is at least one object for which this bound is more significant than the known theory
+        if(!isMoreSignificant) return;
+    }
+    
+    //find the objects for which this bound is better
+    isMoreSignificant = FALSE; //the conjecture is not necessarily more significant than the other conjectures
     for(i=0; i<objectCount; i++){
         if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
                 !(invariantValues_propertyBased[i][mainInvariant])){
