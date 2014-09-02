@@ -211,6 +211,8 @@ sage: conjecture(objects, invariants, 0)
 <code>verbose</code>: if <code>True</code>, the program <code>expressions</code> is ran in verbose mode. Note that this has no point if <code>debug</code> is <code>False</code>. Default value is <code>False</code>.</li>
 <li>
 <code>operators</code>: specifies a set of operators that can be used. If this is <code>None</code>, then all operators are used. Otherwise only the specified operators are used. It is advised to use the method <code>allOperators</code> to get a set containing all operators and then removing the operators you don't need. Default value is <code>None</code>.</li>
+<li>
+<code>theory</code>: specifies a list of known bounds. If this is <code>None</code>, then no known bounds are used. Otherwise each conjecture will have to be more significant than the bounds in this list. This implies that if each object obtains equality for any of the bounds in this list, then no conjectures will be made.</li>
 </ul><h3>
 <a name="running-the-examples" class="anchor" href="#running-the-examples"><span class="octicon octicon-link"></span></a>Running the examples</h3>
 
