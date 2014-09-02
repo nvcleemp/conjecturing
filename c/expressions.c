@@ -95,7 +95,7 @@ double invariantValues[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
 boolean invariantValues_propertyBased[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
 
 double knownTheory[MAX_OBJECT_COUNT];
-boolean knownTheory[MAX_OBJECT_COUNT];
+boolean knownTheory_propertyBased[MAX_OBJECT_COUNT];
 
 int objectCount = 0;
 
