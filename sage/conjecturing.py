@@ -345,7 +345,7 @@ def allPropertyBasedOperators():
     return { '~', '&', '|', '^', '->'}
 
 def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=False, verbose=False, sufficient=True,
-                                                   operators=None):
+                                                   operators=None, theory=None):
 
     if len(invariants)<2 or len(objects)==0: return
 
@@ -382,8 +382,9 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -pc{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
-    command = command.format('v' if verbose and debug else '', '--all-operators ' if operators is None else '',
+    command = 'expressions -pc{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
+                             '--all-operators ' if operators is None else '',
                              time, '--sufficient' if sufficient else '--necessary')
 
     if verbose:
@@ -404,6 +405,20 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
 
     for invariant in names:
         stdin.write('{}\n'.format(invariant))
+
+    if theory is not None:
+        for o in objects:
+            if sufficient:
+                try:
+                    stdin.write('{}\n'.format(max((1 if bool(t(o)) else 0) for t in theory)))
+                except:
+                    stdin.write('-1\n')
+            else:
+                try:
+                    stdin.write('{}\n'.format(min((1 if bool(t(o)) else 0) for t in theory)))
+                except:
+                    stdin.write('-1\n')
+
     for o in objects:
         for invariant in names:
             try:
