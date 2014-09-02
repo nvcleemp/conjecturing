@@ -1239,6 +1239,21 @@ void readInvariantsValues(){
         }
     }
     
+    if(theoryProvided){
+        //first read the known theory
+        for(i=0; i<objectCount; i++){
+            if(fgets(line, sizeof(line), invariantsFile)){
+                double value = 0.0;
+                if(sscanf(line, "%lf", &value) != 1) {
+                    BAILOUT("Error while reading known theory")
+                }
+                knownTheory[i] = value;
+            } else {
+                BAILOUT("Error while reading known theory")
+            }
+        }
+    }
+    
     //start reading the individual values
     for(i=0; i<objectCount; i++){
         for(j=0; j<invariantCount; j++){
