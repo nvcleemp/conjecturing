@@ -1417,6 +1417,16 @@ void help(char *name){
     fprintf(stderr, "    --greater\n");
     fprintf(stderr, "       Use the comparator > when constructing conjectures. The conjectures will\n");
     fprintf(stderr, "       be of the form 'main invariant > f(invariants)'.\n");
+    fprintf(stderr, "    -p, --property\n");
+    fprintf(stderr, "       Make property based conjecture instead of the default invariant based\n");
+    fprintf(stderr, "       conjectures.\n");
+    fprintf(stderr, "    --sufficient\n");
+    fprintf(stderr, "       Create sufficient conditions when constructing property based\n");
+    fprintf(stderr, "       conjectures. The conjectures will be of the form 'main property <- \n");
+    fprintf(stderr, "       f(properties)'. This is the default for property based conjectures.\n");
+    fprintf(stderr, "    --necessary\n");
+    fprintf(stderr, "       Create necessary conditions when constructing property based conjectures.\n");
+    fprintf(stderr, "       The conjectures will be of the form 'main property -> f(properties)'.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "\e[1m* Heuristics\e[21m\n");
     fprintf(stderr, "    --dalmatian\n");
