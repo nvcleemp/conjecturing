@@ -1395,6 +1395,7 @@ void readInvariantsValues_propertyBased(){
 }
 
 boolean checkKnownTheory(){
+    if(!theoryProvided) return TRUE;
     int i;
     int hitCount = 0;
     for(i=0; i<objectCount; i++){
@@ -1417,6 +1418,7 @@ boolean checkKnownTheory(){
 }
 
 boolean checkKnownTheory_propertyBased(){
+    if(!theoryProvided) return TRUE;
     int i;
     int hitCount = 0;
     for(i=0; i<objectCount; i++){
