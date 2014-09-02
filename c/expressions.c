@@ -1375,7 +1375,7 @@ void help(char *name){
     fprintf(stderr, "       Use heuristics to make conjectures.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "\e[1mValid options\n=============\e[21m\n");
-    fprintf(stderr, "\e[1m* Generated types\e[21m (exactly one of these three should be used)\n");
+    fprintf(stderr, "\e[1m* Generated types\e[21m (exactly one of these four should be used)\n");
     fprintf(stderr, "    -u, --unlabeled\n");
     fprintf(stderr, "       Generate unlabeled expression trees.\n");
     fprintf(stderr, "    -l, --labeled\n");
