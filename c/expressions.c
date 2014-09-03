@@ -441,6 +441,106 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
     }
     
     dalmatianUpdateHitCount_propertyBased();
+    
+    //prune conjectures
+    /* We just loop through the conjectures and remove the ones that are no longer
+     * significant. At the moment we avoid doing anything special like looking for
+     * the best set of conjectures to prune.
+     * 
+     * By definition, this pruning will not influence the bounding area (and the
+     * hit count).
+     */
+    int j, k;
+    
+    if(inequality == SUFFICIENT){
+        for(i = 0; i < objectCount; i++){
+            if(dalmatianConjectureInUse[i]){
+                isMoreSignificant = FALSE;
+                for(j = 0; j < objectCount; j++){
+                    if(invariantValues_propertyBased[j][mainInvariant] == UNDEFINED ||
+                            !(invariantValues_propertyBased[j][mainInvariant])){
+                        //we're only looking at object that have the main property to decide
+                        //the significance.
+                        continue;
+                    }
+                    
+                    //first we check whether the object is in the bound area
+                    boolean localObjectInBoundArea = FALSE;
+                    
+                    for(k = 0; k < objectCount; k++){
+                        if(dalmatianConjectureInUse[k] && k!=i){
+                            if(dalmatianCurrentConjectureValues_propertyBased[k][j] ==
+                                    UNDEFINED){
+                                continue;
+                            }
+                            localObjectInBoundArea =
+                                    localObjectInBoundArea ||
+                                    dalmatianCurrentConjectureValues_propertyBased[k][j];
+                        }
+                    }
+                    
+                    //then we check whether this conjecture is still significant
+                    if(!handleComparator_propertyBased(localObjectInBoundArea,
+                            dalmatianCurrentConjectureValues_propertyBased[i][j],
+                            inequality)){
+                        if(verbose){
+                            fprintf(stderr, "Conjecture %d is more significant for object %d.\n", i+1, j+1);
+                        }
+                        isMoreSignificant = TRUE;
+                        break;
+                    }
+                }
+                //we only keep the conjecture if it is still more significant
+                //for at least one object.
+                dalmatianConjectureInUse[i] = isMoreSignificant;
+            }
+        }
+    } else if(inequality == NECESSARY){
+        for(i = 0; i < objectCount; i++){
+            if(dalmatianConjectureInUse[i]){
+                isMoreSignificant = FALSE;
+                for(j = 0; j < objectCount; j++){
+                    if(invariantValues_propertyBased[j][mainInvariant] == UNDEFINED ||
+                            !(invariantValues_propertyBased[j][mainInvariant])){
+                        //we're only looking at object that have the main property to decide
+                        //the significance.
+                        continue;
+                    }
+                    
+                    //first we check whether the object is in the bound area
+                    boolean localObjectInBoundArea = TRUE;
+                    
+                    for(k = 0; k < objectCount; k++){
+                        if(dalmatianConjectureInUse[k] && k!=i){
+                            if(dalmatianCurrentConjectureValues_propertyBased[k][j] ==
+                                    UNDEFINED){
+                                continue;
+                            }
+                            localObjectInBoundArea =
+                                    localObjectInBoundArea &&
+                                    dalmatianCurrentConjectureValues_propertyBased[k][j];
+                        }
+                    }
+                    
+                    //then we check whether this conjecture is still significant
+                    if(!handleComparator_propertyBased(localObjectInBoundArea,
+                            dalmatianCurrentConjectureValues_propertyBased[i][j],
+                            inequality)){
+                        if(verbose){
+                            fprintf(stderr, "Conjecture %d is more significant for object %d.\n", i+1, j+1);
+                        }
+                        isMoreSignificant = TRUE;
+                        break;
+                    }
+                }
+                //we only keep the conjecture if it is still more significant
+                //for at least one object.
+                dalmatianConjectureInUse[i] = isMoreSignificant;
+            }
+        }
+    } else {
+        BAILOUT("Error when handling dalmatian heuristic: unknown inequality")
+    }
 }
     
 boolean dalmatianHeuristicStopConditionReached_propertyBased(){
