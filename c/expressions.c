@@ -1651,6 +1651,13 @@ void help(char *name){
     fprintf(stderr, "       Use all the available operators. This flag will only be used when\n");
     fprintf(stderr, "       generating expressions or when in conjecturing mode. The result is\n");
     fprintf(stderr, "       that no operators are read from the input.\n");
+    fprintf(stderr, "    -t, --theory\n");
+    fprintf(stderr, "       Known theory will be supplied. When using this flag, you need to\n");
+    fprintf(stderr, "       give the best known value for each object: after specifying the\n");
+    fprintf(stderr, "       number objects, invariants and the main invariant (and possibly\n");
+    fprintf(stderr, "       the invariant names), and before specifying the invariant values.\n");
+    fprintf(stderr, "       It is verified whether this known theory is indeed consistent with\n");
+    fprintf(stderr, "       the selected main invariant.\n");
     fprintf(stderr, "    --leq\n");
     fprintf(stderr, "       Use the comparator <= when constructing conjectures. The conjectures will\n");
     fprintf(stderr, "       be of the form 'main invariant <= f(invariants)'. This is the default\n");
