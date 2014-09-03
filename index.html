@@ -290,6 +290,19 @@ sage: conjectures
 <ul>
 <li>Restart the Sage Worksheet Server. Go to project settings for your project and under <strong>Restart</strong> click the button for Sage Worksheet Server.</li>
 <li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above.</li>
+</ul><p>Once you have done this in a SMC project, you might want to update the conjecturing software when a newer version is available. You can do this using the following steps:</p>
+
+<ul>
+<li>Go to the <code>spkg</code> directory where you finished the initial install.</li>
+<li>Execute the following command to update the source code: <code>git pull --all</code>. It will inform you whether it really did any updating.</li>
+<li>If newer source files were indeed available, you can now install them using the following commands. Note: we assume that you are still in the <code>spkg</code> directory.</li>
+</ul><pre><code>~/spkg$ make conjecturing-1.spkg
+~/spkg$ sage -f conjecturing-1.spkg
+</code></pre>
+
+<ul>
+<li>Restart the Sage Worksheet Server. Go to project settings for your project and under <strong>Restart</strong> click the button for Sage Worksheet Server.</li>
+<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet and the newest version of the program will be used.</li>
 </ul>
       </section>
       <footer>
