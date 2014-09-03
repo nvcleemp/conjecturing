@@ -424,18 +424,18 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
         for(i = 0; i < objectCount; i++){
             if(values[i] == UNDEFINED){
                 continue;
-        }
+            }
             dalmatianObjectInBoundArea[i] = 
                     dalmatianObjectInBoundArea[i] || values[i];
-    }
+        }
     } else if(inequality == NECESSARY){
         for(i = 0; i < objectCount; i++){
             if(values[i] == UNDEFINED){
                 continue;
-        }
+            }
             dalmatianObjectInBoundArea[i] = 
                     dalmatianObjectInBoundArea[i] && values[i];
-    }
+        }
     } else {
         BAILOUT("Error when handling dalmatian heuristic: unknown inequality")
     }
