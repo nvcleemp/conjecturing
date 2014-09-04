@@ -329,11 +329,22 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
     boolean isMoreSignificant = FALSE;
     if(theoryProvided){
         for(i=0; i<objectCount; i++){
-            if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
-                    !(invariantValues_propertyBased[i][mainInvariant])){
-                //we're only looking at object that have the main property to decide
-                //the significance.
-                continue;
+            if(inequality == SUFFICIENT){
+                if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
+                        !(invariantValues_propertyBased[i][mainInvariant])){
+                    //we're only looking at object that have the main property to decide
+                    //the significance.
+                    continue;
+                }
+            } else if(inequality == NECESSARY){
+                if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
+                        (invariantValues_propertyBased[i][mainInvariant])){
+                    //we're only looking at object that do not have the main property
+                    //to decide the significance.
+                    continue;
+                }
+            } else {
+                BAILOUT("Error when handling dalmatian heuristic: unknown inequality")
             }
             
             if(!handleComparator_propertyBased(knownTheory_propertyBased[i],
@@ -378,11 +389,22 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
     //find the objects for which this bound is better
     isMoreSignificant = FALSE; //the conjecture is not necessarily more significant than the other conjectures
     for(i=0; i<objectCount; i++){
-        if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
-                !(invariantValues_propertyBased[i][mainInvariant])){
-            //we're only looking at object that have the main property to decide
-            //the significance.
-            continue;
+        if(inequality == SUFFICIENT){
+            if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
+                    !(invariantValues_propertyBased[i][mainInvariant])){
+                //we're only looking at object that have the main property to decide
+                //the significance.
+                continue;
+            }
+        } else if(inequality == NECESSARY){
+            if(invariantValues_propertyBased[i][mainInvariant] == UNDEFINED ||
+                    (invariantValues_propertyBased[i][mainInvariant])){
+                //we're only looking at object that do not have the main property
+                //to decide the significance.
+                continue;
+            }
+        } else {
+            BAILOUT("Error when handling dalmatian heuristic: unknown inequality")
         }
         
         if(!handleComparator_propertyBased(dalmatianObjectInBoundArea[i],
@@ -501,8 +523,8 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
                 isMoreSignificant = FALSE;
                 for(j = 0; j < objectCount; j++){
                     if(invariantValues_propertyBased[j][mainInvariant] == UNDEFINED ||
-                            !(invariantValues_propertyBased[j][mainInvariant])){
-                        //we're only looking at object that have the main property to decide
+                            (invariantValues_propertyBased[j][mainInvariant])){
+                        //we're only looking at object that do not have the main property to decide
                         //the significance.
                         continue;
                     }
