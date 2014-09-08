@@ -11,6 +11,7 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
         self.stack = stack
         self.expression = expression
         self.pickling = pickling
+        self.__name__ = ''.join(c for c in repr(self.expression) if c != ' ')
         super(Conjecture, self).__init__()
 
     def __eq__(self, other):
@@ -24,6 +25,9 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
 
     def _latex_(self):
         return latex(self.expression)
+
+    def __call__(self, g, returnBoundValue=False):
+        return self.evaluate(g, returnBoundValue)
 
     def evaluate(self, g, returnBoundValue=False):
         stack = []
@@ -289,6 +293,7 @@ class PropertyBasedConjecture(SageObject):
         self.expression = expression
         self.propertyCalculators = propertyCalculators
         self.pickling = pickling
+        self.__name__ = repr(self.expression)
         super(PropertyBasedConjecture, self).__init__()
 
     def __eq__(self, other):
@@ -302,6 +307,9 @@ class PropertyBasedConjecture(SageObject):
 
     def _latex_(self):
         return latex(self.expression)
+
+    def __call__(self, g):
+        return self.evaluate(g)
 
     def evaluate(self, g):
         values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
