@@ -188,6 +188,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
                                                    operators=None, theory=None):
 
     if len(invariants)<2 or len(objects)==0: return
+    if not theory: theory=None
 
     assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
 
@@ -356,6 +357,7 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
                                                    operators=None, theory=None):
 
     if len(invariants)<2 or len(objects)==0: return
+    if not theory: theory=None
 
     assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
 
