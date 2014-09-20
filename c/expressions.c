@@ -199,6 +199,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
             if(!handleComparator(knownTheory[i], values[i], inequality)){
                 if(verbose){
                     fprintf(stderr, "Conjecture is more significant than known theory for object %d.\n", i+1);
+                    fprintf(stderr, "%11.6lf vs. %11.6lf\n", knownTheory[i], values[i]);
                 }
                 isMoreSignificant = TRUE;
             }
@@ -240,6 +241,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
         } else {
             if(verbose){
                 fprintf(stderr, "Conjecture is more significant for object %d.\n", i+1);
+                fprintf(stderr, "%11.6lf vs. %11.6lf\n", currentBest, values[i]);
             }
             dalmatianBestConjectureForObject[i] = MAX_OBJECT_COUNT;
             isMoreSignificant = TRUE;
