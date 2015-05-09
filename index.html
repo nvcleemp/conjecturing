@@ -26,26 +26,15 @@
           <li><a href="https://github.com/nvcleemp/conjecturing/tarball/master">Download <strong>TAR Ball</strong></a></li>
           <li><a href="https://github.com/nvcleemp/conjecturing">View On <strong>GitHub</strong></a></li>
         </ul>
-
-        <p></p>
-
-        <p class="view" style="margin-bottom: 0px"><a href="#quickstart">Quickstart</a></p>
-        <p class="view" style="margin-bottom: 0px"><a href="#layout-of-the-repository">Layout of the repository</a></p>
-        <p class="view" style="margin-bottom: 0px"><a href="#usage">Usage</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#c-program">C program</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#making-the-sage-package">Making the Sage Package</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#making-conjectures-in-sage">Making conjectures in Sage</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#running-the-examples">Running the examples</a></p>
-        <p class="view" style="margin-bottom: 0px"><a href="#conjecturing-on-the-sagemath-cloud-">Conjecturing on The Sagemath Cloud ™</a></p>
       </header>
       <section>
         <h1>
-<a name="conjecturing-for-sage" class="anchor" href="#conjecturing-for-sage"><span class="octicon octicon-link"></span></a>Conjecturing for Sage</h1>
+<a id="conjecturing-for-sage" class="anchor" href="#conjecturing-for-sage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conjecturing for Sage</h1>
 
 <p>This repository contains the code described in the paper Automated Conjecture-making: Fajtlowicz's Dalmatian Heuristic Revisited.</p>
 
 <h2>
-<a name="quickstart" class="anchor" href="#quickstart"><span class="octicon octicon-link"></span></a>Quickstart</h2>
+<a id="quickstart" class="anchor" href="#quickstart" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quickstart</h2>
 
 <p>See the directory <code>spkg</code> for instructions on how to build and install a Sage package containing the expressions program.
 Once you have built and installed such a Sage package, you can use the Python files in the directory <code>sage</code> to interact
@@ -74,7 +63,7 @@ sage: conjecture(objects, invariants, 1)
 <p>Note that loading the file <code>numbertheory.py</code> sets the variable <code>invariants</code> to a list of invariants used in number theory.</p>
 
 <h2>
-<a name="layout-of-the-repository" class="anchor" href="#layout-of-the-repository"><span class="octicon octicon-link"></span></a>Layout of the repository</h2>
+<a id="layout-of-the-repository" class="anchor" href="#layout-of-the-repository" aria-hidden="true"><span class="octicon octicon-link"></span></a>Layout of the repository</h2>
 
 <p>The repository contains four directory:</p>
 
@@ -87,11 +76,13 @@ sage: conjecture(objects, invariants, 1)
 <code>sage</code>: this directory contains the Python scripts which integrate the C program into Sage.</li>
 <li>
 <code>examples</code>: this directory contains several examples of how the code in this repository can be used.</li>
-</ul><h2>
-<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+</ul>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
 
 <h3>
-<a name="c-program" class="anchor" href="#c-program"><span class="octicon octicon-link"></span></a>C program</h3>
+<a id="c-program" class="anchor" href="#c-program" aria-hidden="true"><span class="octicon octicon-link"></span></a>C program</h3>
 
 <p>Building the C program is simple: just execute the command <code>make</code> in the directory <code>c</code>. This will build the program <code>expressions</code>. A detailed usage message for <code>expressions</code> can be obtained by executing the following command:</p>
 
@@ -161,7 +152,7 @@ I2 &lt;= ((I3) ^ 2) + 1
 </code></pre>
 
 <h3>
-<a name="making-the-sage-package" class="anchor" href="#making-the-sage-package"><span class="octicon octicon-link"></span></a>Making the Sage Package</h3>
+<a id="making-the-sage-package" class="anchor" href="#making-the-sage-package" aria-hidden="true"><span class="octicon octicon-link"></span></a>Making the Sage Package</h3>
 
 <p>You do not need to make the Sage Package. You can simply install the one we are providing. If you however want to make the Sage Package yourself, simply go to the directory <code>spkg</code> and use the following command:</p>
 
@@ -176,7 +167,7 @@ I2 &lt;= ((I3) ^ 2) + 1
 <p>Depending on the location where Sage is installed, you might need to add <code>sudo</code> at the beginning of that command.</p>
 
 <h3>
-<a name="making-conjectures-in-sage" class="anchor" href="#making-conjectures-in-sage"><span class="octicon octicon-link"></span></a>Making conjectures in Sage</h3>
+<a id="making-conjectures-in-sage" class="anchor" href="#making-conjectures-in-sage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Making conjectures in Sage</h3>
 
 <p>Once you have installed the Sage Package (either by downloading and installing it, or by building it yourself and then installing it), you can load the files in the directory <code>sage</code> to make conjectures within Sage. The most important file is <code>conjecturing.py</code>. This loads the code needed to make conjectures. The remaining files just provide utility methods to make conjectures for graph theory, matrix theory and number theory.</p>
 
@@ -194,7 +185,9 @@ I2 &lt;= ((I3) ^ 2) + 1
 <code>invariants</code>: the invariants that can appear in the conjectures.</li>
 <li>
 <code>mainInvariant</code>: the main invariant that will appear on the left-hand-side of the comparator.</li>
-</ul><p>These three are sufficient to make conjectures:</p>
+</ul>
+
+<p>These three are sufficient to make conjectures:</p>
 
 <pre><code>sage: def max_degree(g):
 ....:    return max(g.degree())
@@ -224,8 +217,10 @@ sage: conjecture(objects, invariants, 0)
 <code>operators</code>: specifies a set of operators that can be used. If this is <code>None</code>, then all operators are used. Otherwise only the specified operators are used. It is advised to use the method <code>allOperators</code> to get a set containing all operators and then removing the operators you don't need. Default value is <code>None</code>.</li>
 <li>
 <code>theory</code>: specifies a list of known bounds. If this is <code>None</code>, then no known bounds are used. Otherwise each conjecture will have to be more significant than the bounds in this list. This implies that if each object obtains equality for any of the bounds in this list, then no conjectures will be made.</li>
-</ul><h3>
-<a name="running-the-examples" class="anchor" href="#running-the-examples"><span class="octicon octicon-link"></span></a>Running the examples</h3>
+</ul>
+
+<h3>
+<a id="running-the-examples" class="anchor" href="#running-the-examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running the examples</h3>
 
 <p>Each of the examples in the directory <code>examples</code> specify which files need to be loaded for the example to work. The examples are referred to from the paper. Most of the examples come in two versions: a short and a long version. The short version immediately should give the conjectures as they appear in the paper. Since in most cases the conjecturing is halted by the time limit, in some cases there might be a small discrepancy between the conjectures in the paper and the conjectures you get. The long version repeats the steps we took to produce the conjectures, i.e., start with a small set, generate conjectures, look for counterexamples, add them to the objects, generate conjectures, ... Note that these long versions sometimes take very long (some need multiple days!).</p>
 
@@ -283,14 +278,16 @@ sage: conjectures
 <p>Note that this will take quite long to verify these two conjectures for all values it checks.</p>
 
 <h2>
-<a name="conjecturing-on-the-sagemath-cloud-" class="anchor" href="#conjecturing-on-the-sagemath-cloud-"><span class="octicon octicon-link"></span></a>Conjecturing on The Sagemath Cloud ™</h2>
+<a id="conjecturing-on-sagemathcloud-" class="anchor" href="#conjecturing-on-sagemathcloud-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conjecturing on SagemathCloud ™</h2>
 
 <p>One easy way to work with Sage is by going to <a href="http://cloud.sagemath.com">http://cloud.sagemath.com</a>. Of course you can use our code on The Sagemath Cloud ™. By default, however, it is not possible to install additional packages there, so we give some extra explanation below.</p>
 
 <ul>
 <li>Follow the instructions on <a href="https://github.com/sagemath/cloud/wiki/FAQ#wiki-own-sage-bin">https://github.com/sagemath/cloud/wiki/FAQ#wiki-own-sage-bin</a> to set up your own Sage binary.</li>
 <li>Make and install the Sage package in a Terminal:</li>
-</ul><pre><code>~$ echo [ui] &gt; ~/.hgrc
+</ul>
+
+<pre><code>~$ echo [ui] &gt; ~/.hgrc
 ~$ echo username=x &gt;&gt; ~/.hgrc
 ~$ git clone --depth 1 https://github.com/nvcleemp/conjecturing.git .
 ~$ cd spkg
@@ -301,13 +298,17 @@ sage: conjectures
 <ul>
 <li>Restart the Sage Worksheet Server. Go to project settings for your project and under <strong>Restart</strong> click the button for Sage Worksheet Server.</li>
 <li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above.</li>
-</ul><p>Once you have done this in a SMC project, you might want to update the conjecturing software when a newer version is available. You can do this using the following steps:</p>
+</ul>
+
+<p>Once you have done this in a SMC project, you might want to update the conjecturing software when a newer version is available. You can do this using the following steps:</p>
 
 <ul>
 <li>Go to the <code>spkg</code> directory where you finished the initial install.</li>
 <li>Execute the following command to update the source code: <code>git pull --all</code>. It will inform you whether it really did any updating.</li>
 <li>If newer source files were indeed available, you can now install them using the following commands. Note: we assume that you are still in the <code>spkg</code> directory.</li>
-</ul><pre><code>~/spkg$ make conjecturing-1.spkg
+</ul>
+
+<pre><code>~/spkg$ make conjecturing-1.spkg
 ~/spkg$ sage -f conjecturing-1.spkg
 </code></pre>
 
