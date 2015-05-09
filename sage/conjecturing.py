@@ -198,7 +198,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
 
     # check whether number of invariants and objects falls within the allowed bounds
     import subprocess
-    sp = subprocess.Popen('expressions --limits all', shell=True,
+    sp = subprocess.Popen('./expressions --limits all', shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, close_fds=True)
 
@@ -225,7 +225,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -c{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = './expressions -c{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
     command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
                              '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
@@ -365,7 +365,7 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
 
     # check whether number of invariants and objects falls within the allowed bounds
     import subprocess
-    sp = subprocess.Popen('expressions --limits all', shell=True,
+    sp = subprocess.Popen('./expressions --limits all', shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, close_fds=True)
 
@@ -392,7 +392,7 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -pc{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = './expressions -pc{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
     command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
                              '--all-operators ' if operators is None else '',
                              time, '--sufficient' if sufficient else '--necessary')
