@@ -26,18 +26,6 @@
           <li><a href="https://github.com/nvcleemp/conjecturing/tarball/master">Download <strong>TAR Ball</strong></a></li>
           <li><a href="https://github.com/nvcleemp/conjecturing">View On <strong>GitHub</strong></a></li>
         </ul>
-        
-        <p></p>
-        
-        <p class="view" style="margin-bottom: 0px"><a href="#quickstart">Quickstart</a></p>
-        <p class="view" style="margin-bottom: 0px"><a href="#layout-of-the-repository">Layout of the repository</a></p>
-        <p class="view" style="margin-bottom: 0px"><a href="#usage">Usage</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#c-program">C program</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#making-the-sage-package">Making the Sage Package</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#making-conjectures-in-sage">Making conjectures in Sage</a></p>
-        <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#running-the-examples">Running the examples</a></p>
-        <p class="view" style="margin-bottom: 0px"><a href="#conjecturing-on-the-sagemath-cloud-">Conjecturing on SageMathCloud ™</a></p>
-
       </header>
       <section>
         <h1>
@@ -290,44 +278,36 @@ sage: conjectures
 <p>Note that this will take quite long to verify these two conjectures for all values it checks.</p>
 
 <h2>
-<a id="conjecturing-on-sagemathcloud-" class="anchor" href="#conjecturing-on-sagemathcloud-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conjecturing on SagemathCloud ™</h2>
+<a id="conjecturing-on-sagemathcloud-" class="anchor" href="#conjecturing-on-sagemathcloud-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conjecturing on SageMathCloud ™</h2>
 
-<p>One easy way to work with Sage is by going to <a href="http://cloud.sagemath.com">http://cloud.sagemath.com</a>. Of course you can use our code on The Sagemath Cloud ™. By default, however, it is not possible to install additional packages there, so we give some extra explanation below.</p>
+<p>One easy way to work with Sage is by going to <a href="http://cloud.sagemath.com">http://cloud.sagemath.com</a>. Of course you can use our code on SageMathCloud ™. By default, however, it is not possible to install additional packages there, so we created a separate release of the conjecturing package which can easily be used on SMC.</p>
 
 <ul>
-<li>Follow the instructions on <a href="https://github.com/sagemath/cloud/wiki/FAQ#wiki-own-sage-bin">https://github.com/sagemath/cloud/wiki/FAQ#wiki-own-sage-bin</a> to set up your own Sage binary.</li>
-<li>Make and install the Sage package in a Terminal:</li>
+<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.9-SMC.zip">0.9-SMC release</a>.</li>
+<li>Create a new project on SMC, and upload the zip file from the previous step to that project.</li>
+<li>Open a terminal on SMC and execute the following commands:</li>
 </ul>
 
-<pre><code>~$ echo [ui] &gt; ~/.hgrc
-~$ echo username=x &gt;&gt; ~/.hgrc
-~$ git clone --depth 1 https://github.com/nvcleemp/conjecturing.git .
-~$ cd spkg
-~/spkg$ make conjecturing-1.spkg
-~/spkg$ sage -f conjecturing-1.spkg
+<pre><code>~$ unzip conjecturing-0.9-SMC
+~$ cd conjecturing-0.9-SMC
+~/conjecturing-0.9-SMC$ make
 </code></pre>
 
 <ul>
-<li>Restart the Sage Worksheet Server. Go to project settings for your project and under <strong>Restart</strong> click the button for Sage Worksheet Server.</li>
-<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above.</li>
+<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above. In case you are bothered by the zip file and the directory 0.9-SMC, you can just remove them. Do not remove the files <code>expressions</code> and <code>conjecturing.py</code>.</li>
 </ul>
 
-<p>Once you have done this in a SMC project, you might want to update the conjecturing software when a newer version is available. You can do this using the following steps:</p>
+<p>You can check that the installation was successful by creating a worksheet, copying the code below and executing it. If everything went OK, you should see some conjectures.</p>
 
-<ul>
-<li>Go to the <code>spkg</code> directory where you finished the initial install.</li>
-<li>Execute the following command to update the source code: <code>git pull --all</code>. It will inform you whether it really did any updating.</li>
-<li>If newer source files were indeed available, you can now install them using the following commands. Note: we assume that you are still in the <code>spkg</code> directory.</li>
-</ul>
-
-<pre><code>~/spkg$ make conjecturing-1.spkg
-~/spkg$ sage -f conjecturing-1.spkg
+<pre><code>load('conjecturing.py')
+def max_degree(g):
+    return max(g.degree())
+invariants = [Graph.size, Graph.order, max_degree]
+objects = [graphs.CompleteGraph(n) for n in [3,4,5]]
+conjecture(objects, invariants, 0)
 </code></pre>
 
-<ul>
-<li>Restart the Sage Worksheet Server. Go to project settings for your project and under <strong>Restart</strong> click the button for Sage Worksheet Server.</li>
-<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet and the newest version of the program will be used.</li>
-</ul>
+<p>To update to a newer version, you just repeat the steps above for the newer zip file.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/nvcleemp">nvcleemp</a></p>
