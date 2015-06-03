@@ -14,9 +14,3 @@ Conjecturing was written by Nico Van Cleemput.
 
 == Dependencies ==
  * None
-
-== Changelog ==
-
-=== conjecturing-20130807 Nico Van Cleemput (7th August 2013) ===
- * First release put into Sage.
-
