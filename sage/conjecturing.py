@@ -109,7 +109,7 @@ def _makeConjecture(inputList, variable, invariantsDict):
                 f = wrapUnboundMethod(op, invariantsDict)
             else:
                 f = wrapBoundMethod(op, invariantsDict)
-            expressionStack.append(sage.symbolic.function_factory.function(op, variable))
+            expressionStack.append(sage.symbolic.function_factory.function(op)(variable))
             operatorStack.append((f,0))
         elif op in specials:
             _handleSpecialOperators(expressionStack, op)
@@ -151,9 +151,9 @@ def _handleSpecialOperators(stack, op):
     elif op == 'log10':
         stack.append(log(stack.pop(),10))
     elif op == 'max':
-        stack.append(function('maximum',stack.pop(),stack.pop()))
+        stack.append(function('maximum')(stack.pop(),stack.pop()))
     elif op == 'min':
-        stack.append(function('minimum',stack.pop(),stack.pop()))
+        stack.append(function('minimum')(stack.pop(),stack.pop()))
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
