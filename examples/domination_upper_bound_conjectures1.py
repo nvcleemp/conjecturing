@@ -3,7 +3,7 @@ This file assumes that the conjecturing spkg and nauty spkg is installed and tha
 'graphtheory.py' are loaded.
 '''
 
-def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, upperBound=True, steps=10, mainInvariant=1, verbose=False):
+def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, upperBound=True, steps=10, mainInvariant=1, verbose=False, operators=None):
     if verbose:
         print("Starting with these objects:")
         for g in objects:
@@ -23,7 +23,7 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
                 print("    {}".format(name))
         print("")
     for _ in range(steps):
-        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
+        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound, operators=operators)
         if verbose:
             print("Found the following conjectures:")
             for c in l:
@@ -45,7 +45,7 @@ def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, 
             break
     return l
 
-objects = [graphs.CompleteGraph(3), 
+objects = [graphs.CompleteGraph(3),
            Graph('WxEW?CB?I?_R????_?W?@?OC?AW???O?C??B???G?A?_??R'),
            Graph('PKKOGCO?G?gH?@_?_?_?@C?C'),
            Graph('T{aAA@?G@?C?C?A??_??_?A??C?@??A??A??')]
@@ -59,8 +59,10 @@ objects = [graphs.CompleteGraph(3),
 knownUpperBounds = [matching_number, annihilation_number, fractional_alpha, lovasz_theta, cvetkovic]
 for bound in knownUpperBounds:
     invariants.remove(bound)
-mainInvariant = invariants.index(dominationNumber)
 
-conjectures = automatedGraphSearch(objects, invariants, 3, 10, mainInvariant=mainInvariant, steps=100, verbose=True)
+operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+    '+', '*', 'max', 'min', '-', '/', '^'}
+
+conjectures = automatedGraphSearch(objects, invariants, 3, 10, mainInvariant=mainInvariant, steps=100, verbose=True, operators=operators)
 
 print("The conjectures are stored in the variable conjectures.")

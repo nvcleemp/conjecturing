@@ -17,6 +17,9 @@ invariants.remove(goldbach) #only for even numbers
 
 mainInvariant = invariants.index(riemann)
 
-conjectures = conjecture(objects, invariants, mainInvariant, upperBound=True)
+operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+    '+', '*', 'max', 'min', '-', '/', '^'}
+
+conjectures = conjecture(objects, invariants, mainInvariant, upperBound=True, operators=operators)
 
 print("The conjectures are stored in the variable conjectures.")

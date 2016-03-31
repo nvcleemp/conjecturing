@@ -3,9 +3,9 @@ This file assumes that the conjecturing spkg and nauty spkg is installed and tha
 'graphtheory.py' are loaded.
 '''
 
-def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, upperBound=True, steps=10, mainInvariant=1):
+def automatedGraphSearch(objects, invariants, minimumVertices, maximumVertices, upperBound=True, steps=10, mainInvariant=1, operators=None):
     for _ in range(steps):
-        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
+        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound, operators=operators)
         noCounterExample = True
         for i in range(minimumVertices, maximumVertices+1):
             for g in graphs.nauty_geng('-c {}'.format(i)):
@@ -24,6 +24,9 @@ objects = [graphs.CompleteGraph(3)]
 
 mainInvariant = invariants.index(dominationNumber)
 
-conjectures = automatedGraphSearch(objects, invariants, 3, 10, mainInvariant=mainInvariant, steps=100, upperBound=False)
+operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+    '+', '*', 'max', 'min', '-', '/', '^'}
+
+conjectures = automatedGraphSearch(objects, invariants, 3, 10, mainInvariant=mainInvariant, steps=100, upperBound=False, operators=operators)
 
 print("The conjectures are stored in the variable conjectures.")

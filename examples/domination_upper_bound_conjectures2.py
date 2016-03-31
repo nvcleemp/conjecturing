@@ -3,7 +3,7 @@ This file assumes that the conjecturing spkg is installed and that 'conjecturing
 'graphtheory.py' are loaded.
 '''
 
-objects = [graphs.CompleteGraph(3), 
+objects = [graphs.CompleteGraph(3),
            Graph('WxEW?CB?I?_R????_?W?@?OC?AW???O?C??B???G?A?_??R'),
            Graph('PKKOGCO?G?gH?@_?_?_?@C?C'),
            Graph('T{aAA@?G@?C?C?A??_??_?A??C?@??A??A??'),
@@ -25,6 +25,9 @@ mainInvariant = invariants.index(dominationNumber)
 minPos, maxPos = invariants.index(min_degree), invariants.index(max_degree)
 invariants[minPos], invariants[maxPos] = invariants[maxPos], invariants[minPos]
 
-conjectures = conjecture(objects, invariants, mainInvariant, upperBound=True)
+operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+       '+', '*', 'max', 'min', '-', '/', '^'}
+
+conjectures = conjecture(objects, invariants, mainInvariant, upperBound=True, operators=operators)
 
 print("The conjectures are stored in the variable conjectures.")
