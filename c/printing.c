@@ -42,6 +42,40 @@ void printUnaryOperator_left(int id, FILE *f){
         fprintf(f, "ln(");
     } else if(id==9){
         fprintf(f, "log10(");
+    } else if(id==10){
+        fprintf(f, "exp(");
+    } else if(id==11){
+        fprintf(f, "10 ^ (");
+    } else if(id==12){
+        fprintf(f, "ceil(");
+    } else if(id==13){
+        fprintf(f, "floor(");
+    } else if(id==14){
+        fprintf(f, "|(");
+    } else if(id==15){
+        fprintf(f, "sin(");
+    } else if(id==16){
+        fprintf(f, "cos(");
+    } else if(id==17){
+        fprintf(f, "tan(");
+    } else if(id==18){
+        fprintf(f, "asin(");
+    } else if(id==19){
+        fprintf(f, "acos(");
+    } else if(id==20){
+        fprintf(f, "atan(");
+    } else if(id==21){
+        fprintf(f, "sinh(");
+    } else if(id==22){
+        fprintf(f, "cosh(");
+    } else if(id==23){
+        fprintf(f, "tanh(");
+    } else if(id==24){
+        fprintf(f, "asinh(");
+    } else if(id==25){
+        fprintf(f, "acosh(");
+    } else if(id==26){
+        fprintf(f, "atanh(");
     } else {
         BAILOUT("Unknown unary operator ID")
     }
@@ -58,7 +92,12 @@ void printUnaryOperator_right(int id, FILE *f){
         fprintf(f, ") / 2");
     } else if(id==4){
         fprintf(f, ") ^ 2");
-    } else if(id==5 || id==6 || id==7 || id==8 || id==9){
+    } else if(id==14){
+        fprintf(f, ")|");
+    } else if(id==5 || id==6 || id==7 || id==8 || id==9 || id==10 || id == 11 ||
+            id == 12 || id == 13 || id == 15 || id == 16 || id == 17 || id == 18 || 
+            id == 19 || id == 20 || id == 21 || id == 22 || id == 23 || id == 24 || 
+            id == 25 || id == 26){
         fprintf(f, ")");
     } else {
         BAILOUT("Unknown unary operator ID")
@@ -178,6 +217,40 @@ void printUnaryOperator_single(int id, FILE *f){
         fprintf(f, "ln");
     } else if(id==9){
         fprintf(f, "log10");
+    } else if(id==10){
+        fprintf(f, "exp");
+    } else if(id==11){
+        fprintf(f, "10^");
+    } else if(id==12){
+        fprintf(f, "ceil");
+    } else if(id==13){
+        fprintf(f, "floor");
+    } else if(id==14){
+        fprintf(f, "abs");
+    } else if(id==15){
+        fprintf(f, "sin");
+    } else if(id==16){
+        fprintf(f, "cos");
+    } else if(id==17){
+        fprintf(f, "tan");
+    } else if(id==18){
+        fprintf(f, "asin");
+    } else if(id==19){
+        fprintf(f, "acos");
+    } else if(id==20){
+        fprintf(f, "atan");
+    } else if(id==21){
+        fprintf(f, "sinh");
+    } else if(id==22){
+        fprintf(f, "cosh");
+    } else if(id==23){
+        fprintf(f, "tanh");
+    } else if(id==24){
+        fprintf(f, "asinh");
+    } else if(id==25){
+        fprintf(f, "acosh");
+    } else if(id==26){
+        fprintf(f, "atanh");
     } else {
         BAILOUT("Unknown unary operator ID")
     }
