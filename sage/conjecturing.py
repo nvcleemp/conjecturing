@@ -94,9 +94,12 @@ def wrapBoundMethod(op, invariantsDict):
 def _makeConjecture(inputList, variable, invariantsDict):
     import operator
 
-    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10', 'max', 'min'}
+    specials = {'-1', '+1', '*2', '/2', '^2', '-()', '1/', 'log10', 'max', 'min', '10^'}
 
-    unaryOperators = {'sqrt': sqrt, 'ln': log}
+    unaryOperators = {'sqrt': sqrt, 'ln': log, 'exp': exp, 'ceil': ceil, 'floor': floor,
+                      'abs': abs, 'sin': sin, 'cos': cos, 'tan': tan, 'asin': arcsin,
+                      'acos': arccos, 'atan': arctan, 'sinh': sinh, 'cosh': cosh,
+                      'tanh': tanh, 'asinh': arcsinh, 'acosh': arccosh, 'atanh': arctanh}
     binaryOperators = {'+': operator.add, '*': operator.mul, '-': operator.sub, '/': operator.truediv, '^': operator.pow}
     comparators = {'<': operator.lt, '<=': operator.le, '>': operator.gt, '>=': operator.ge}
     expressionStack = []
@@ -109,7 +112,7 @@ def _makeConjecture(inputList, variable, invariantsDict):
                 f = wrapUnboundMethod(op, invariantsDict)
             else:
                 f = wrapBoundMethod(op, invariantsDict)
-            expressionStack.append(sage.symbolic.function_factory.function(op, variable))
+            expressionStack.append(sage.symbolic.function_factory.function(op)(variable))
             operatorStack.append((f,0))
         elif op in specials:
             _handleSpecialOperators(expressionStack, op)
@@ -151,9 +154,11 @@ def _handleSpecialOperators(stack, op):
     elif op == 'log10':
         stack.append(log(stack.pop(),10))
     elif op == 'max':
-        stack.append(function('maximum',stack.pop(),stack.pop()))
+        stack.append(function('maximum')(stack.pop(),stack.pop()))
     elif op == 'min':
-        stack.append(function('minimum',stack.pop(),stack.pop()))
+        stack.append(function('minimum')(stack.pop(),stack.pop()))
+    elif op == '10^':
+        stack.append(10**stack.pop())
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
@@ -178,11 +183,16 @@ def _getSpecialOperators(op):
         return max, 2
     elif op == 'min':
         return min, 2
+    elif op == '10^':
+        return (lambda x: 10**x), 1
     else:
         raise ValueError("Unknown operator: {}".format(op))
 
 def allOperators():
-    return { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10', '+', '*', 'max', 'min', '-', '/', '^'}
+    return { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+       'exp', '10^', 'ceil', 'floor', 'abs', 'sin', 'cos', 'tan', 'asin',
+       'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
+       '+', '*', 'max', 'min', '-', '/', '^'}
 
 def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, upperBound=True,
                                                    operators=None, theory=None):
@@ -192,8 +202,16 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
 
     assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
 
-    operatorDict = { '-1' : 'U 0', '+1' : 'U 1', '*2' : 'U 2', '/2' : 'U 3', '^2' : 'U 4', '-()' : 'U 5', '1/' : 'U 6',
-                     'sqrt' : 'U 7', 'ln' : 'U 8', 'log10' : 'U 9', '+' : 'C 0', '*' : 'C 1', 'max' : 'C 2', 'min' : 'C 3',
+    operatorDict = { '-1' : 'U 0', '+1' : 'U 1', '*2' : 'U 2', '/2' : 'U 3',
+                     '^2' : 'U 4', '-()' : 'U 5', '1/' : 'U 6',
+                     'sqrt' : 'U 7', 'ln' : 'U 8', 'log10' : 'U 9',
+                     'exp' : 'U 10', '10^' : 'U 11', 'ceil' : 'U 12',
+                     'floor' : 'U 13', 'abs' : 'U 14', 'sin' : 'U 15',
+                     'cos' : 'U 16', 'tan' : 'U 17', 'asin' : 'U 18',
+                     'acos' : 'U 19', 'atan' : 'U 20', 'sinh': 'U 21',
+                     'cosh' : 'U 22', 'tanh' : 'U 23', 'asinh': 'U 24',
+                     'acosh' : 'U 25', 'atanh' : 'U 26',
+                     '+' : 'C 0', '*' : 'C 1', 'max' : 'C 2', 'min' : 'C 3',
                      '-' : 'N 0', '/' : 'N 1', '^' : 'N 2'}
 
     # check whether number of invariants and objects falls within the allowed bounds
@@ -210,7 +228,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
-    
+
     for pos, invariant in enumerate(invariants):
         if type(invariant) == tuple:
             name, invariant = invariant
@@ -264,19 +282,19 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
                 stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
             except:
                 stdin.write('NaN\n')
-    
+
     if debug:
         for l in sp.stderr:
             print '> ' + l.rstrip()
-    
+
     # process the output
     out = sp.stdout
-    
+
     variable = SR.var(variableName)
-    
+
     conjectures = []
     inputList = []
-    
+
     for l in out:
         op = l.strip()
         if op:
@@ -284,7 +302,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         else:
             conjectures.append(_makeConjecture(inputList, variable, invariantsDict))
             inputList = []
-    
+
     return conjectures
 
 class PropertyBasedConjecture(SageObject):
@@ -377,7 +395,7 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
-    
+
     for pos, invariant in enumerate(invariants):
         if type(invariant) == tuple:
             name, invariant = invariant
@@ -435,17 +453,17 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
                 stdin.write('{}\n'.format(1 if bool(invariantsDict[invariant](o)) else 0))
             except:
                 stdin.write('-1\n')
-    
+
     if debug:
         for l in sp.stderr:
             print '> ' + l.rstrip()
-    
+
     # process the output
     out = sp.stdout
-    
+
     conjectures = []
     inputList = []
-    
+
     for l in out:
         op = l.strip()
         if op:
@@ -453,5 +471,5 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
         else:
             conjectures.append(_makePropertyBasedConjecture(inputList, invariantsDict))
             inputList = []
-    
+
     return conjectures

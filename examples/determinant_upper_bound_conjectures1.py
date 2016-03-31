@@ -3,7 +3,7 @@ This file assumes that the conjecturing spkg is installed and that 'conjecturing
 'matrixtheory.py' are loaded.
 '''
 
-def automatedGraphSearch(objects, invariants, minimumSize, maximumSize, upperBound=True, steps=10, mainInvariant=1, verbose=False):
+def automatedGraphSearch(objects, invariants, minimumSize, maximumSize, upperBound=True, steps=10, mainInvariant=1, verbose=False, operators=None):
     if verbose:
         print("Starting with these objects:")
         for m in objects:
@@ -23,7 +23,7 @@ def automatedGraphSearch(objects, invariants, minimumSize, maximumSize, upperBou
                 print("    {}".format(name))
         print("")
     for _ in range(steps):
-        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
+        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound, operators=operators)
         if verbose:
             print("Found the following conjectures:")
             for c in l:
@@ -48,7 +48,7 @@ def automatedGraphSearch(objects, invariants, minimumSize, maximumSize, upperBou
             print("No counterexample found")
             break
     if not noCounterExample:
-        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
+        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound, operators=operators)
         if verbose:
             print("Found the following conjectures:")
             for c in l:
@@ -60,7 +60,7 @@ def inverseTriangularNumber(t):
     n = int(sqrt(2*t))
     assert n*(n+1)==2*t, "Not a triangular number: {}".format(t)
     return n
-        
+
 
 def symmetricMatrixFromList(l):
     n = inverseTriangularNumber(len(l))
@@ -71,7 +71,7 @@ def symmetricMatrixFromList(l):
         end += n - i
         m[i] = [m[j][i] for j in range(i)] + l[start:end]
     return matrix(m)
-    
+
 def int2base21(i, length):
     if not i: return [0] * int(length)
     l = []
@@ -93,6 +93,9 @@ objects = [matrix([[1,1],[1,1]])]
 
 mainInvariant = invariants.index(determinant)
 
-conjectures = automatedGraphSearch(objects, invariants, 2, 4, steps=100, verbose=True, mainInvariant=mainInvariant)
+operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+    '+', '*', 'max', 'min', '-', '/', '^'}
+
+conjectures = automatedGraphSearch(objects, invariants, 2, 4, steps=100, verbose=True, mainInvariant=mainInvariant, operators=operators)
 
 print("The conjectures are stored in the variable conjectures.")

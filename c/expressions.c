@@ -59,7 +59,7 @@ char *invariantNamesPointers[MAX_INVARIANT_COUNT];
 
 int inequality = LEQ; // == SUFFICIENT
 
-int unaryOperatorCount = 10;
+int unaryOperatorCount = 27;
 /* 
  * 1: x - 1
  * 2: x + 1
@@ -71,6 +71,23 @@ int unaryOperatorCount = 10;
  * 8: sqrt(x)
  * 9: ln(x)
  * 10: log_10(x)
+ * 11: exp(x)
+ * 12: 10 ** x
+ * 13: ceil(x)
+ * 14: floor(x)
+ * 15: abs(x)
+ * 16: sin(x)
+ * 17: cos(x)
+ * 18: tan(x)
+ * 19: asin(x)
+ * 20: acos(x)
+ * 21: atan(x)
+ * 22: sinh(x)
+ * 23: cosh(x)
+ * 24: tanh(x)
+ * 25: asinh(x)
+ * 26: acosh(x)
+ * 27: atanh(x)
  */
 int unaryOperators[MAX_UNARY_OPERATORS];
 
@@ -820,22 +837,73 @@ double handleUnaryOperator(int id, double value){
         return log(value);
     } else if(id==9){
         return log10(value);
+    } else if(id==10){
+        return exp(value);
+    } else if(id==11){
+        return pow(10, value);
+    } else if(id==12){
+        return ceil(value);
+    } else if(id==13){
+        return floor(value);
+    } else if(id==14){
+        return fabs(value);
+    } else if(id==15){
+        return sin(value);
+    } else if(id==16){
+        return cos(value);
+    } else if(id==17){
+        return tan(value);
+    } else if(id==18){
+        return asin(value);
+    } else if(id==19){
+        return acos(value);
+    } else if(id==20){
+        return atan(value);
+    } else if(id==21){
+        return sinh(value);
+    } else if(id==22){
+        return cosh(value);
+    } else if(id==23){
+        return tanh(value);
+    } else if(id==24){
+        return asinh(value);
+    } else if(id==25){
+        return acosh(value);
+    } else if(id==26){
+        return atanh(value);
     } else {
         BAILOUT("Unknown unary operator ID")
     }
 }
 
 void writeUnaryOperatorExample(FILE *f){
-    fprintf(f, "U 0    x - 1\n");
-    fprintf(f, "U 1    x + 1\n");
-    fprintf(f, "U 2    x * 2\n");
-    fprintf(f, "U 3    x / 2\n");
-    fprintf(f, "U 4    x ^ 2\n");
-    fprintf(f, "U 5    -x\n");
-    fprintf(f, "U 6    1 / x\n");
-    fprintf(f, "U 7    sqrt(x)\n");
-    fprintf(f, "U 8    ln(x)\n");
-    fprintf(f, "U 9    log_10(x)\n");
+    fprintf(f, "U  0    x - 1\n");
+    fprintf(f, "U  1    x + 1\n");
+    fprintf(f, "U  2    x * 2\n");
+    fprintf(f, "U  3    x / 2\n");
+    fprintf(f, "U  4    x ^ 2\n");
+    fprintf(f, "U  5    -x\n");
+    fprintf(f, "U  6    1 / x\n");
+    fprintf(f, "U  7    sqrt(x)\n");
+    fprintf(f, "U  8    ln(x)\n");
+    fprintf(f, "U  9    log_10(x)\n");
+    fprintf(f, "U 10    exp(x)\n");
+    fprintf(f, "U 11    10 ^ x\n");
+    fprintf(f, "U 12    ceil(x)\n");
+    fprintf(f, "U 13    floor(x)\n");
+    fprintf(f, "U 14    |x|\n");
+    fprintf(f, "U 15    sin(x)\n");
+    fprintf(f, "U 16    cos(x)\n");
+    fprintf(f, "U 17    tan(x)\n");
+    fprintf(f, "U 18    asin(x)\n");
+    fprintf(f, "U 19    acos(x)\n");
+    fprintf(f, "U 20    atan(x)\n");
+    fprintf(f, "U 21    sinh(x)\n");
+    fprintf(f, "U 22    cosh(x)\n");
+    fprintf(f, "U 23    tanh(x)\n");
+    fprintf(f, "U 24    asinh(x)\n");
+    fprintf(f, "U 25    acosh(x)\n");
+    fprintf(f, "U 26    atanh(x)\n");
 }
 
 double handleCommutativeBinaryOperator(int id, double left, double right){

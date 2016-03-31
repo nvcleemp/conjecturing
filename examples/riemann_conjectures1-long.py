@@ -3,7 +3,7 @@ This file assumes that the conjecturing spkg is installed and that 'conjecturing
 and 'numbertheory.py' is loaded.
 '''
 
-def automatedSearch(objects, invariants, mainInvariant, universe, upperBound=True, steps=10, verbose=False):
+def automatedSearch(objects, invariants, mainInvariant, universe, upperBound=True, steps=10, verbose=False, operators=None):
     if verbose:
         print("Starting with these objects:")
         for i in objects:
@@ -23,7 +23,7 @@ def automatedSearch(objects, invariants, mainInvariant, universe, upperBound=Tru
                 print("   {}".format(name))
         print("")
     for step in range(steps):
-        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
+        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound, operators=operators)
         if verbose:
             print("Found the following conjectures:")
             for c in l:
@@ -45,7 +45,7 @@ def automatedSearch(objects, invariants, mainInvariant, universe, upperBound=Tru
             print "No counterexample found"
             break
     if not noCounterExample:
-        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound)
+        l = conjecture(objects, invariants, mainInvariant, upperBound=upperBound, operators=operators)
     return l
 
 def riemann(x):
@@ -65,7 +65,10 @@ invariants.remove(goldbach) #only for even numbers
 
 mainInvariant = invariants.index(riemann)
 
-conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=200, verbose=True, upperBound=True)
-#conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=10, verbose=True, upperBound=True)
+operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+    '+', '*', 'max', 'min', '-', '/', '^'}
+
+conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=200, verbose=True, upperBound=True, operators=operators)
+#conjectures = automatedSearch(objects, invariants, mainInvariant, universe, steps=10, verbose=True, upperBound=True, operators=operators)
 
 print("The conjectures are stored in the variable conjectures.")

@@ -7,6 +7,9 @@ objects = [Integer(4), Integer(12)]
 
 mainInvariant = invariants.index(goldbach)
 
-conjectures = conjecture(objects, invariants, mainInvariant, upperBound=False)
+operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
+    '+', '*', 'max', 'min', '-', '/', '^'}
+
+conjectures = conjecture(objects, invariants, mainInvariant, upperBound=False, operators=operators)
 
 print("The conjectures are stored in the variable conjectures.")
