@@ -26,14 +26,14 @@
           <li><a href="https://github.com/nvcleemp/conjecturing/tarball/master">Download <strong>TAR Ball</strong></a></li>
           <li><a href="https://github.com/nvcleemp/conjecturing">View On <strong>GitHub</strong></a></li>
         </ul>
-        
+
          <p></p>
-         
+
           <p class="view" style="margin-bottom: 0px"><a href="#quickstart">Quickstart</a></p>
           <p class="view" style="margin-bottom: 0px"><a href="#layout-of-the-repository">Layout of the repository</a></p>
           <p class="view" style="margin-bottom: 0px"><a href="#usage">Usage</a></p>
           <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#c-program">C program</a></p>
-          <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#making-the-sage-package">Making the Sage Package</a></p>
+          <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#installing-in-sage">Installing in Sage</a></p>
           <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#making-conjectures-in-sage">Making conjectures in Sage</a></p>
           <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#running-the-examples">Running the examples</a></p>
           <p class="view" style="margin-bottom: 0px"><a href="#conjecturing-on-sagemathcloud-">Conjecturing on SageMathCloud ™</a></p>
@@ -83,7 +83,7 @@ sage: conjecture(objects, invariants, 1)
 <li>
 <code>c</code>: this directory contains the code for the program expressions which is used to generate the expressions and conjectures. This program can also be used as a stand-alone program.</li>
 <li>
-<code>spkg</code>: this directory contains the script needed to construct a Sage package of the C program, so that the program can easily be installed.</li>
+<code>spkg</code>: this directory contains the scripts needed to install the C program as a package in Sage.</li>
 <li>
 <code>sage</code>: this directory contains the Python scripts which integrate the C program into Sage.</li>
 <li>
@@ -143,7 +143,7 @@ Found 10 labeled trees.
 
 <p>Now you can generate all valid expressions with one unary operator as follows:</p>
 
-<pre><code>$ ./expressions -e 1 0 --all-operators --print-valid-expressions &lt; values.txt 
+<pre><code>$ ./expressions -e 1 0 --all-operators --print-valid-expressions &lt; values.txt
 I2 &lt;= (I1) * 2
 I2 &lt;= (I1) ^ 2
 Found 1 unlabeled trees.
@@ -153,7 +153,7 @@ Found 2 valid expressions.
 
 <p>Finally you can also generate conjectures using the same file:</p>
 
-<pre><code>$ ./expressions -c --all-operators --dalmatian &lt; values.txt 
+<pre><code>$ ./expressions -c --all-operators --dalmatian &lt; values.txt
 Generation process was stopped by the conjecturing heuristic.
 Found 5 unlabeled trees.
 Found 410 labeled trees.
@@ -164,19 +164,17 @@ I2 &lt;= ((I3) ^ 2) + 1
 </code></pre>
 
 <h3>
-<a id="making-the-sage-package" class="anchor" href="#making-the-sage-package" aria-hidden="true"><span class="octicon octicon-link"></span></a>Making the Sage Package</h3>
+<a id="installing-in-sage" class="anchor" href="#installing-in-sage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installing in Sage</h3>
 
-<p>You do not need to make the Sage Package. You can simply install the one we are providing. If you however want to make the Sage Package yourself, simply go to the directory <code>spkg</code> and use the following command:</p>
+<p>First you need to locate the Sage installation into which you want to install conjecturing. In case this is the system installation of Sage, you can find the location using the command <code>which sage</code>.</p>
 
-<pre><code>$ make conjecturing-YYYYMMDD.spkg
-</code></pre>
-
-<p>Replace <code>YYYYMMDD</code> by the year, the month and the day respectively. You can then install this newly created package by issueing the following command:</p>
-
-<pre><code>$ sage -f conjecturing-YYYYMMDD.spkg
-</code></pre>
-
-<p>Depending on the location where Sage is installed, you might need to add <code>sudo</code> at the beginning of that command.</p>
+<ul>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/releases/download/0.10.0/spkg.zip">spkg.zip</a>, extract it and copy the directory <i>conjecturing</i> into the directory <i>SAGE_ROOT/build/pkgs</i>.</li>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/archive/0.10.0.tar.gz">conjecturing-0.10.0.tar.gz</a> and place the file into <i>SAGE_ROOT/upstream</i>.</li>
+    <li>Run the following command: <code>$ sage -sh sage-fix-pkg-checksums</code><br>Make sure that you use the Sage installation into which you are installing.</li>
+    <li>Install the package using the following command: <code>$ sage -i conjecturing</code><br>Make sure that you use the Sage installation into which you are installing.</li>
+</ul>
+<p></p>
 
 <h3>
 <a id="making-conjectures-in-sage" class="anchor" href="#making-conjectures-in-sage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Making conjectures in Sage</h3>
@@ -239,7 +237,7 @@ sage: conjecture(objects, invariants, 0)
 <p>For example, to run the first example of goldbach conjectures, you proceed as follows. Start Sage in the directory <code>examples</code>. Execute the following commands:</p>
 
 <pre><code>sage: load('../sage/conjecturing.py')
-sage: load('../sage/numbertheory.py')   
+sage: load('../sage/numbertheory.py')
 sage: load('goldbach_conjectures1.py')
 The conjectures are stored in the variable conjectures.
 sage: conjectures
@@ -248,9 +246,9 @@ sage: conjectures
 
 <p>If you want to run the long version, then you load the file which has -long appended to the name:</p>
 
-<pre><code>sage: load('../sage/conjecturing.py') 
-sage: load('../sage/numbertheory.py') 
-sage: load('goldbach_conjectures1-long.py')   
+<pre><code>sage: load('../sage/conjecturing.py')
+sage: load('../sage/numbertheory.py')
+sage: load('goldbach_conjectures1-long.py')
 Starting with these objects:
  4
 
@@ -295,18 +293,18 @@ sage: conjectures
 <p>One easy way to work with Sage is by going to <a href="http://cloud.sagemath.com">http://cloud.sagemath.com</a>. Of course you can use our code on SageMathCloud ™. By default, however, it is not possible to install additional packages there, so we created a separate release of the conjecturing package which can easily be used on SMC.</p>
 
 <ul>
-<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.9-SMC.zip">0.9-SMC release</a>.</li>
+<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.10.0-SMC.zip">0.10.0-SMC release</a>.</li>
 <li>Create a new project on SMC, and upload the zip file from the previous step to that project.</li>
 <li>Open a terminal on SMC and execute the following commands:</li>
 </ul>
 
-<pre><code>~$ unzip conjecturing-0.9-SMC
-~$ cd conjecturing-0.9-SMC
-~/conjecturing-0.9-SMC$ make
+<pre><code>~$ unzip conjecturing-0.10.0-SMC
+~$ cd conjecturing-0.10.0-SMC
+~/conjecturing-0.10.0-SMC$ make
 </code></pre>
 
 <ul>
-<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above. In case you are bothered by the zip file and the directory 0.9-SMC, you can just remove them. Do not remove the files <code>expressions</code> and <code>conjecturing.py</code>.</li>
+<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above. In case you are bothered by the zip file and the directory 0.10.0-SMC, you can just remove them. Do not remove the files <code>expressions</code> and <code>conjecturing.py</code>.</li>
 </ul>
 
 <p>You can check that the installation was successful by creating a worksheet, copying the code below and executing it. If everything went OK, you should see some conjectures.</p>
@@ -327,6 +325,6 @@ conjecture(objects, invariants, 0)
       </footer>
     </div>
     <script src="javascripts/scale.fix.js"></script>
-    
+
   </body>
 </html>
