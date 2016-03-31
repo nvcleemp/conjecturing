@@ -210,7 +210,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
-    
+
     for pos, invariant in enumerate(invariants):
         if type(invariant) == tuple:
             name, invariant = invariant
@@ -264,19 +264,19 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
                 stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
             except:
                 stdin.write('NaN\n')
-    
+
     if debug:
         for l in sp.stderr:
             print '> ' + l.rstrip()
-    
+
     # process the output
     out = sp.stdout
-    
+
     variable = SR.var(variableName)
-    
+
     conjectures = []
     inputList = []
-    
+
     for l in out:
         op = l.strip()
         if op:
@@ -284,7 +284,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, deb
         else:
             conjectures.append(_makeConjecture(inputList, variable, invariantsDict))
             inputList = []
-    
+
     return conjectures
 
 class PropertyBasedConjecture(SageObject):
@@ -377,7 +377,7 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
-    
+
     for pos, invariant in enumerate(invariants):
         if type(invariant) == tuple:
             name, invariant = invariant
@@ -435,17 +435,17 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
                 stdin.write('{}\n'.format(1 if bool(invariantsDict[invariant](o)) else 0))
             except:
                 stdin.write('-1\n')
-    
+
     if debug:
         for l in sp.stderr:
             print '> ' + l.rstrip()
-    
+
     # process the output
     out = sp.stdout
-    
+
     conjectures = []
     inputList = []
-    
+
     for l in out:
         op = l.strip()
         if op:
@@ -453,5 +453,5 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
         else:
             conjectures.append(_makePropertyBasedConjecture(inputList, invariantsDict))
             inputList = []
-    
+
     return conjectures
