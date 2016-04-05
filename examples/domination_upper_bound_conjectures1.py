@@ -59,6 +59,7 @@ objects = [graphs.CompleteGraph(3),
 knownUpperBounds = [matching_number, annihilation_number, fractional_alpha, lovasz_theta, cvetkovic]
 for bound in knownUpperBounds:
     invariants.remove(bound)
+mainInvariant = invariants.index(dominationNumber)
 
 operators = { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
     '+', '*', 'max', 'min', '-', '/', '^'}
