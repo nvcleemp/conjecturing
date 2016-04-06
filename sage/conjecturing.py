@@ -510,8 +510,8 @@ def allPropertyBasedOperators():
     """
     return { '~', '&', '|', '^', '->'}
 
-def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=False, verbose=False, sufficient=True,
-                                                   operators=None, theory=None):
+def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=False,
+                            verbose=False, sufficient=True, operators=None, theory=None):
     """
     Runs the conjecturing program for properties with the provided objects,
     properties and main property. This method requires the package conjecturing
@@ -520,11 +520,11 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
     INPUT:
 
     -  ``objects`` - a list of objects about which conjectures should be made.
-    -  ``invariants`` - a list of functions (callable objects) which take a
+    -  ``properties`` - a list of functions (callable objects) which take a
        single argument and return a boolean value. Each function should
        be able to produce a value for each of the elements of objects.
-    -  ``mainInvariant`` - an integer that is the index of one of the elements
-       of invariants. All conjectures will then be a bound for the property that
+    -  ``mainProperty`` - an integer that is the index of one of the elements
+       of properties. All conjectures will then be a bound for the property that
        corresponds to this index.
     -  ``sufficient`` - if given, this boolean value specifies whether sufficient
        or necessary conditions for the main property should be generated. If
@@ -602,14 +602,14 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
         [(~(is_even))->(is_prime)]
     """
 
-    if len(invariants)<2 or len(objects)==0: return
+    if len(properties)<2 or len(objects)==0: return
     if not theory: theory=None
 
-    assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
+    assert 0 <= mainProperty < len(properties), 'Illegal value for mainProperty'
 
     operatorDict = { '~' : 'U 0', '&' : 'C 0', '|' : 'C 1', '^' : 'C 2', '->' : 'N 0'}
 
-    # check whether number of invariants and objects falls within the allowed bounds
+    # check whether number of properties and objects falls within the allowed bounds
     import subprocess
     sp = subprocess.Popen('expressions --limits all', shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -618,23 +618,23 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
     limits = {key:int(value) for key, value in (l.split(':') for l in sp.stdout)}
 
     assert len(objects) <= limits['MAX_OBJECT_COUNT'], 'This version of expressions does not support that many objects.'
-    assert len(invariants) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many invariants.'
+    assert len(properties) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many properties.'
 
     # prepare the invariants to be used in conjecturing
-    invariantsDict = {}
+    propertiesDict = {}
     names = []
 
-    for pos, invariant in enumerate(invariants):
-        if type(invariant) == tuple:
-            name, invariant = invariant
-        elif hasattr(invariant, '__name__'):
-            if invariant.__name__ in invariantsDict:
-                name = '{}_{}'.format(invariant.__name__, pos)
+    for pos, property in enumerate(properties):
+        if type(property) == tuple:
+            name, property = property
+        elif hasattr(property, '__name__'):
+            if property.__name__ in propertiesDict:
+                name = '{}_{}'.format(property.__name__, pos)
             else:
-                name = invariant.__name__
+                name = property.__name__
         else:
-            name = 'invariant_{}'.format(pos)
-        invariantsDict[name] = invariant
+            name = 'property_{}'.format(pos)
+        propertiesDict[name] = property
         names.append(name)
 
     # call the conjecturing program
@@ -657,10 +657,10 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
         for op in operators:
             stdin.write('{}\n'.format(operatorDict[op]))
 
-    stdin.write('{} {} {}\n'.format(len(objects), len(invariants), mainInvariant + 1))
+    stdin.write('{} {} {}\n'.format(len(objects), len(properties), mainProperty + 1))
 
-    for invariant in names:
-        stdin.write('{}\n'.format(invariant))
+    for property in names:
+        stdin.write('{}\n'.format(property))
 
     if theory is not None:
         for o in objects:
@@ -676,9 +676,9 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
                     stdin.write('-1\n')
 
     for o in objects:
-        for invariant in names:
+        for property in names:
             try:
-                stdin.write('{}\n'.format(1 if bool(invariantsDict[invariant](o)) else 0))
+                stdin.write('{}\n'.format(1 if bool(propertiesDict[property](o)) else 0))
             except:
                 stdin.write('-1\n')
 
@@ -697,7 +697,7 @@ def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=Fa
         if op:
             inputList.append(op)
         else:
-            conjectures.append(_makePropertyBasedConjecture(inputList, invariantsDict))
+            conjectures.append(_makePropertyBasedConjecture(inputList, propertiesDict))
             inputList = []
 
     return conjectures
