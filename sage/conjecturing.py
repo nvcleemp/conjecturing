@@ -209,6 +209,119 @@ def allOperators():
 
 def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, upperBound=True,
                                                    operators=None, theory=None):
+    """
+    Runs the conjecturing program for invariants with the provided objects,
+    invariants and main invariant. This method requires the package conjecturing
+    to be installed.
+
+    INPUT:
+
+    -  ``objects`` - a list of objects about which conjectures should be made.
+    -  ``invariants`` - a list of functions (callable objects) which take a
+       single argument and return a numerical real value. Each function should
+       be able to produce a value for each of the elements of objects.
+    -  ``mainInvariant`` - an integer that is the index of one of the elements
+       of invariants. All conjectures will then be a bound for the invariant that
+       corresponds to this index.
+    -  ``upperBound`` - if given, this boolean value specifies whether upper or
+       lower bounds for the main invariant should be generated. If ``True``,
+       then upper bounds are generated. If ``False``, then lower bounds are
+       generated. The default value is ``True``
+    -  ``time`` - if given, this integer specifies the number of seconds before
+       the conjecturing program times out and returns the best conjectures it
+       has at that point. The default value is 5.
+    -  ``theory`` - if given, specifies a list of known bounds. If this is
+       ``None``, then no known bounds are used. Otherwise each conjecture will
+       have to be more significant than the bounds in this list. This implies
+       that if each object obtains equality for any of the bounds in this list,
+       then no conjectures will be made. The default value is ``None``.
+    -  ``operators`` - if given, specifies a set of operators that can be used.
+       If this is ``None``, then all known operators are used. Otherwise only
+       the specified operators are used. It is advised to use the method
+       ``allOperators()`` to get a set containing all operators and then
+       removing the operators which are not needed. The default value is
+       ``None``.
+    -  ``variableName`` - if given, this name will be used to denote the objects
+       in the produced conjectures. The default value is ``'x'``. This option
+       only has a cosmetical purpose.
+    -  ``debug`` - if given, this boolean value specifies whether the output of
+       the program ``expressions`` to ``stderr`` is printed. The default value
+       is ``False``.
+    -  ``verbose`` - if given, this boolean value specifies whether the program
+       ``expressions`` is ran in verbose mode. Note that this has nu purpose if
+       ``debug`` is not also set to ``True``. The default value is ``False``.
+
+    EXAMPLES::
+
+    A very simple example defines just two functions that take an integer and
+    return an integer, and then generates conjectures for these invariant Using
+    the single integer 1. As we are specifying the index of the main invariant
+    to be 0, all conjectures will be upper bounds for ``a``::
+
+        >>> def a(n): return n
+        >>> def b(n): return n + 1
+        >>> conjecture([1], [a,b], 0)
+        [a(x) <= b(x) - 1]
+
+    We can also generate lower bound conjectures::
+
+        >>> conjecture([1], [a,b], 0, upperBound=False)
+        [a(x) >= b(x) - 1]
+
+    In order to get more nicely printed conjectures, we can change the default
+    variable name which is used in the conjectures::
+
+        >>> conjecture([1], [a,b], 0, variableName='n')
+        [a(n) <= b(n) - 1]
+
+    Conjectures can be made for any kind of object::
+
+        >>> def max_degree(g): return max(g.degree())
+        >>> objects = [graphs.CompleteGraph(i) for i in range(3,6)]
+        >>> invariants = [Graph.size, Graph.order, max_degree]
+        >>> mainInvariant = invariants.index(Graph.size)
+        >>> conjecture(objects, invariants, mainInvariant, variableName='G')
+         [size(G) <= 2*order(G),
+          size(G) <= max_degree(G)^2 - 1,
+          size(G) <= 1/2*max_degree(G)*order(G)]
+
+    In some cases strange conjectures might be produced or one conjecture you
+    might be expecting does not show up. In this case you can use the ``debug``
+    and ``verbose`` option to find out what is going on behind the scene. By
+    enabling ``debug`` the program prints the reason it stopped generating
+    conjectures (time limit, no better conjectures possible, ...) and gives some
+    statistics about the number of conjectures it looked at::
+
+        >>> conjecture([1], [a,b], 0, debug=True)
+        > Generation process was stopped by the conjecturing heuristic.
+        > Found 2 unlabeled trees.
+        > Found 2 labeled trees.
+        > Found 2 valid expressions.
+        [a(x) <= b(x) - 1]
+
+    By also enabling ``verbose``, you can discover which values are actually
+    given to the program::
+
+        >>> conjecture([1], [a,b], 0, debug=True, verbose=True)
+        >      Invariant  1  Invariant  2
+        >   1)    1.000000      2.000000
+        > Generating trees with 0 unary nodes and 0 binary nodes.
+        > Saving expression
+        > a <= b
+        > Status: 1 unlabeled tree, 1 labeled tree, 1 expression
+        > Generating trees with 1 unary node and 0 binary nodes.
+        > Conjecture is more significant for object 1.
+        >    2.000000 vs.    1.000000
+        > Saving expression
+        > a <= (b) - 1
+        > Status: 2 unlabeled trees, 2 labeled trees, 2 expressions
+        > Generation process was stopped by the conjecturing heuristic.
+        > Found 2 unlabeled trees.
+        > Found 2 labeled trees.
+        > Found 2 valid expressions.
+        [a(x) <= b(x) - 1]
+
+    """
 
     if len(invariants)<2 or len(objects)==0: return
     if not theory: theory=None
