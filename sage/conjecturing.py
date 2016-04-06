@@ -39,8 +39,8 @@ class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberP
             elif opType==1:
                 stack.append(op(stack.pop()))
             elif opType==2:
-	        right = stack.pop()
-	        left = stack.pop()
+                right = stack.pop()
+                left = stack.pop()
                 if type(left) == sage.symbolic.expression.Expression:
                     left = left.n()
                 if type(right) == sage.symbolic.expression.Expression:
