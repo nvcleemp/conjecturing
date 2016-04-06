@@ -195,11 +195,11 @@ def allOperators():
     get a set from which to remove some operators or to just get an idea
     of how to write some operators.
 
-    There are at the moment 34 operators available, including, e.g., addition.
+    There are at the moment 34 operators available, including, e.g., addition::
 
-        sage: len(allOperators())
+        >>> len(allOperators())
         34
-        sage: '+' in allOperators()
+        >>> '+' in allOperators()
         True
     """
     return { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
@@ -501,11 +501,11 @@ def allPropertyBasedOperators():
     get a set from which to remove some operators or to just get an idea
     of how to write some operators.
 
-    There are at the moment 5 operators available, including, e.g., AND.
+    There are at the moment 5 operators available, including, e.g., AND::
 
-        sage: len(allPropertyBasedOperators())
+        >>> len(allPropertyBasedOperators())
         5
-        sage: '&' in allPropertyBasedOperators()
+        >>> '&' in allPropertyBasedOperators()
         True
     """
     return { '~', '&', '|', '^', '->'}
