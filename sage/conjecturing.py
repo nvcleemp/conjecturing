@@ -207,8 +207,9 @@ def allOperators():
        'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
        '+', '*', 'max', 'min', '-', '/', '^'}
 
-def conjecture(objects, invariants, mainInvariant, variableName='x', time=5, debug=False, verbose=False, upperBound=True,
-                                                   operators=None, theory=None):
+def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
+               debug=False, verbose=False, upperBound=True, operators=None,
+               theory=None):
     """
     Runs the conjecturing program for invariants with the provided objects,
     invariants and main invariant. This method requires the package conjecturing
