@@ -512,6 +512,95 @@ def allPropertyBasedOperators():
 
 def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=False, verbose=False, sufficient=True,
                                                    operators=None, theory=None):
+    """
+    Runs the conjecturing program for properties with the provided objects,
+    properties and main property. This method requires the package conjecturing
+    to be installed.
+
+    INPUT:
+
+    -  ``objects`` - a list of objects about which conjectures should be made.
+    -  ``invariants`` - a list of functions (callable objects) which take a
+       single argument and return a boolean value. Each function should
+       be able to produce a value for each of the elements of objects.
+    -  ``mainInvariant`` - an integer that is the index of one of the elements
+       of invariants. All conjectures will then be a bound for the property that
+       corresponds to this index.
+    -  ``sufficient`` - if given, this boolean value specifies whether sufficient
+       or necessary conditions for the main property should be generated. If
+       ``True``, then sufficient conditions are generated. If ``False``, then
+       necessary conditions are generated. The default value is ``True``
+    -  ``time`` - if given, this integer specifies the number of seconds before
+       the conjecturing program times out and returns the best conjectures it
+       has at that point. The default value is 5.
+    -  ``theory`` - if given, specifies a list of known bounds. If this is
+       ``None``, then no known bounds are used. Otherwise each conjecture will
+       have to be more significant than the conditions in this list. The default
+       value is ``None``.
+    -  ``operators`` - if given, specifies a set of operators that can be used.
+       If this is ``None``, then all known operators are used. Otherwise only
+       the specified operators are used. It is advised to use the method
+       ``allPropertyBasedOperators()`` to get a set containing all operators and
+       then removing the operators which are not needed. The default value is
+       ``None``.
+    -  ``debug`` - if given, this boolean value specifies whether the output of
+       the program ``expressions`` to ``stderr`` is printed. The default value
+       is ``False``.
+    -  ``verbose`` - if given, this boolean value specifies whether the program
+       ``expressions`` is ran in verbose mode. Note that this has nu purpose if
+       ``debug`` is not also set to ``True``. The default value is ``False``.
+
+    EXAMPLES::
+
+    A very simple example uses just two properties of integers and generates
+    sufficient conditions for an integer to be prime based on the integer 3::
+
+        >>> propertyBasedConjecture([3], [is_prime,is_even], 0)
+        [(~(is_even))->(is_prime)]
+
+    We can also generate necessary condition conjectures::
+
+        >>> propertyBasedConjecture([3], [is_prime,is_even], 0, sufficient=False)
+        [(is_prime)->(~(is_even))]
+
+    In some cases strange conjectures might be produced or one conjecture you
+    might be expecting does not show up. In this case you can use the ``debug``
+    and ``verbose`` option to find out what is going on behind the scene. By
+    enabling ``debug`` the program prints the reason it stopped generating
+    conjectures (time limit, no better conjectures possible, ...) and gives some
+    statistics about the number of conjectures it looked at::
+
+        >>> propertyBasedConjecture([3], [is_prime,is_even], 0, debug=True)
+        > Generation process was stopped by the conjecturing heuristic.
+        > Found 2 unlabeled trees.
+        > Found 2 labeled trees.
+        > Found 2 valid expressions.
+        [(~(is_even))->(is_prime)]
+
+    By also enabling ``verbose``, you can discover which values are actually
+    given to the program::
+
+        >>> propertyBasedConjecture([3], [is_prime,is_even], 0, debug=True, verbose=True)
+        Using the following command
+        expressions -pcv --dalmatian --all-operators --time 5 --invariant-names --output stack --sufficient --allowed-skips 0
+        >      Invariant  1  Invariant  2
+        >   1)    TRUE          FALSE
+        > Generating trees with 0 unary nodes and 0 binary nodes.
+        > Saving expression
+        > is_prime <- is_even
+        > Status: 1 unlabeled tree, 1 labeled tree, 1 expression
+        > Generating trees with 1 unary node and 0 binary nodes.
+        > Conjecture is more significant for object 1.
+        > Saving expression
+        > is_prime <- ~(is_even)
+        > Conjecture 2 is more significant for object 1.
+        > Status: 2 unlabeled trees, 2 labeled trees, 2 expressions
+        > Generation process was stopped by the conjecturing heuristic.
+        > Found 2 unlabeled trees.
+        > Found 2 labeled trees.
+        > Found 2 valid expressions.
+        [(~(is_even))->(is_prime)]
+    """
 
     if len(invariants)<2 or len(objects)==0: return
     if not theory: theory=None
