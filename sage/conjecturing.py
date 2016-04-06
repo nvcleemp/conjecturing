@@ -189,6 +189,19 @@ def _getSpecialOperators(op):
         raise ValueError("Unknown operator: {}".format(op))
 
 def allOperators():
+    """
+    Returns a set containing all the operators that can be used with the
+    invariant-based conjecture method. This method can be used to quickly
+    get a set from which to remove some operators or to just get an idea
+    of how to write some operators.
+
+    There are at the moment 34 operators available, including, e.g., addition.
+
+        sage: len(allOperators())
+        34
+        sage: '+' in allOperators()
+        True
+    """
     return { '-1', '+1', '*2', '/2', '^2', '-()', '1/', 'sqrt', 'ln', 'log10',
        'exp', '10^', 'ceil', 'floor', 'abs', 'sin', 'cos', 'tan', 'asin',
        'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
