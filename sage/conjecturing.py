@@ -209,7 +209,7 @@ def allOperators():
 
 def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                debug=False, verbose=False, upperBound=True, operators=None,
-               theory=None):
+               theory=None, precomputed=None):
     """
     Runs the conjecturing program for invariants with the provided objects,
     invariants and main invariant. This method requires the package conjecturing
@@ -236,6 +236,20 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
        have to be more significant than the bounds in this list. This implies
        that if each object obtains equality for any of the bounds in this list,
        then no conjectures will be made. The default value is ``None``.
+    -  ``precomputed`` - if given, specifies a way to obtain precomputed invariant
+       values for (some of) the objects. If this is ``None``, then no precomputed
+       values are used. If this is a tuple, then it has to have length 3. The
+       first element is then a dictionary, the second element is a function that
+       returns a key for an object, and the third element is a function that
+       returns a key for an invariant. When an invariant value for an object
+       needs to be computed it will first be checked whether the key of the
+       object is in the dictionary. If it is, then it should be associated with
+       a dictionary and it will be checked whether the key of the invariant is
+       in that dictionary. If it is, then the associated value will be taken as
+       the invariant value, otherwise the invariant value will be computed. If
+       ``precomputed`` is not a tuple, it is assumed to be a dictionary, and the
+       same procedure as above is used, but the identity is used for both key
+       functions.
     -  ``operators`` - if given, specifies a set of operators that can be used.
        If this is ``None``, then all known operators are used. Otherwise only
        the specified operators are used. It is advised to use the method
@@ -286,6 +300,19 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
           size(G) <= max_degree(G)^2 - 1,
           size(G) <= 1/2*max_degree(G)*order(G)]
 
+    In some cases there might be invariants that are slow to calculate for some
+    objects. For these cases, the method ``conjecture`` provides a way to specify
+    precomputed values for some objects::
+
+        >>> o_key = lambda g: g.canonical_label().graph6_string()
+        >>> i_key = lambda f: f.__name__
+        >>> objects = [graphs.CompleteGraph(3), graphs.SchlaefliGraph()]
+        >>> invariants = [Graph.chromatic_number, Graph.order]
+        >>> main_invariant = invariants.index(Graph.chromatic_number)
+        >>> precomputed = {o_key(graphs.SchlaefliGraph()) : {i_key(Graph.chromatic_number) : 9}}
+        >>> conjecture(objects, invariants, main_invariant, precomputed=(precomputed, o_key, i_key))
+        [chromatic_number(x) <= order(x), chromatic_number(x) <= 10^tanh(order(x)) - 1]
+
     In some cases strange conjectures might be produced or one conjecture you
     might be expecting does not show up. In this case you can use the ``debug``
     and ``verbose`` option to find out what is going on behind the scene. By
@@ -326,6 +353,14 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
 
     if len(invariants)<2 or len(objects)==0: return
     if not theory: theory=None
+    if not precomputed:
+        precomputed = None
+    elif type(precomputed) == tuple:
+        assert len(precomputed) == 3, 'The length of the precomputed tuple should be 3.'
+        precomputed, object_key, invariant_key = precomputed
+    else:
+        object_key = lambda x: x
+        invariant_key = lambda x: x
 
     assert 0 <= mainInvariant < len(invariants), 'Illegal value for mainInvariant'
 
@@ -406,7 +441,17 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     for o in objects:
         for invariant in names:
             try:
-                stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
+                precomputed_value = None
+                if precomputed:
+                    o_key = object_key(o)
+                    i_key = invariant_key(invariantsDict[invariant])
+                    if o_key in precomputed:
+                        if i_key in precomputed[o_key]:
+                            precomputed_value = precomputed[o_key][i_key]
+                if precomputed_value is None:
+                    stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
+                else:
+                    stdin.write('{}\n'.format(float(precomputed_value)))
             except:
                 stdin.write('NaN\n')
 
@@ -512,7 +557,8 @@ def allPropertyBasedOperators():
     return { '~', '&', '|', '^', '->'}
 
 def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=False,
-                            verbose=False, sufficient=True, operators=None, theory=None):
+                            verbose=False, sufficient=True, operators=None,
+                            theory=None, precomputed=None):
     """
     Runs the conjecturing program for properties with the provided objects,
     properties and main property. This method requires the package conjecturing
@@ -605,6 +651,14 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
 
     if len(properties)<2 or len(objects)==0: return
     if not theory: theory=None
+    if not precomputed:
+        precomputed = None
+    elif type(precomputed) == tuple:
+        assert len(precomputed) == 3, 'The length of the precomputed tuple should be 3.'
+        precomputed, object_key, invariant_key = precomputed
+    else:
+        object_key = lambda x: x
+        invariant_key = lambda x: x
 
     assert 0 <= mainProperty < len(properties), 'Illegal value for mainProperty'
 
@@ -679,7 +733,17 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     for o in objects:
         for property in names:
             try:
-                stdin.write('{}\n'.format(1 if bool(propertiesDict[property](o)) else 0))
+                precomputed_value = None
+                if precomputed:
+                    o_key = object_key(o)
+                    i_key = invariant_key(invariantsDict[invariant])
+                    if o_key in precomputed:
+                        if i_key in precomputed[o_key]:
+                            precomputed_value = precomputed[o_key][i_key]
+                if precomputed_value is None:
+                    stdin.write('{}\n'.format(1 if bool(propertiesDict[property](o)) else 0))
+                else:
+                    stdin.write('{}\n'.format(1 if bool(precomputed_value) else 0))
             except:
                 stdin.write('-1\n')
 
