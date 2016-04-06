@@ -382,6 +382,19 @@ def _makePropertyBasedConjecture(inputList, invariantsDict):
     return PropertyBasedConjecture(propcalc.formula(expressionStack.pop()), propertyCalculators, (inputList, invariantsDict))
 
 def allPropertyBasedOperators():
+    """
+    Returns a set containing all the operators that can be used with the
+    property-based conjecture method. This method can be used to quickly
+    get a set from which to remove some operators or to just get an idea
+    of how to write some operators.
+
+    There are at the moment 5 operators available, including, e.g., AND.
+
+        sage: len(allPropertyBasedOperators())
+        5
+        sage: '&' in allPropertyBasedOperators()
+        True
+    """
     return { '~', '&', '|', '^', '->'}
 
 def propertyBasedConjecture(objects, invariants, mainInvariant, time=5, debug=False, verbose=False, sufficient=True,
