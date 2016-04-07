@@ -229,6 +229,19 @@ sage: conjecture(objects, invariants, 0)
 <code>theory</code>: specifies a list of known bounds. If this is <code>None</code>, then no known bounds are used. Otherwise each conjecture will have to be more significant than the bounds in this list. This implies that if each object obtains equality for any of the bounds in this list, then no conjectures will be made.</li>
 </ul>
 
+<p>You can also make property-based conjectures:</p>
+
+<pre><code>sage: properties = [is_prime, is_even]
+sage: objects = [3]
+sage: propertyBasedConjecture(objects, properties, 0)
+[(~(is_even))-&gt;(is_prime)]
+</code></pre>
+
+<p>The methods provide more detailed information. You can access this by running the following commands:</p>
+
+<pre><code>sage: help(conjecture)
+sage: help(propertyBasedConjecture)</code></pre>
+
 <h3>
 <a id="running-the-examples" class="anchor" href="#running-the-examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running the examples</h3>
 
