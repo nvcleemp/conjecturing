@@ -210,25 +210,6 @@ sage: conjecture(objects, invariants, 0)
  size(x) &lt;= 1/2*order(x)*max degree(x)]
 </code></pre>
 
-<p>The optional arguments are:</p>
-
-<ul>
-<li>
-<code>upperBound</code>: if <code>True</code>, the conjectures are upper bounds for the main invariant. Default value is <code>True</code>.</li>
-<li>
-<code>time</code>: specifies the amount of seconds after which the heuristic decides to no longer look for new conjectures. Default value is 5.</li>
-<li>
-<code>variableName</code>: specifies the symbol to be used for a general object in the conjectures. Default value is 'x'.</li>
-<li>
-<code>debug</code>: if <code>True</code>, the output of the program <code>expressions</code> to stderr is printed. Default value is <code>False</code>.</li>
-<li>
-<code>verbose</code>: if <code>True</code>, the program <code>expressions</code> is ran in verbose mode. Note that this has no point if <code>debug</code> is <code>False</code>. Default value is <code>False</code>.</li>
-<li>
-<code>operators</code>: specifies a set of operators that can be used. If this is <code>None</code>, then all operators are used. Otherwise only the specified operators are used. It is advised to use the method <code>allOperators</code> to get a set containing all operators and then removing the operators you don't need. Default value is <code>None</code>.</li>
-<li>
-<code>theory</code>: specifies a list of known bounds. If this is <code>None</code>, then no known bounds are used. Otherwise each conjecture will have to be more significant than the bounds in this list. This implies that if each object obtains equality for any of the bounds in this list, then no conjectures will be made.</li>
-</ul>
-
 <p>You can also make property-based conjectures:</p>
 
 <pre><code>sage: properties = [is_prime, is_even]
