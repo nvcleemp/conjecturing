@@ -212,8 +212,8 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                theory=None, precomputed=None):
     """
     Runs the conjecturing program for invariants with the provided objects,
-    invariants and main invariant. This method requires the package conjecturing
-    to be installed.
+    invariants and main invariant. This method requires the program ``expressions``
+    to be in the current working directory of Sage.
 
     INPUT:
 
@@ -561,8 +561,8 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
                             theory=None, precomputed=None):
     """
     Runs the conjecturing program for properties with the provided objects,
-    properties and main property. This method requires the package conjecturing
-    to be installed.
+    properties and main property. This method requires the program ``expressions``
+    to be in the current working directory of Sage.
 
     INPUT:
 
@@ -629,7 +629,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
 
         >>> propertyBasedConjecture([3], [is_prime,is_even], 0, debug=True, verbose=True)
         Using the following command
-        expressions -pcv --dalmatian --all-operators --time 5 --invariant-names --output stack --sufficient --allowed-skips 0
+        ./expressions -pcv --dalmatian --all-operators --time 5 --invariant-names --output stack --sufficient --allowed-skips 0
         >      Invariant  1  Invariant  2
         >   1)    TRUE          FALSE
         > Generating trees with 0 unary nodes and 0 binary nodes.
