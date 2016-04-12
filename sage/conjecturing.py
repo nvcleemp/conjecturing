@@ -736,7 +736,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
                 precomputed_value = None
                 if precomputed:
                     o_key = object_key(o)
-                    i_key = invariant_key(invariantsDict[invariant])
+                    i_key = invariant_key(propertiesDict[property])
                     if o_key in precomputed:
                         if i_key in precomputed[o_key]:
                             precomputed_value = precomputed[o_key][i_key]
