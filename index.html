@@ -22,8 +22,8 @@
 
 
         <ul>
-          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.11.0.tar.gz">Download <strong>0.11.0</strong></a></li>
-          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.11.0-SMC.zip">Download <strong>0.11.0-SMC</strong></a></li>
+          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.11.1.tar.gz">Download <strong>0.11.1</strong></a></li>
+          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.11.1-SMC.zip">Download <strong>0.11.1-SMC</strong></a></li>
           <li><a href="https://github.com/nvcleemp/conjecturing">View On <strong>GitHub</strong></a></li>
         </ul>
 
@@ -169,8 +169,8 @@ I2 &lt;= ((I3) ^ 2) + 1
 <p>First you need to locate the Sage installation into which you want to install conjecturing. In case this is the system installation of Sage, you can find the location using the command <code>which sage</code>.</p>
 
 <ul>
-    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/releases/download/0.11.0/spkg.zip">spkg.zip</a>, extract it and copy the directory <i>conjecturing</i> into the directory <i>SAGE_ROOT/build/pkgs</i>.</li>
-    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/archive/0.11.0.tar.gz">conjecturing-0.11.0.tar.gz</a> and place the file into <i>SAGE_ROOT/upstream</i>.</li>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/releases/download/0.11.1/spkg.zip">spkg.zip</a>, extract it and copy the directory <i>conjecturing</i> into the directory <i>SAGE_ROOT/build/pkgs</i>.</li>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/archive/0.11.1.tar.gz">conjecturing-0.11.1.tar.gz</a> and place the file into <i>SAGE_ROOT/upstream</i>.</li>
     <li>Run the following command: <code>$ sage -sh sage-fix-pkg-checksums</code><br>Make sure that you use the Sage installation into which you are installing.</li>
     <li>Install the package using the following command: <code>$ sage -i conjecturing</code><br>Make sure that you use the Sage installation into which you are installing.</li>
 </ul>
@@ -292,18 +292,18 @@ sage: conjectures
 <p>One easy way to work with Sage is by going to <a href="http://cloud.sagemath.com">http://cloud.sagemath.com</a>. Of course you can use our code on SageMathCloud ™. By default, however, it is not possible to install additional packages there, so we created a separate release of the conjecturing package which can easily be used on SMC.</p>
 
 <ul>
-<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.11.0-SMC.zip">0.11.0-SMC release</a>.</li>
+<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.11.1-SMC.zip">0.11.1-SMC release</a>.</li>
 <li>Create a new project on SMC, and upload the zip file from the previous step to that project.</li>
 <li>Open a terminal on SMC and execute the following commands:</li>
 </ul>
 
-<pre><code>~$ unzip conjecturing-0.11.0-SMC
-~$ cd conjecturing-0.11.0-SMC
-~/conjecturing-0.11.0-SMC$ make
+<pre><code>~$ unzip conjecturing-0.11.1-SMC
+~$ cd conjecturing-0.11.1-SMC
+~/conjecturing-0.11.1-SMC$ make
 </code></pre>
 
 <ul>
-<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above. In case you are bothered by the zip file and the directory 0.11.0-SMC, you can just remove them. Do not remove the files <code>expressions</code> and <code>conjecturing.py</code>.</li>
+<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above. In case you are bothered by the zip file and the directory 0.11.1-SMC, you can just remove them. Do not remove the files <code>expressions</code> and <code>conjecturing.py</code>.</li>
 </ul>
 
 <p>You can check that the installation was successful by creating a worksheet, copying the code below and executing it. If everything went OK, you should see some conjectures.</p>
