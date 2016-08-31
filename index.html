@@ -22,7 +22,7 @@
 
 
         <ul>
-          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.11.1.tar.gz">Download <strong>0.11.1</strong></a></li>
+          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.11.2.tar.gz">Download <strong>0.11.2</strong></a></li>
           <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.11.1-SMC.zip">Download <strong>0.11.1-SMC</strong></a></li>
           <li><a href="https://github.com/nvcleemp/conjecturing">View On <strong>GitHub</strong></a></li>
         </ul>
@@ -169,9 +169,9 @@ I2 &lt;= ((I3) ^ 2) + 1
 <p>First you need to locate the Sage installation into which you want to install conjecturing. In case this is the system installation of Sage, you can find the location using the command <code>which sage</code>.</p>
 
 <ul>
-    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/releases/download/0.11.1/spkg.zip">spkg.zip</a>, extract it and copy the directory <i>conjecturing</i> into the directory <i>SAGE_ROOT/build/pkgs</i>.</li>
-    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/archive/0.11.1.tar.gz">conjecturing-0.11.1.tar.gz</a> and place the file into <i>SAGE_ROOT/upstream</i>.</li>
-    <li>Run the following command: <code>$ sage -sh sage-fix-pkg-checksums</code><br>Make sure that you use the Sage installation into which you are installing.</li>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/releases/download/0.11.2/spkg.zip">spkg.zip</a>, extract it and copy the directory <i>conjecturing</i> into the directory <i>SAGE_ROOT/build/pkgs</i>.</li>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/archive/0.11.2.tar.gz">conjecturing-0.11.2.tar.gz</a> and place the file into <i>SAGE_ROOT/upstream</i>.</li>
+    <li>Run the following command: <code>$ sage --package fix-checksum conjecturing</code><br>Make sure that you use the Sage installation into which you are installing.</li>
     <li>Install the package using the following command: <code>$ sage -i conjecturing</code><br>Make sure that you use the Sage installation into which you are installing.</li>
 </ul>
 <p></p>
