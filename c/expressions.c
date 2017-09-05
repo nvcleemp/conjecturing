@@ -2142,17 +2142,7 @@ int processOptions(int argc, char **argv) {
                         inequality = GREATER;
                         break;
                     case 16:
-                        if(strcmp(optarg, "all")==0){
-                            fprintf(stdout, "MAX_OBJECT_COUNT: %d\n", MAX_OBJECT_COUNT);
-                            fprintf(stdout, "MAX_INVARIANT_COUNT: %d\n", MAX_INVARIANT_COUNT);
-                        } else if(strcmp(optarg, "MAX_OBJECT_COUNT")==0){
-                            fprintf(stdout, "%d\n", MAX_OBJECT_COUNT);
-                        } else if(strcmp(optarg, "MAX_INVARIANT_COUNT")==0){
-                            fprintf(stdout, "%d\n", MAX_INVARIANT_COUNT);
-                        } else {
-                            fprintf(stderr, "Unknown limit: %s\n", optarg);
-                            return EXIT_FAILURE;
-                        }
+                        fprintf(stderr, "Limits are no longer supported.\n");
                         return EXIT_SUCCESS;
                         break;
                     case 17:
