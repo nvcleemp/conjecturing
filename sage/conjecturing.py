@@ -376,17 +376,6 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                      '+' : 'C 0', '*' : 'C 1', 'max' : 'C 2', 'min' : 'C 3',
                      '-' : 'N 0', '/' : 'N 1', '^' : 'N 2'}
 
-    # check whether number of invariants and objects falls within the allowed bounds
-    import subprocess
-    sp = subprocess.Popen('expressions --limits all', shell=True,
-                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, close_fds=True)
-
-    limits = {key:int(value) for key, value in (l.split(':') for l in sp.stdout)}
-
-    assert len(objects) <= limits['MAX_OBJECT_COUNT'], 'This version of expressions does not support that many objects.'
-    assert len(invariants) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many invariants.'
-
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
@@ -666,17 +655,6 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     assert 0 <= mainProperty < len(properties), 'Illegal value for mainProperty'
 
     operatorDict = { '~' : 'U 0', '&' : 'C 0', '|' : 'C 1', '^' : 'C 2', '->' : 'N 0'}
-
-    # check whether number of properties and objects falls within the allowed bounds
-    import subprocess
-    sp = subprocess.Popen('expressions --limits all', shell=True,
-                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, close_fds=True)
-
-    limits = {key:int(value) for key, value in (l.split(':') for l in sp.stdout)}
-
-    assert len(objects) <= limits['MAX_OBJECT_COUNT'], 'This version of expressions does not support that many objects.'
-    assert len(properties) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many properties.'
 
     # prepare the invariants to be used in conjecturing
     propertiesDict = {}
