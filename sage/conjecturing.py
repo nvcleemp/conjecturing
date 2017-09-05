@@ -376,17 +376,6 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                      '+' : 'C 0', '*' : 'C 1', 'max' : 'C 2', 'min' : 'C 3',
                      '-' : 'N 0', '/' : 'N 1', '^' : 'N 2'}
 
-    # check whether number of invariants and objects falls within the allowed bounds
-    import subprocess
-    sp = subprocess.Popen('./expressions --limits all', shell=True,
-                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, close_fds=True)
-
-    limits = {key:int(value) for key, value in (l.split(':') for l in sp.stdout)}
-
-    assert len(objects) <= limits['MAX_OBJECT_COUNT'], 'This version of expressions does not support that many objects.'
-    assert len(invariants) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many invariants.'
-
     # prepare the invariants to be used in conjecturing
     invariantsDict = {}
     names = []
@@ -425,33 +414,36 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     for invariant in names:
         stdin.write('{}\n'.format(invariant))
 
+    def get_value(invariant, o):
+        precomputed_value = None
+        if precomputed:
+            o_key = object_key(o)
+            i_key = invariant_key(invariant)
+            if o_key in precomputed:
+                if i_key in precomputed[o_key]:
+                    precomputed_value = precomputed[o_key][i_key]
+        if precomputed_value is None:
+            return invariant(o)
+        else:
+            return precomputed_value
+
     if theory is not None:
         for o in objects:
             if upperBound:
                 try:
-                    stdin.write('{}\n'.format(min(float(t(o)) for t in theory)))
+                    stdin.write('{}\n'.format(min(float(get_value(t, o)) for t in theory)))
                 except:
                     stdin.write('NaN\n')
             else:
                 try:
-                    stdin.write('{}\n'.format(max(float(t(o)) for t in theory)))
+                    stdin.write('{}\n'.format(max(float(get_value(t, o)) for t in theory)))
                 except:
                     stdin.write('NaN\n')
 
     for o in objects:
         for invariant in names:
             try:
-                precomputed_value = None
-                if precomputed:
-                    o_key = object_key(o)
-                    i_key = invariant_key(invariantsDict[invariant])
-                    if o_key in precomputed:
-                        if i_key in precomputed[o_key]:
-                            precomputed_value = precomputed[o_key][i_key]
-                if precomputed_value is None:
-                    stdin.write('{}\n'.format(float(invariantsDict[invariant](o))))
-                else:
-                    stdin.write('{}\n'.format(float(precomputed_value)))
+                stdin.write('{}\n'.format(float(get_value(invariantsDict[invariant], o))))
             except:
                 stdin.write('NaN\n')
 
@@ -664,17 +656,6 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
 
     operatorDict = { '~' : 'U 0', '&' : 'C 0', '|' : 'C 1', '^' : 'C 2', '->' : 'N 0'}
 
-    # check whether number of properties and objects falls within the allowed bounds
-    import subprocess
-    sp = subprocess.Popen('./expressions --limits all', shell=True,
-                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, close_fds=True)
-
-    limits = {key:int(value) for key, value in (l.split(':') for l in sp.stdout)}
-
-    assert len(objects) <= limits['MAX_OBJECT_COUNT'], 'This version of expressions does not support that many objects.'
-    assert len(properties) <= limits['MAX_INVARIANT_COUNT'], 'This version of expressions does not support that many properties.'
-
     # prepare the invariants to be used in conjecturing
     propertiesDict = {}
     names = []
@@ -717,33 +698,36 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     for property in names:
         stdin.write('{}\n'.format(property))
 
+    def get_value(prop, o):
+        precomputed_value = None
+        if precomputed:
+            o_key = object_key(o)
+            p_key = invariant_key(prop)
+            if o_key in precomputed:
+                if p_key in precomputed[o_key]:
+                    precomputed_value = precomputed[o_key][p_key]
+        if precomputed_value is None:
+            return prop(o)
+        else:
+            return precomputed_value
+
     if theory is not None:
         for o in objects:
             if sufficient:
                 try:
-                    stdin.write('{}\n'.format(max((1 if bool(t(o)) else 0) for t in theory)))
+                    stdin.write('{}\n'.format(max((1 if bool(get_value(t, o)) else 0) for t in theory)))
                 except:
                     stdin.write('-1\n')
             else:
                 try:
-                    stdin.write('{}\n'.format(min((1 if bool(t(o)) else 0) for t in theory)))
+                    stdin.write('{}\n'.format(min((1 if bool(get_value(t, o)) else 0) for t in theory)))
                 except:
                     stdin.write('-1\n')
 
     for o in objects:
         for property in names:
             try:
-                precomputed_value = None
-                if precomputed:
-                    o_key = object_key(o)
-                    i_key = invariant_key(propertiesDict[property])
-                    if o_key in precomputed:
-                        if i_key in precomputed[o_key]:
-                            precomputed_value = precomputed[o_key][i_key]
-                if precomputed_value is None:
-                    stdin.write('{}\n'.format(1 if bool(propertiesDict[property](o)) else 0))
-                else:
-                    stdin.write('{}\n'.format(1 if bool(precomputed_value) else 0))
+                stdin.write('{}\n'.format(1 if bool(get_value(propertiesDict[property], o)) else 0))
             except:
                 stdin.write('-1\n')
 

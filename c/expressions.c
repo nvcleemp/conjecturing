@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <float.h>
+#include <malloc.h>
 
 #include "bintrees.h"
 #include "util.h"
@@ -37,7 +38,7 @@ int targetUnary; //number of unary nodes in the generated trees
 int targetBinary; //number of binary nodes in the generated trees
 
 int invariantCount;
-boolean invariantsUsed[MAX_INVARIANT_COUNT];
+boolean *invariantsUsed;
 
 int mainInvariant;
 
@@ -46,8 +47,8 @@ boolean useInvariantNames = FALSE;
 
 float allowedPercentageOfSkips = 0.2f;
 
-char invariantNames[MAX_INVARIANT_COUNT][1024];
-char *invariantNamesPointers[MAX_INVARIANT_COUNT];
+char **invariantNames;
+char **invariantNamesPointers;
 
 #define LEQ 0 // i.e., MI <= expression
 #define LESS 1 // i.e., MI < expression
@@ -108,11 +109,11 @@ int nonCommBinaryOperatorCount = 3;
  */
 int nonCommBinaryOperators[MAX_NCOMM_BINARY_OPERATORS];
 
-double invariantValues[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
-boolean invariantValues_propertyBased[MAX_OBJECT_COUNT][MAX_INVARIANT_COUNT];
+double **invariantValues;
+boolean **invariantValues_propertyBased;
 
-double knownTheory[MAX_OBJECT_COUNT];
-boolean knownTheory_propertyBased[MAX_OBJECT_COUNT];
+double *knownTheory;
+boolean *knownTheory_propertyBased;
 
 int objectCount = 0;
 
@@ -179,16 +180,16 @@ boolean isComplete(TREE *tree){
 
 boolean dalmatianFirst = TRUE;
 
-double dalmatianCurrentConjectureValues[MAX_OBJECT_COUNT+1][MAX_OBJECT_COUNT];
-boolean dalmatianCurrentConjectureValues_propertyBased[MAX_OBJECT_COUNT+1][MAX_OBJECT_COUNT];
+double **dalmatianCurrentConjectureValues;
+boolean **dalmatianCurrentConjectureValues_propertyBased;
 
-int dalmatianBestConjectureForObject[MAX_OBJECT_COUNT];
+int *dalmatianBestConjectureForObject;
 
-boolean dalmatianObjectInBoundArea[MAX_OBJECT_COUNT+1] = {FALSE}; //only for property based conjectures
+boolean *dalmatianObjectInBoundArea; //only for property based conjectures
 
-boolean dalmatianConjectureInUse[MAX_OBJECT_COUNT+1] = {FALSE};
+boolean *dalmatianConjectureInUse;
 
-TREE dalmatianConjectures[MAX_OBJECT_COUNT+1];
+TREE *dalmatianConjectures;
 
 int dalmatianHitCount = 0;
 
@@ -233,7 +234,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
             printExpression(tree, stderr);
         }
         memcpy(dalmatianCurrentConjectureValues[0], values, 
-                sizeof(double)*(MAX_OBJECT_COUNT));
+                sizeof(double)*objectCount);
         for(i=0; i<objectCount; i++){
             dalmatianBestConjectureForObject[i] = 0;
         }
@@ -249,7 +250,8 @@ void dalmatianHeuristic(TREE *tree, double *values){
     
     //find the objects for which this bound is better
     isMoreSignificant = FALSE; //the conjecture is not necessarily more significant than the other conjectures
-    int conjectureFrequency[MAX_OBJECT_COUNT] = {0};
+    int conjectureFrequency[objectCount];
+    memset(conjectureFrequency, 0, objectCount*sizeof(int));
     for(i=0; i<objectCount; i++){
         double currentBest = 
         dalmatianCurrentConjectureValues[dalmatianBestConjectureForObject[i]][i];
@@ -260,7 +262,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
                 fprintf(stderr, "Conjecture is more significant for object %d.\n", i+1);
                 fprintf(stderr, "%11.6lf vs. %11.6lf\n", currentBest, values[i]);
             }
-            dalmatianBestConjectureForObject[i] = MAX_OBJECT_COUNT;
+            dalmatianBestConjectureForObject[i] = objectCount;
             isMoreSignificant = TRUE;
         }
     }
@@ -292,9 +294,9 @@ void dalmatianHeuristic(TREE *tree, double *values){
     }
     
     memcpy(dalmatianCurrentConjectureValues[smallestAvailablePosition], values, 
-            sizeof(double)*(MAX_OBJECT_COUNT));
+            sizeof(double)*objectCount);
     for(i=0; i<objectCount; i++){
-        if(dalmatianBestConjectureForObject[i] == MAX_OBJECT_COUNT){
+        if(dalmatianBestConjectureForObject[i] == objectCount){
             dalmatianBestConjectureForObject[i] = smallestAvailablePosition;
         }
     }
@@ -309,11 +311,88 @@ boolean dalmatianHeuristicStopConditionReached(){
     return dalmatianHitCount == objectCount;
 }
 
-void dalmatianHeuristicInit(){
+void dalmatianHeuristicInit_shared_pre(){
+    int i;
+    
+    dalmatianBestConjectureForObject = (int *)malloc(sizeof(int) * objectCount);
+    if(dalmatianBestConjectureForObject == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    dalmatianConjectureInUse = (boolean *)malloc(sizeof(boolean) * (objectCount + 1));
+    if(dalmatianConjectureInUse == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    for(i = 0; i <= objectCount; i++){
+        dalmatianConjectureInUse[i] = FALSE;
+    }
+    
+    dalmatianConjectures = (TREE *)malloc(sizeof(TREE) * (objectCount+1));
+    if(dalmatianConjectures == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void dalmatianHeuristicInit_shared_post(){
     int i;
     for(i=0;i<=objectCount;i++){
         initTree(dalmatianConjectures+i);
     }
+}
+
+void dalmatianHeuristicInit(){
+    int i;
+    dalmatianHeuristicInit_shared_pre();
+    
+    dalmatianCurrentConjectureValues  = (double **)malloc(sizeof(double *) * (objectCount + 1));
+    if(dalmatianCurrentConjectureValues == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    dalmatianCurrentConjectureValues[0] = (double *)malloc(sizeof(double) * (objectCount + 1) * objectCount);
+    if(dalmatianCurrentConjectureValues[0] == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+ 
+    for(i = 0; i <= objectCount; i++)
+        dalmatianCurrentConjectureValues[i] = (*dalmatianCurrentConjectureValues + objectCount * i);
+    
+    dalmatianHeuristicInit_shared_post();
+}
+
+void dalmatianHeuristicInit_propertyBased(){
+    int i;
+    dalmatianHeuristicInit_shared_pre();
+
+    dalmatianObjectInBoundArea = (boolean *)malloc(sizeof(boolean) * (objectCount + 1));
+    if(dalmatianObjectInBoundArea == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    for(i = 0; i <= objectCount; i++){
+        dalmatianObjectInBoundArea[i] = FALSE;
+    }
+    
+    dalmatianCurrentConjectureValues_propertyBased  = (boolean **)malloc(sizeof(double *) * (objectCount + 1));
+    if(dalmatianCurrentConjectureValues_propertyBased == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    dalmatianCurrentConjectureValues_propertyBased[0] = (boolean *)malloc(sizeof(double) * (objectCount + 1) * objectCount);
+    if(dalmatianCurrentConjectureValues_propertyBased[0] == NULL){
+        fprintf(stderr, "Initialisation of Dalmatian heuristic failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+ 
+    for(i = 0; i <= objectCount; i++)
+        dalmatianCurrentConjectureValues_propertyBased[i] = (*dalmatianCurrentConjectureValues_propertyBased + objectCount * i);
+
+
+    dalmatianHeuristicInit_shared_post();
 }
 
 void dalmatianHeuristicPostProcessing(){
@@ -386,7 +465,7 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
             printExpression_propertyBased(tree, stderr);
         }
         memcpy(dalmatianCurrentConjectureValues_propertyBased[0], values, 
-                sizeof(double)*(MAX_OBJECT_COUNT));
+                sizeof(double)*objectCount);
         for(i=0; i<objectCount; i++){
             if(values[i] == UNDEFINED){
                 continue;
@@ -456,7 +535,7 @@ void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
     }
     
     memcpy(dalmatianCurrentConjectureValues_propertyBased[smallestAvailablePosition],
-            values, sizeof(boolean)*(MAX_OBJECT_COUNT));    
+            values, sizeof(boolean)*objectCount);    
     copyTree(tree, dalmatianConjectures + smallestAvailablePosition);
     dalmatianConjectureInUse[smallestAvailablePosition] = TRUE;
     
@@ -604,9 +683,6 @@ boolean dalmatianHeuristicStopConditionReached_propertyBased(){
      */
     return dalmatianHitCount == pCount;
 }
-
-void (* const dalmatianHeuristicInit_propertyBased)(void) = 
-        dalmatianHeuristicInit;
 
 void (* const dalmatianHeuristicPostProcessing_propertyBased)(void) = 
         dalmatianHeuristicPostProcessing;
@@ -1125,7 +1201,7 @@ boolean evaluateTree_propertyBased(TREE *tree, boolean *values, int *calculatedV
 }
 
 void checkExpression(TREE *tree){
-    double values[MAX_OBJECT_COUNT];
+    double values[objectCount];
     int calculatedValues = 0;
     int hitCount = 0;
     int skipCount = 0;
@@ -1135,7 +1211,7 @@ void checkExpression(TREE *tree){
 }
 
 void checkExpression_propertyBased(TREE *tree){
-    boolean values[MAX_OBJECT_COUNT];
+    boolean values[objectCount];
     int calculatedValues = 0;
     int hitCount = 0;
     int skipCount = 0;
@@ -1430,6 +1506,99 @@ char *trim(char *str){
     return str;
 }
 
+void allocateMemory_shared(){
+    int i;
+    if(invariantCount <= 0){
+        fprintf(stderr, "Illegal value for invariant count: %d -- exiting!\n", invariantCount);
+        exit(EXIT_FAILURE);
+    }
+    if(objectCount <= 0){
+        fprintf(stderr, "Illegal value for object count: %d -- exiting!\n", objectCount);
+        exit(EXIT_FAILURE);
+    }
+    
+    invariantsUsed = (boolean *)malloc(sizeof(boolean) * invariantCount);
+    if(invariantsUsed == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    invariantNames = (char **)malloc(sizeof(char *) * invariantCount);
+    if(invariantNames == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    invariantNames[0] = (char *)malloc(sizeof(char) * invariantCount * 1024);
+    if(invariantNames[0] == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    for(i = 0; i < invariantCount; i++){
+        invariantNames[i] = (*invariantNames + 1024 * i);
+    }
+    
+    invariantNamesPointers = (char **)malloc(sizeof(char *) * invariantCount);
+    if(invariantNamesPointers == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    
+}
+
+void allocateMemory_invariantBased(){
+    int i;
+    
+    allocateMemory_shared();
+
+    invariantValues = (double **)malloc(sizeof(double *) * objectCount);
+    if(invariantValues == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    invariantValues[0] = (double *)malloc(sizeof(double) * objectCount * invariantCount);
+    if(invariantValues[0] == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    for(i = 0; i < objectCount; i++){
+        invariantValues[i] = (*invariantValues + invariantCount * i);
+    }
+    
+    knownTheory = (double *)malloc(sizeof(double) * objectCount);
+    if(knownTheory == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+            
+}
+
+void allocateMemory_propertyBased(){
+    int i;
+    
+    allocateMemory_shared();
+
+    invariantValues_propertyBased = (boolean **)malloc(sizeof(boolean *) * objectCount);
+    if(invariantValues_propertyBased == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    invariantValues_propertyBased[0] = (boolean *)malloc(sizeof(boolean) * objectCount * invariantCount);
+    if(invariantValues_propertyBased[0] == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+    for(i = 0; i < objectCount; i++){
+        invariantValues_propertyBased[i] = (*invariantValues_propertyBased + invariantCount * i);
+    }
+    
+    knownTheory_propertyBased = (boolean *)malloc(sizeof(boolean) * objectCount);
+    if(knownTheory_propertyBased == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }
+
+}
+
 void readInvariantsValues(){
     int i,j;
     char line[1024]; //array to temporarily store a line
@@ -1444,19 +1613,7 @@ void readInvariantsValues(){
         BAILOUT("Error while reading invariants")
     }
     
-    if(objectCount > MAX_OBJECT_COUNT){
-        fprintf(stderr, "Recompile with a higher value for MAX_OBJECT_COUNT to handle this many objects.\n");
-        fprintf(stderr, "Number of objects is %d.\n", objectCount);
-        fprintf(stderr, "Value of MAX_OBJECT_COUNT is %d.\n", MAX_OBJECT_COUNT);
-        exit(EXIT_FAILURE);
-    }
-    
-    if(invariantCount > MAX_INVARIANT_COUNT){
-        fprintf(stderr, "Recompile with a higher value for MAX_INVARIANT_COUNT to handle this many invariants.\n");
-        fprintf(stderr, "Number of invariants is %d.\n", invariantCount);
-        fprintf(stderr, "Value of MAX_INVARIANT_COUNT is %d.\n", MAX_INVARIANT_COUNT);
-        exit(EXIT_FAILURE);
-    }
+    allocateMemory_invariantBased();
     
     //maybe read invariant names
     if(useInvariantNames){
@@ -1516,19 +1673,7 @@ void readInvariantsValues_propertyBased(){
         BAILOUT("Error while reading invariants")
     }
     
-    if(objectCount > MAX_OBJECT_COUNT){
-        fprintf(stderr, "Recompile with a higher value for MAX_OBJECT_COUNT to handle this many objects.\n");
-        fprintf(stderr, "Number of objects is %d.\n", objectCount);
-        fprintf(stderr, "Value of MAX_OBJECT_COUNT is %d.\n", MAX_OBJECT_COUNT);
-        exit(EXIT_FAILURE);
-    }
-    
-    if(invariantCount > MAX_INVARIANT_COUNT){
-        fprintf(stderr, "Recompile with a higher value for MAX_INVARIANT_COUNT to handle this many invariants.\n");
-        fprintf(stderr, "Number of invariants is %d.\n", invariantCount);
-        fprintf(stderr, "Value of MAX_INVARIANT_COUNT is %d.\n", MAX_INVARIANT_COUNT);
-        exit(EXIT_FAILURE);
-    }
+    allocateMemory_propertyBased();
     
     //maybe read invariant names
     if(useInvariantNames){
@@ -1997,17 +2142,7 @@ int processOptions(int argc, char **argv) {
                         inequality = GREATER;
                         break;
                     case 16:
-                        if(strcmp(optarg, "all")==0){
-                            fprintf(stdout, "MAX_OBJECT_COUNT: %d\n", MAX_OBJECT_COUNT);
-                            fprintf(stdout, "MAX_INVARIANT_COUNT: %d\n", MAX_INVARIANT_COUNT);
-                        } else if(strcmp(optarg, "MAX_OBJECT_COUNT")==0){
-                            fprintf(stdout, "%d\n", MAX_OBJECT_COUNT);
-                        } else if(strcmp(optarg, "MAX_INVARIANT_COUNT")==0){
-                            fprintf(stdout, "%d\n", MAX_INVARIANT_COUNT);
-                        } else {
-                            fprintf(stderr, "Unknown limit: %s\n", optarg);
-                            return EXIT_FAILURE;
-                        }
+                        fprintf(stderr, "Limits are no longer supported.\n");
                         return EXIT_SUCCESS;
                         break;
                     case 17:
