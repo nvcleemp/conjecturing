@@ -399,6 +399,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                              '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
 
+    import subprocess
     sp = subprocess.Popen(command, shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, close_fds=True)
@@ -683,6 +684,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
         print('Using the following command')
         print(command)
 
+    import subprocess
     sp = subprocess.Popen(command, shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, close_fds=True)

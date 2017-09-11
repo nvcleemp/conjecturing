@@ -1506,6 +1506,19 @@ char *trim(char *str){
     return str;
 }
 
+void allocateMemory_onlyLabeled(){
+    if(invariantCount <= 0){
+        fprintf(stderr, "Illegal value for invariant count: %d -- exiting!\n", invariantCount);
+        exit(EXIT_FAILURE);
+    }
+    
+    invariantsUsed = (boolean *)malloc(sizeof(boolean) * invariantCount);
+    if(invariantsUsed == NULL){
+        fprintf(stderr, "Initialisation failed: insufficient memory -- exiting!\n");
+        exit(EXIT_FAILURE);
+    }    
+}
+
 void allocateMemory_shared(){
     int i;
     if(invariantCount <= 0){
@@ -2299,6 +2312,7 @@ int main(int argc, char *argv[]) {
         for (i=0; i<nonCommBinaryOperatorCount; i++) {
             nonCommBinaryOperators[i] = i;
         }
+        allocateMemory_onlyLabeled();
     } else if (!onlyUnlabeled){
         if(operatorFile==NULL){
             int i;
