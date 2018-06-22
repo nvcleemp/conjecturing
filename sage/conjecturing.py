@@ -399,6 +399,10 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                              '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
 
+    if verbose:
+        print('Using the following command')
+        print(command)
+
     import subprocess
     sp = subprocess.Popen(command, shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -429,6 +433,8 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
             return precomputed_value
 
     if theory is not None:
+        if verbose:
+            print "Started writing theory to expressions"
         for o in objects:
             if upperBound:
                 try:
@@ -440,6 +446,11 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                     stdin.write('{}\n'.format(max(float(get_value(t, o)) for t in theory)))
                 except:
                     stdin.write('NaN\n')
+        if verbose:
+            print "Finished writing theory to expressions"
+
+    if verbose:
+        print "Started computing and writing invariant values to expressions"
 
     for o in objects:
         for invariant in names:
@@ -447,6 +458,9 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                 stdin.write('{}\n'.format(float(get_value(invariantsDict[invariant], o))))
             except:
                 stdin.write('NaN\n')
+
+    if verbose:
+        print "Finished computing and writing invariant values to expressions"
 
     if debug:
         for l in sp.stderr:
@@ -467,6 +481,9 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
         else:
             conjectures.append(_makeConjecture(inputList, variable, invariantsDict))
             inputList = []
+
+    if verbose:
+        print "Finished conjecturing"
 
     return conjectures
 
@@ -714,6 +731,8 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
             return precomputed_value
 
     if theory is not None:
+        if verbose:
+            print "Started writing theory to expressions"
         for o in objects:
             if sufficient:
                 try:
@@ -725,6 +744,11 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
                     stdin.write('{}\n'.format(min((1 if bool(get_value(t, o)) else 0) for t in theory)))
                 except:
                     stdin.write('-1\n')
+        if verbose:
+            print "Finished writing theory to expressions"
+
+    if verbose:
+        print "Started computing and writing property values to expressions"
 
     for o in objects:
         for property in names:
@@ -732,6 +756,9 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
                 stdin.write('{}\n'.format(1 if bool(get_value(propertiesDict[property], o)) else 0))
             except:
                 stdin.write('-1\n')
+
+    if verbose:
+        print "Finished computing and writing property values to expressions"
 
     if debug:
         for l in sp.stderr:
@@ -750,5 +777,8 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
         else:
             conjectures.append(_makePropertyBasedConjecture(inputList, propertiesDict))
             inputList = []
+
+    if verbose:
+        print "Finished conjecturing"
 
     return conjectures
