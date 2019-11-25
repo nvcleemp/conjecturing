@@ -87,7 +87,7 @@ def automatedSearch(objects, invariants, universe, upperBound=True, steps=10, ma
                 noCounterExample = False
                 break
         if noCounterExample:
-            print "No counterexample found"
+            print("No counterexample found")
             break
     return l
 
