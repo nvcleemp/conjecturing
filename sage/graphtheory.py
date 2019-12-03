@@ -59,11 +59,11 @@ def lovasz_theta(g):
 
     d = m + n
     c = -1 * cvxopt.base.matrix([0.0]*(n-1) + [2.0]*(d-n))
-    Xrow = [i*(1+n) for i in xrange(n-1)] + [b+a*n for (a, b) in gc.edge_iterator(labels=False)]
+    Xrow = [i*(1+n) for i in range(n-1)] + [b+a*n for (a, b) in gc.edge_iterator(labels=False)]
     Xcol = range(n-1) + range(d-1)[n-1:]
     X = cvxopt.base.spmatrix(1.0, Xrow, Xcol, (n*n, d-1))
 
-    for i in xrange(n-1):
+    for i in range(n-1):
         X[n*n-1, i] = -1.0
 
     sol = cvxopt.solvers.sdp(c, Gs=[-X], hs=[-cvxopt.base.matrix([0.0]*(n*n-1) + [-1.0], (n,n))])
