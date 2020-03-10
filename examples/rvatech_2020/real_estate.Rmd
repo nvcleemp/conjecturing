@@ -1,0 +1,578 @@
+---
+title: "Real Estate Models"
+output:
+  html_document: default
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+Load libraries.
+```{r warning=FALSE, message=FALSE}
+library(data.table)
+library(dplyr)
+library(elasticnet)
+library(glmnet)
+library(caret)
+library(ROCR)
+library(rgl)
+library(rpart)
+library(randomForest)
+library(randomGLM)
+library(NeuralNetTools)
+library(kernlab)
+```
+
+# Input Data and Data Preparation
+
+Read data.
+```{r}
+set.seed(12345)
+filenames <- list.files("competition/data", pattern="*.csv",full.names=TRUE)
+ldf <- lapply(filenames, read.csv)
+mydata <- rbindlist(ldf)
+```
+
+Filter for houses with a price.  Calculate target and select variables of interest.  Remove houses with missing values for square footage and price per square foot and houses with more than 20,000 square feet and priced at more than \$2,000 per square foot.
+```{r}
+mydata <- mydata %>%
+  dplyr::filter(!is.na(PRICE)) %>%
+  mutate(TARGET=as.factor(PRICE > 300000))  %>%
+  dplyr::select(
+		BEDS, BATHS, 
+		SQUARE.FEET, LOT.SIZE, 
+		YEAR.BUILT, DAYS.ON.MARKET, 
+		X..SQUARE.FEET, HOA.MONTH, 
+		LATITUDE, LONGITUDE, 
+		PROPERTY.TYPE,
+		TARGET, PRICE)  %>%
+  dplyr::filter(!is.na(SQUARE.FEET) & 
+	 !is.na(X..SQUARE.FEET) & 
+	 SQUARE.FEET <= 20000 & 
+	 X..SQUARE.FEET <= 2000 & 
+	   !(PROPERTY.TYPE %in% c("Parking", "", "Timeshare","Ranch", "Moorage", "Vacant Land"))) %>%
+  droplevels()
+```
+
+Relabel the levels of the target variable to "Above" and "Below".
+```{r}
+mydata$TARGET <- factor(mydata$TARGET, labels=c("Below", "Above"))
+```
+
+
+Partition data into train and test datasets with 1000 observations in the training data.
+```{r}
+trainRows <- createDataPartition(mydata$TARGET, 
+				 p=1000/nrow(mydata), 
+				 list=FALSE)
+
+trainData <- mydata %>%
+    dplyr::slice(trainRows) %>%
+    dplyr::select(-PRICE)
+testData <- mydata %>%
+    dplyr::slice(-trainRows) %>%
+    dplyr::select(-PRICE)
+```
+
+Check the number of missing values for each variable.
+```{r}
+apply(is.na(mydata), 2, sum)
+```
+
+Use median imputation for missing values.
+```{r}
+trainDataPreprocess <- preProcess(trainData, 
+				  method=c("medianImpute"))
+
+trainData <- predict(trainDataPreprocess, 
+		     newdata=trainData)
+testData <- predict(trainDataPreprocess, 
+		    newdata=testData)
+```
+
+
+Create three-dimensional plot of square footage, price per square foot, and the product (the estimated price).
+```{r}
+mycolors <- ifelse(trainData$TARGET == "Above", 4, 3)
+plot3d(trainData$X..SQUARE.FEET, 
+       trainData$SQUARE.FEET, 
+       trainData$X..SQUARE.FEET*trainData$SQUARE.FEET, 
+       col=mycolors,
+       xlab="Price per Square Foot",
+       ylab="Square Footage",
+       zlab="Estimated Price")
+```
+
+Create centered and scaled data.
+```{r}
+trainDataMM <- model.matrix(TARGET ~ (.)^2, 
+                                 data=trainData)
+testDataMM <- model.matrix(TARGET ~ (.)^2, 
+                                data=testData)
+
+trainDataMMNoInt <- model.matrix(TARGET ~ .,
+                                      data=trainData)
+testDataMMNoInt <- model.matrix(TARGET ~ ., 
+                                     data=testData)
+
+trainOutData <- data.frame(TARGET=as.integer(trainData$TARGET)-1, trainDataMMNoInt[,-1])
+testOutData <- data.frame(TARGET=as.integer(testData$TARGET)-1, testDataMMNoInt[,-1])
+write.table(trainOutData, "trainData.csv", row.names=FALSE, sep=",")
+write.table(testOutData, "testData.csv", row.names=FALSE, sep=",")
+
+# for scaled data
+trainDataPreprocess <- preProcess(trainData[,-ncol(trainData)])
+trainDataScale <- predict(trainDataPreprocess, trainData[,-ncol(trainData)])
+testDataScale <- predict(trainDataPreprocess, testData[,-ncol(testData)])
+trainDataScale <- data.frame(trainDataScale, TARGET=trainData$TARGET)
+testDataScale <- data.frame(testDataScale, TARGET=testData$TARGET)
+
+
+trainDataMMScale <- model.matrix(TARGET ~ (.)^2, 
+                                 data=trainDataScale)
+testDataMMScale <- model.matrix(TARGET ~ (.)^2, 
+                                data=testDataScale)
+
+trainDataMMScaleNoInt <- model.matrix(TARGET ~ .,
+                                      data=trainDataScale)
+testDataMMScaleNoInt <- model.matrix(TARGET ~ ., 
+                                     data=testDataScale)
+
+trainOutDataScale <- data.frame(TARGET=as.integer(trainData$TARGET)-1, trainDataMMScaleNoInt[,-1])
+testOutDataScale <- data.frame(TARGET=as.integer(testData$TARGET)-1, testDataMMScaleNoInt[,-1])
+write.table(trainOutDataScale, "trainDataScale.csv", row.names=FALSE, sep=",")
+write.table(testOutDataScale, "testDataScale.csv", row.names=FALSE, sep=",")
+```
+
+# Logistic Regression 
+
+## Main Effects
+```{r}
+mylr <- glm(TARGET ~ ., 
+	    data=trainData, 
+	    family=binomial("logit"))
+summary(mylr)
+
+mylrPredict <- predict(mylr, newdata=testData)
+
+mylrPred <- prediction(mylrPredict, 
+                        testData$TARGET,
+                        label.ordering=c("Below", "Above")
+                        )
+mylrAUC <- performance(mylrPred, "auc")
+mylrPerf <- performance(mylrPred, "tpr", "fpr")
+mylrAUC@y.values[[1]]
+```
+
+## Interaction Terms
+
+Logistic regression with all interaction terms.  The algorithm fails to converge.  
+```{r}
+mylrIntAll <- glm(TARGET ~ (.)^2, 
+	    data=trainData, 
+	    family=binomial("logit"))
+```
+
+Logistic regression with the main effects and the active interaction term.  The algorithm fails to converge.  
+```{r}
+mylrInt <- glm(TARGET ~ BEDS +  BATHS +  SQUARE.FEET + LOT.SIZE + 
+		       YEAR.BUILT + DAYS.ON.MARKET + 
+		         X..SQUARE.FEET +
+		       HOA.MONTH + LATITUDE + LONGITUDE + 
+		         PROPERTY.TYPE + 
+		         X..SQUARE.FEET:SQUARE.FEET, 
+	    data=trainData, 
+	    family=binomial("logit"))
+```
+
+## Main Effects, Screening, then Interaction Terms.  
+
+Significant terms from the logistic regression with only main effects are included.  Does not converge.
+```{r}
+mylrScreen <- glm(TARGET ~  (BEDS + BATHS + SQUARE.FEET + DAYS.ON.MARKET + 
+                      X..SQUARE.FEET + HOA.MONTH + PROPERTY.TYPE)^2, 
+	    data=trainData, 
+	    family=binomial("logit"))
+```
+
+
+## LASSO
+
+Fit a LASSO model for all interaction terms.  Only one model is recovered containing only the "year built" variable.
+```{r}
+mylrLassoCV <-  cv.glmnet(x=trainDataMM,
+                                     y=trainData$TARGET,
+                                     intercept=FALSE, 
+                                     family="binomial", 
+                                     nfolds=5)
+
+mylrLassoCV$lambda.min
+
+mylrLassoFinal <- glmnet(x=trainDataMM,
+                    y=trainData$TARGET, 
+                    intercept=FALSE,
+                    family="binomial",
+                    lambda=mylrLassoCV$lambda.min)
+
+
+mylrLassoFinalVars <- which(mylrLassoFinal$beta[,ncol(mylrLassoFinal$beta)] != 0)
+mylrLassoFinalBeta <- mylrLassoFinal$beta[mylrLassoFinalVars]
+
+mylrLassoFinalVars
+mylrLassoFinalBeta
+
+mylrLassoPredict <- predict(mylrLassoFinal, 
+                            newx=testDataMMScale, 
+                            type="response")
+
+mylrLassoPred <- prediction(mylrLassoPredict[,1], 
+                            testData$TARGET,
+                            label.ordering = c("Below", "Above"))
+mylrLassoAUC <- performance(mylrLassoPred, "auc")
+mylrLassoPerf <- performance(mylrLassoPred, "tpr", "fpr")
+
+mylrLassoAUC@y.values[[1]]
+
+mylrLasso <- glmnet(x=trainDataMM,
+                    y=trainData$TARGET, 
+                    intercept=FALSE,
+                    family="binomial")
+plot(mylrLasso)
+```
+
+Fit a LASSO model for all interaction terms with centered and scaled data.  The "best" value of lambda is for the model with 44 terms.  
+```{r}
+mylrLassoCV <-  cv.glmnet(x=trainDataMMScale,
+                                     y=trainData$TARGET,
+                                     intercept=FALSE, 
+                                     family="binomial", 
+                                     nfolds=5)
+
+mylrLassoCV$lambda.min
+
+mylrLassoFinal <- glmnet(x=trainDataMMScale,
+                    y=trainData$TARGET, 
+                    intercept=FALSE,
+                    family="binomial",
+                    lambda=mylrLassoCV$lambda.min)
+
+
+mylrLassoFinalVars <- which(mylrLassoFinal$beta[,ncol(mylrLassoFinal$beta)] != 0)
+mylrLassoFinalBeta <- mylrLassoFinal$beta[mylrLassoFinalVars]
+
+length(mylrLassoFinalVars)
+mylrLassoFinalVars
+mylrLassoFinalBeta
+
+mylrLassoPredict <- predict(mylrLassoFinal, 
+                            newx=testDataMMScale, 
+                            type="response")
+
+mylrLassoPred <- prediction(mylrLassoPredict[,1], 
+                            testData$TARGET,
+                            label.ordering = c("Below", "Above"))
+mylrLassoAUC <- performance(mylrLassoPred, "auc")
+mylrLassoPerf <- performance(mylrLassoPred, "tpr", "fpr")
+mylrLassoAUC@y.values[[1]]
+```
+
+The active interaction term stays in the model for about 1/3 of the solution path.   At that point there are 52 terms remaining. 
+```{r}
+
+mylrLasso <- glmnet(x=trainDataMMScale,
+                    y=trainData$TARGET, 
+                    intercept=FALSE,
+                    family="binomial")
+plot(mylrLasso)
+write.table(as.matrix(mylrLasso$beta),file="betas.csv", sep=",")
+```
+
+## Random GLM
+
+Random GLM with up to order 2 interactions.  
+```{r}
+library(randomGLM)
+
+myRandomGLM <- randomGLM(x=trainDataMMNoInt,
+                    y=trainData$TARGET, 
+                    xtest = testDataMMNoInt,
+                    maxInteractionOrder = 2,
+                    classify=TRUE)
+
+myRandomGLMPred <- prediction(myRandomGLM$predictedTest.response[,2], 
+                              testData$TARGET,
+                              label.ordering=c("Below","Above")
+                              )
+myRandomGLMAUC <- performance(myRandomGLMPred, "auc")
+myRandomGLMPerf <- performance(myRandomGLMPred, "tpr", "fpr")
+myRandomGLMAUC@y.values[[1]]
+
+myRandomGLM$timesSelectedByForwardRegression
+```
+
+Count number of times out of 100 bags each term is selected in a model.  The active interaction term occurs in 50 of the bags.  Several other degree 2 terms are used as well.
+```{r}
+myRandomGLMNames <- sapply(myRandomGLM$featuresInForwardRegression, 
+                           function(x) colnames(x))
+table(unlist(myRandomGLMNames))
+```
+
+# Machine Learning
+
+We will use caret, so reorder the levels of the target.
+```{r}
+trainData$TARGET <- factor(trainData$TARGET, levels=c("Above", "Below"))
+testData$TARGET <- factor(testData$TARGET, levels=c("Above", "Below"))
+trainDataScale$TARGET <- factor(trainDataScale$TARGET, levels=c("Above", "Below"))
+testDataScale$TARGET <- factor(testDataScale$TARGET, levels=c("Above", "Below"))
+```
+
+# Classification Tree
+
+For a classification tree model, square footage and price per square foot are important variables.  Other variables have high importance values as well.  The accuracy is not as good as for many of the other models tested.  
+
+```{r warning=FALSE}
+myrpart <- train(TARGET ~ ., 
+                data = trainData,
+                method="rpart",
+                trControl=trainControl(classProbs=TRUE))
+myrpartPredict <- predict(myrpart,
+                          newdata=testData,
+                          type="prob")
+
+myrpart$finalModel$variable.importance
+
+myrpartPred <- prediction(myrpartPredict[,1], 
+                        testData$TARGET,
+                        label.ordering=c("Below","Above"))
+myrpartAUC <- performance(myrpartPred, "auc")
+myrpartPerf <- performance(myrpartPred, "tpr", "fpr")
+myrpartAUC@y.values[[1]]
+```
+
+## The Support Vector Machine
+
+Using scaled data.
+
+
+Support vector machine with a linear kernel. 
+```{r}
+mysvmLinear <- train(TARGET ~ ., 
+                     data = trainDataScale,
+                     method="svmLinear", 
+                     trControl=trainControl(classProbs=TRUE))
+
+mysvmLinearPredict <- predict(mysvmLinear, newdata=testDataScale)
+
+mysvmLinearPredict <- predict(mysvmLinear, 
+                                 newdata=testDataScale, 
+                                 type="prob")
+
+mysvmLinearPred <- prediction(mysvmLinearPredict[,1], 
+                                 testDataScale$TARGET,
+                                 label.ordering=c("Below","Above"))
+mysvmLinearAUC <- performance(mysvmLinearPred, "auc")
+mysvmLinearPerf <- performance(mysvmLinearPred, "tpr", "fpr")
+mysvmLinearAUC@y.values[[1]]
+```
+
+Support vector machine with a polynomial kernel.  
+```{r}
+mysvmPoly <- train(TARGET ~ .,
+                   data=trainDataScale,
+                   method="svmPoly", 
+                   trainControl=c(classProbs=TRUE))
+
+mysvmPolyPredict <- predict(mysvmPoly, 
+                               newdata=testDataScale, 
+                               type="prob")
+
+# getting probabilities fails, so get point predictions
+mysvmPolyPredict <- predict(mysvmPoly, 
+                               newdata=testDataScale) 
+
+
+# calculate AUC based on 0/1 predictions
+mysvmPolyPred <- prediction(-as.numeric(mysvmPolyPredict)+2, 
+                               testDataScale$TARGET,
+                               label.ordering=c("Below", "Above"))
+mysvmPolyAUC <- performance(mysvmPolyPred, "auc")
+mysvmPolyPerf <- performance(mysvmPolyPred, "tpr", "fpr")
+mysvmPolyAUC@y.values[[1]]
+```
+
+Support vector machine with a radial basis function kernel.  Takes a few minutes.   Performance is near bingo.
+```{r}
+mysvmRbf <- train(TARGET ~ .,
+                  data=trainDataScale,
+                  method="svmRadial", 
+                  trainControl=c(classProbs=TRUE))
+  
+
+## getting probabilities fails, so use the point prediction
+#mysvmRbfPredict <- predict(mysvmRbf, 
+#                               newdata=testDataScale, 
+#                               type="prob")
+
+mysvmRbfPredict <- predict(mysvmRbf, 
+                               newdata=testDataScale) 
+
+
+# calculate AUC based on 0/1 predictions
+mysvmRbfPred <- prediction(-as.numeric(mysvmRbfPredict)+2, 
+                               testDataScale$TARGET,
+                               label.ordering=c("Below", "Above"))
+mysvmRbfAUC <- performance(mysvmRbfPred, "auc")
+mysvmRbfPerf <- performance(mysvmRbfPred, "tpr", "fpr")
+mysvmRbfAUC@y.values[[1]]
+```
+
+## Neural Network  
+```{r message=FALSE}
+mynnet <- train(x=trainDataScale[,-ncol(trainDataScale)],
+                   y=trainDataScale$TARGET,
+                   method="nnet", 
+                   trControl=trainControl(classProbs=TRUE))
+
+mynnet
+
+mynnetPredict <- predict(mynnet, newdata=testDataScale[,-ncol(testDataScale)], type="prob")
+
+mynnetPred <- prediction(mynnetPredict[,1], 
+                            testDataScale$TARGET,
+                            label.ordering=c("Below", "Above"))
+mynnetAUC <- performance(mynnetPred, "auc")
+mynnetPerf <- performance(mynnetPred, "tpr", "fpr")
+mynnetAUC@y.values[[1]]
+```
+
+Variable importance.
+```{r}
+garson(mynnet$finalModel, bar_plot=FALSE)
+```
+
+## Random Forest  
+```{r}
+myrf <- train(x=trainDataScale[,-ncol(trainDataScale)],
+                   y=trainDataScale$TARGET,
+                   method="rf", 
+                   trControl=trainControl(classProbs=TRUE))
+
+myrfPredict <- predict(myrf, 
+                          newdata=testDataScale[,-ncol(testDataScale)], 
+                          type="prob")
+
+myrfPred <- prediction(myrfPredict[,1], 
+                          testDataScale$TARGET,
+                          label.ordering=c("Below", "Above"))
+myrfAUC <- performance(myrfPred, "auc")
+myrfPerf <- performance(myrfPred, "tpr", "fpr")
+myrfAUC@y.values[[1]]
+```
+
+Variable importance.
+```{r}
+myrf$finalModel$importance
+```
+
+# ROC Curves
+```{r}
+library(colorspace)
+predictions <- matrix(c(mylrPredict, 
+                        mylrLassoPredict[,1], 
+                        myRandomGLM$predictedTest.response[,2], 
+                        myrpartPredict[,1], 
+                        mysvmLinearPredict[,1], 
+                        -as.numeric(mysvmPolyPredict)+2, 
+                        -as.numeric(mysvmRbfPredict)+2, 
+                        mynnetPredict[,1], 
+                        myrfPredict[,1]), ncol=9)
+pred_matrix <- prediction(predictions, 
+                          labels=matrix(testDataScale$TARGET, 
+                                        nrow=nrow(predictions), 
+                                        ncol=9),
+                          label.ordering=c("Below", "Above"))
+  
+perf_matrix <- performance(pred_matrix, "tpr", "fpr")
+plot(perf_matrix, col=as.list(rainbow(9)), lwd=3)
+
+legend(0.5, 0.8, c("Log. Reg.", 
+                   "LASSO", 
+                   "Random GLM", 
+                   "Class. Tree", 
+                   "SVM Lin.", 
+                   "SVM Poly.", 
+                   "SVM RBF", 
+                   "NNET", 
+                   "RF"), col=rainbow(9), lwd=3)
+```
+
+
+# CONJECTURING
+
+## Property 1
+
+$\textrm{bathrooms} \geq -\textrm{threeHundredK}/\textrm{pricePerSquareFoot} + \textrm{squareFootage} \rightarrow \textrm{isBelow}$
+
+Check using the first derived property as a classification rule by itself.  By the nature of the proposed method, there are no errors on the training data.
+
+```{r}
+conjFeatureTrain <- factor(ifelse(trainData$BATHS >= -300000/trainData$X..SQUARE.FEET + trainData$SQUARE.FEET,
+                                  "Below",
+                                  "Above"),
+                           levels=c("Below", "Above"))
+table(trainData$TARGET, conjFeatureTrain)
+```
+
+
+On the test data, there are 37 errors out of 30,156 houses.
+
+```{r}
+conjFeatureTest <- factor(ifelse(testData$BATHS >= -300000/testData$X..SQUARE.FEET + testData$SQUARE.FEET, 
+                                 "Below", 
+                                 "Above"), 
+                          levels=c("Below", "Above"))
+table(testData$TARGET, conjFeatureTest)
+```
+
+An inspection of the misclassified houses reveals that the mis-classifications were due to rounding error and/or mis-coding of the data.  For example, there is a house with 31,248 bathrooms.
+```{r}
+testData$PRICE <- mydata$PRICE[-trainRows]
+testData %>%
+    dplyr::filter(TARGET != conjFeatureTest) %>%
+    dplyr::select(TARGET, X..SQUARE.FEET, SQUARE.FEET, BATHS, PRICE) %>%
+    dplyr::mutate(SQFT.TIMES.PRICEPERSQFT = X..SQUARE.FEET*SQUARE.FEET)
+    
+```
+## Property 2
+
+$\textrm{squareFootage} \geq (\textrm{threeHundredK}+1)/(\textrm{pricePerSquareFoot} - 1) \rightarrow \textrm{isAbove}$
+
+Check using the first derived property as a classification rule by itself.  As with the other property, there are no errors on the training data.
+
+```{r}
+conjFeatureTrain2 <- factor(ifelse(trainData$SQUARE.FEET >= (300000+1)/(trainData$X..SQUARE.FEET - 1),
+                                  "Above",
+                                  "Below"),
+                           levels=c("Below", "Above"))
+table(trainData$TARGET, conjFeatureTrain2)
+```
+
+
+On the test data, there are 26 errors out of 30,156 houses.
+
+```{r}
+conjFeatureTest2 <- factor(ifelse(testData$SQUARE.FEET >= (300000+1)/(testData$X..SQUARE.FEET - 1),
+                                 "Above", 
+                                 "Below"), 
+                          levels=c("Below", "Above"))
+table(testData$TARGET, conjFeatureTest2)
+```
+
+An inspection of the misclassified houses reveals that the mis-classifications were due to rounding error and/or mis-coding of the data.  For example, two houses had prices below $460.
+```{r}
+testData %>%
+    dplyr::filter(TARGET != conjFeatureTest2) %>%
+    dplyr::select(TARGET, X..SQUARE.FEET, SQUARE.FEET, BATHS, PRICE) %>%
+    dplyr::mutate(SQFT.TIMES.PRICEPERSQFT = X..SQUARE.FEET*SQUARE.FEET)
+```

@@ -434,7 +434,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
 
     if theory is not None:
         if verbose:
-            print "Started writing theory to expressions"
+            print("Started writing theory to expressions")
         for o in objects:
             if upperBound:
                 try:
@@ -447,10 +447,10 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                 except:
                     stdin.write('NaN\n')
         if verbose:
-            print "Finished writing theory to expressions"
+            print("Finished writing theory to expressions")
 
     if verbose:
-        print "Started computing and writing invariant values to expressions"
+        print("Started computing and writing invariant values to expressions")
 
     for o in objects:
         for invariant in names:
@@ -460,11 +460,11 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                 stdin.write('NaN\n')
 
     if verbose:
-        print "Finished computing and writing invariant values to expressions"
+        print("Finished computing and writing invariant values to expressions")
 
     if debug:
         for l in sp.stderr:
-            print '> ' + l.rstrip()
+            print('> ' + l.rstrip())
 
     # process the output
     out = sp.stdout
@@ -483,7 +483,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
             inputList = []
 
     if verbose:
-        print "Finished conjecturing"
+        print("Finished conjecturing")
 
     return conjectures
 
@@ -732,7 +732,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
 
     if theory is not None:
         if verbose:
-            print "Started writing theory to expressions"
+            print("Started writing theory to expressions")
         for o in objects:
             if sufficient:
                 try:
@@ -745,10 +745,10 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
                 except:
                     stdin.write('-1\n')
         if verbose:
-            print "Finished writing theory to expressions"
+            print("Finished writing theory to expressions")
 
     if verbose:
-        print "Started computing and writing property values to expressions"
+        print("Started computing and writing property values to expressions")
 
     for o in objects:
         for property in names:
@@ -758,11 +758,11 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
                 stdin.write('-1\n')
 
     if verbose:
-        print "Finished computing and writing property values to expressions"
+        print("Finished computing and writing property values to expressions")
 
     if debug:
         for l in sp.stderr:
-            print '> ' + l.rstrip()
+            print('> ' + l.rstrip())
 
     # process the output
     out = sp.stdout
@@ -779,6 +779,6 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
             inputList = []
 
     if verbose:
-        print "Finished conjecturing"
+        print("Finished conjecturing")
 
     return conjectures
