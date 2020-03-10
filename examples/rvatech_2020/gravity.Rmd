@@ -1,0 +1,152 @@
+---
+title: "Gravity Models"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+Load libraries.
+```{r message=FALSE, warning=FALSE}
+library(caret)
+library(rpart)
+library(randomForest)
+library(kernlab)
+library(nnet)
+library(NeuralNetTools)
+```
+
+Read data.
+```{r}
+trainData <- read.table("gravityTrainData.csv", sep=",", header=FALSE)
+testData <- read.table("gravityTestData.csv", sep=",", header=FALSE)
+colnames(trainData) <- c("F", "m1", "m2", "r")
+colnames(testData) <- c("F", "m1", "m2", "r")
+```
+
+Calculate the gravitational constant.
+```{r}
+summary(gravConst <- trainData$F/(trainData$m1*trainData$m2/trainData$r^2))
+```
+
+Linear regression with main effects.  All terms are significant.
+```{r}
+mylm <- lm(F ~ ., data=trainData)
+summary(mylm)
+
+mylmPredict <- predict(mylm, newdata=testData)
+
+(lm_pr <- postResample(pred = mylmPredict, obs = testData$F))
+```
+
+Fit a second-order model.  All interaction terms are significant, as well as $m_1^2$.  
+```{r}
+mylmIntAll <- lm(F ~ (.)^2 + I(m1^2) + I(m2^2) + I(r^2), data=trainData)
+summary(mylmIntAll)
+
+mylmIntAllPredict <- predict(mylmIntAll, newdata=testData)
+
+(lm_int_all_pr <- postResample(pred = mylmIntAllPredict, obs = testData$F))
+```
+
+```{r warning=FALSE}
+myrpart <- train(x = trainData[,-1],
+                y = trainData[,1],
+                method="rpart")
+
+plot(myrpart$finalModel)
+text(myrpart$finalModel)
+
+myrpart$finalModel$variable.importance
+
+myrpartPredict <- predict(myrpart, newdata=testData[,-1])
+(rpart_pr <- postResample(pred = myrpartPredict, obs = testData$F))
+```
+
+Support vector machine with a linear kernel.
+```{r}
+mysvmLinear <- train(x = trainData[,-1],
+                     y = trainData[,1],
+                     method="svmLinear")
+
+mysvmLinearPredict <- predict(mysvmLinear, newdata=testData[,-1])
+(svm_lin_pr <- postResample(pred = mysvmLinearPredict, obs = testData$F))
+```
+
+Support vector machine with a polynomial kernel.
+```{r}
+mysvmPoly <- train(x = trainData[,-1],
+                     y = trainData[,1],
+                     method="svmPoly")
+
+mysvmPolyPredict <- predict(mysvmPoly, newdata=testData[,-1])
+(svm_poly_pr <- postResample(pred = mysvmPolyPredict, obs = testData$F))
+```
+
+Support vector machine with a radial basis function kernel.
+```{r}
+mysvmRbf <- train(x = trainData[,-1],
+                     y = trainData[,1],
+                     method="svmRadial")
+
+mysvmRbfPredict <- predict(mysvmRbf, newdata=testData[,-1])
+(svm_rbf_pr <- postResample(pred = mysvmRbfPredict, obs = testData$F))
+```
+
+Neural network.
+```{r message=FALSE}
+mynnet <- train(x = trainData[,-1],
+                y = trainData[,1],
+                method="nnet",
+                trace=FALSE)
+
+garson(mynnet$finalModel, bar_plot=FALSE)
+
+mynnetPredict <- predict(mynnet, newdata=testData[,-1])
+(nnet_pr <- postResample(pred = mynnetPredict, obs = testData$F))
+```
+
+Random forest.
+```{r}
+myrf <- train(x = trainData[,-1],
+              y = trainData[,1],
+              method="rf")
+
+myrf$finalModel$importance
+
+
+myrfPredict <- predict(myrf, newdata=testData[,-1])
+(rf_pr <- postResample(pred = myrfPredict, obs = testData$F))
+```
+
+RMSE plot.
+```{r}
+rmse_data <- data.frame(
+  model=c("LM", "LM_INT", "RT", "SVM_LIN", "SVM_POLY",  "SVM_RBF", "NN", "RF"),
+  RMSE=c(lm_pr[1], lm_int_all_pr[1], 
+         rpart_pr[1], svm_lin_pr[1],
+         svm_poly_pr[1], svm_rbf_pr[1],
+         nnet_pr[1], rf_pr[1])
+)
+rmse_data$model <- factor(rmse_data$model, levels=c("LM", "LM_INT", "RT", "SVM_LIN", "SVM_POLY",  "SVM_RBF", "NN", "RF"))
+
+
+ggplot(rmse_data, aes(x=model, y=RMSE)) + 
+  geom_bar(stat="identity", color="black", fill="blue") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+```
+
+
+# CONJECTURING
+
+
+Recover the gravitational constant using linear regression, based on the relationship $F \geq m_1m_2/r^2$.
+
+```{r}
+constDF <- data.frame(F=trainData$F, m1m2OverR2 = trainData$m1*trainData$m2/trainData$r^2)
+
+constlm <- lm(F ~ ., data=constDF)
+summary(constlm)
+coef(constlm)
+```
+
+

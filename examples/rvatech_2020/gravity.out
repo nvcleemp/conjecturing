@@ -1,0 +1,65 @@
+using 1000 random data points 
+
+random gravitiational constant = 0.057097611122 
+
+gravitational data loaded 
+
+Invariants defined! 
+
+Pairs loaded! 
+
+conjecturing loaded ... ready to conjecture! 
+
+Upper bound conjecturing
+> Generation process was stopped because the maximum time was reached.
+> Found 19 unlabeled trees.
+> Found 210774 labeled trees.
+> Found 74375 valid expressions.
+(1, force(x) <= ceil(mass1(x)^2/distance(x)^2))
+(2, force(x) <= 2*mass2(x)/sqrt(distance(x)))
+(3, force(x) <= ceil(mass2(x)^2/distance(x)^2))
+(4, force(x) <= 10^(mass2(x)/distance(x)) - 1)
+(5, force(x) <= e^(mass2(x)/distance(x) - 1))
+(6, force(x) <= sqrt(2)*distance(x)*sqrt(mass1(x)))
+(7, force(x) <= log(e^mass1(x))/mass2(x))
+(8, force(x) <= log(e^mass1(x))/(distance(x)*log(10)))
+(9, force(x) <= log(10^mass2(x))/distance(x))
+(10, force(x) <= (2*mass1(x) - mass2(x))^2)
+(11, force(x) <= e^(mass1(x)/distance(x)) - 1)
+(12, force(x) <= (1/floor(distance(x)/mass1(x))))
+(13, force(x) <= 2*abs(mass1(x) - mass2(x)))
+(14, force(x) <= e^(mass1(x)/distance(x) - 1))
+(15, force(x) <= 10^(mass1(x)/distance(x) - 1))
+(16, force(x) <= log(10^(2*sqrt(mass2(x)))))
+(17, force(x) <= (1/floor(log(log(distance(x)))/log(10))))
+(18, force(x) <= distance(x)^2 - mass1(x) + mass2(x))
+(19, force(x) <= mass1(x)*mass2(x)/distance(x)^2)
+Lower bound conjecturing
+> Generation process was stopped because the maximum time was reached.
+> Found 29 unlabeled trees.
+> Found 426486 labeled trees.
+> Found 80112 valid expressions.
+(1, force(x) >= 8*mass2(x)/distance(x)^2)
+(2, force(x) >= e^(log(mass1(x))/log(10) - mass2(x)))
+(3, force(x) >= (mass1(x) + 1)*log(10)/log(e^distance(x)))
+(4, force(x) >= 1/16/mass1(x)^2)
+(5, force(x) >= 1/2*(mass1(x) + 2)/distance(x)^2)
+(6, force(x) >= mass1(x)/(sqrt(mass2(x)) - distance(x)))
+(7, force(x) >= -sqrt(mass1(x)) + mass2(x)/distance(x))
+(8, force(x) >= (mass2(x) + 1)*log(10)/log(e^distance(x)))
+(9, force(x) >= -distance(x)^2 + 1/4*mass2(x))
+(10, force(x) >= -1/(distance(x) - 2*mass1(x)))
+(11, force(x) >= -2/(2*distance(x) - mass1(x)))
+(12, force(x) >= (1/(mass2(x)^2 - distance(x))))
+(13, force(x) >= -1/(distance(x) - 2*mass2(x)))
+(14, force(x) >= -1/(2*distance(x) - mass2(x)))
+(15, force(x) >= floor(log(mass2(x)/distance(x))/log(10)))
+(16, force(x) >= -1/2/(distance(x) - mass2(x)))
+(17, force(x) >= minimum(1/distance(x), -mass1(x) + mass2(x)))
+(18, force(x) >= log(mass1(x))/(distance(x)*mass2(x)))
+(19, force(x) >= -1/(distance(x) + mass1(x) - mass2(x)))
+(20, force(x) >= -1/(distance(x) - minimum(mass1(x), mass2(x))))
+(21, force(x) >= sqrt(log(mass1(x))) - log(distance(x))/log(10))
+(22, force(x) >= 2*sqrt(mass1(x)) - 1/2*distance(x))
+(23, force(x) >= 1/2*mass1(x)/(distance(x) - 1)^2)
+(24, force(x) >= -log(distance(x))^2/log(10)^2 + log(mass2(x)))
