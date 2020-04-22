@@ -121,6 +121,9 @@ unsigned long int treeCount = 0;
 unsigned long int labeledTreeCount = 0;
 unsigned long int validExpressionsCount = 0;
 
+int maximum_complexity_reached = -1;
+boolean report_maximum_complexity_reached = FALSE;
+
 unsigned long int timeOut = 0;
 boolean timeOutReached = FALSE;
 
@@ -1388,6 +1391,9 @@ void generateTree(int unary, int binary){
         fprintf(stderr, "Generating trees with %d unary node%s and %d binary node%s.\n",
                 unary, unary == 1 ? "" : "s", binary, binary == 1 ? "" : "s");
     }
+    if(report_maximum_complexity_reached){//no need to check if this is larger since we generate them in increasing order
+        maximum_complexity_reached = 2*binary + unary;
+    }
     TREE tree;
     targetUnary = unary;
     targetBinary = binary;
@@ -1967,6 +1973,8 @@ void help(char *name){
     fprintf(stderr, "       Specifies the file containing the invariant values. Defaults to stdin.\n");
     fprintf(stderr, "    --print-valid-expressions\n");
     fprintf(stderr, "       Causes all valid expressions that are found to be printed to stderr.\n");
+    fprintf(stderr, "    --maximum-complexity\n");
+    fprintf(stderr, "       Print the maximum complexity reached during the generation to stderr.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "\e[1mInput format\n============\e[21m\n");
     fprintf(stderr, "The operators that should be used and the invariant values are read from an in-\n");
@@ -2079,6 +2087,7 @@ int processOptions(int argc, char **argv) {
         {"print-valid-expressions", no_argument, NULL, 0},
         {"sufficient", no_argument, NULL, 0},
         {"necessary", no_argument, NULL, 0},
+        {"maximum-complexity", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -2178,6 +2187,9 @@ int processOptions(int argc, char **argv) {
                         break;
                     case 20:
                         inequality = NECESSARY;
+                        break;
+                    case 21:
+                        report_maximum_complexity_reached = TRUE;
                         break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
@@ -2421,6 +2433,10 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
         fprintf(stderr, "Found %lu valid expressions.\n", validExpressionsCount);
+    }
+    
+    if(report_maximum_complexity_reached){
+        fprintf(stderr, "Maximum complexity reached was %d\n", maximum_complexity_reached);
     }
     
     //do some heuristic-specific post-processing like outputting the conjectures
