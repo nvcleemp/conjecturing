@@ -406,7 +406,8 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     import subprocess
     sp = subprocess.Popen(command, shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, close_fds=True)
+                          stderr=subprocess.PIPE, close_fds=True,
+                          encoding='utf-8')
     stdin = sp.stdin
 
     if operators is not None:
@@ -704,7 +705,8 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     import subprocess
     sp = subprocess.Popen(command, shell=True,
                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, close_fds=True)
+                          stderr=subprocess.PIPE, close_fds=True,
+                          encoding='utf-8')
     stdin = sp.stdin
 
     if operators is not None:
