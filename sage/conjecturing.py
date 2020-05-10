@@ -467,6 +467,8 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
         for l in sp.stderr:
             print('> ' + l.rstrip())
 
+    stdin.flush()
+
     # process the output
     out = sp.stdout
 
@@ -765,6 +767,8 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     if debug:
         for l in sp.stderr:
             print('> ' + l.rstrip())
+
+    stdin.flush()
 
     # process the output
     out = sp.stdout
