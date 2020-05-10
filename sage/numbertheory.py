@@ -81,7 +81,7 @@ def automatedSearch(objects, invariants, universe, upperBound=True, steps=10, ma
         noCounterExample = True
         for i in universe:
             if any([not c.evaluate(Integer(i)) for c in l]):
-                print "Adding {}".format(i)
+                print("Adding {}".format(i))
                 objects.append(i)
                 universe.remove(i)
                 noCounterExample = False
