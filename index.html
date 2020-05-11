@@ -32,6 +32,7 @@
           <p class="view" style="margin-bottom: 0px"><a href="#installation">Installation</a></p>
           <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#installing-in-sage">Installing in Sage</a></p>
           <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#conjecturing-on-cocalc-">Conjecturing on CoCalc</a></p>
+          <p class="view" style="margin-bottom: 0px; margin-left: 10px"><a href="#no-installation">Conjecturing without installation</a></p>
           <p class="view" style="margin-bottom: 0px"><a href="#quickstart">Quickstart</a></p>
           <p class="view" style="margin-bottom: 0px"><a href="#layout-of-the-repository">Layout of the repository</a></p>
           <p class="view" style="margin-bottom: 0px"><a href="#usage">Usage</a></p>
@@ -95,6 +96,22 @@ invariants = [Graph.size, Graph.order, max_degree]
 objects = [graphs.CompleteGraph(n) for n in [3,4,5]]
 conjecture(objects, invariants, 0)
 </code></pre>
+
+<p>To update to a newer version, you just repeat the steps above for the newer zip file.</p>
+
+<h3>
+<a id="no-installation" class="anchor" href="#no-installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conjecturing without installation</h3>
+
+<p>You might want to use our code without going through the hassle of installing it within Sage. This might be the case if you do not have the correct priviliges to install conjecturing, or if you are using the Sage version from your distribution and you don't want to make changes to it. It is possible to do this, although it brings some limitations with it.</p>
+
+<ul>
+<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.12-CoCalc.zip">0.12-CoCalc release</a>.</li>
+<li>Unzip the folder into a temporary directory.</li>
+<li>Open a terminal, change the location to this directory and issue the <code>make</code> command.</li>
+<li>You are done. You can now start conjecturing, but do not remove the files <code>expressions</code> and <code>conjecturing.py</code> that were copied into your home directory.</li>
+</ul>
+
+<p>In case you use this setup, you will only be able to use conjecturing if Sage is started from your home directory. You can move the files <code>expressions</code> and <code>conjecturing.py</code> to another location, but then conjecturing will only work if Sage is started from that location.</p>
 
 <p>To update to a newer version, you just repeat the steps above for the newer zip file.</p>
 
