@@ -37,7 +37,7 @@ char outputType = 'h';
 int targetUnary; //number of unary nodes in the generated trees
 int targetBinary; //number of binary nodes in the generated trees
 
-int invariantCount;
+int invariantCount = 0;
 boolean *invariantsUsed;
 
 int mainInvariant;
@@ -121,6 +121,9 @@ unsigned long int treeCount = 0;
 unsigned long int labeledTreeCount = 0;
 unsigned long int validExpressionsCount = 0;
 
+int maximum_complexity_reached = -1;
+boolean report_maximum_complexity_reached = FALSE;
+
 unsigned long int timeOut = 0;
 boolean timeOutReached = FALSE;
 
@@ -132,6 +135,7 @@ boolean heuristicStoppedGeneration = FALSE;
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
 boolean generateExpressions = FALSE;
+boolean generateAllExpressions = FALSE;
 boolean doConjecturing = FALSE;
 boolean propertyBased = FALSE;
 boolean theoryProvided = FALSE;
@@ -1224,6 +1228,9 @@ void checkExpression_propertyBased(TREE *tree){
 
 void handleLabeledTree(TREE *tree){
     labeledTreeCount++;
+    if(generateAllExpressions){
+        return;
+    }
     if(generateExpressions || doConjecturing){
         if(propertyBased){
             checkExpression_propertyBased(tree);
@@ -1383,6 +1390,9 @@ void generateTree(int unary, int binary){
     if(verbose){
         fprintf(stderr, "Generating trees with %d unary node%s and %d binary node%s.\n",
                 unary, unary == 1 ? "" : "s", binary, binary == 1 ? "" : "s");
+    }
+    if(report_maximum_complexity_reached){//no need to check if this is larger since we generate them in increasing order
+        maximum_complexity_reached = 2*binary + unary;
     }
     TREE tree;
     targetUnary = unary;
@@ -1865,6 +1875,8 @@ void help(char *name){
     fprintf(stderr, " %s [options] -l unary binary invariants\n", name);
     fprintf(stderr, "       Generates labeled expression trees with the given number of unary\n");
     fprintf(stderr, "       and binary operators and the given number of invariants.\n");
+    fprintf(stderr, " %s [options] -a [unary binary] [invariants]\n", name);
+    fprintf(stderr, "       Generates labeled expression trees.\n");
     fprintf(stderr, " %s [options] -e unary binary\n", name);
     fprintf(stderr, "       Generates valid expressions with the given number of unary and\n");
     fprintf(stderr, "       binary operators.\n");
@@ -1877,6 +1889,8 @@ void help(char *name){
     fprintf(stderr, "       Generate unlabeled expression trees.\n");
     fprintf(stderr, "    -l, --labeled\n");
     fprintf(stderr, "       Generate labeled expression trees.\n");
+    fprintf(stderr, "    -a, --all-expressions\n");
+    fprintf(stderr, "       Generate labeled expression trees as for conjecturing.\n");
     fprintf(stderr, "    -e, --expressions\n");
     fprintf(stderr, "       Generate true expressions.\n");
     fprintf(stderr, "    -c, --conjecture\n");
@@ -1959,6 +1973,8 @@ void help(char *name){
     fprintf(stderr, "       Specifies the file containing the invariant values. Defaults to stdin.\n");
     fprintf(stderr, "    --print-valid-expressions\n");
     fprintf(stderr, "       Causes all valid expressions that are found to be printed to stderr.\n");
+    fprintf(stderr, "    --maximum-complexity\n");
+    fprintf(stderr, "       Print the maximum complexity reached during the generation to stderr.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "\e[1mInput format\n============\e[21m\n");
     fprintf(stderr, "The operators that should be used and the invariant values are read from an in-\n");
@@ -2071,11 +2087,13 @@ int processOptions(int argc, char **argv) {
         {"print-valid-expressions", no_argument, NULL, 0},
         {"sufficient", no_argument, NULL, 0},
         {"necessary", no_argument, NULL, 0},
+        {"maximum-complexity", no_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
         {"labeled", no_argument, NULL, 'l'},
         {"expressions", no_argument, NULL, 'e'},
+        {"all-expressions", no_argument, NULL, 'a'},
         {"conjecture", no_argument, NULL, 'c'},
         {"output", required_argument, NULL, 'o'},
         {"property", no_argument, NULL, 'p'},
@@ -2083,7 +2101,7 @@ int processOptions(int argc, char **argv) {
     };
     int option_index = 0;
 
-    while ((c = getopt_long(argc, argv, "hvuleco:pt", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hvuleaco:pt", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
                 //handle long option with no alternative
@@ -2170,6 +2188,9 @@ int processOptions(int argc, char **argv) {
                     case 20:
                         inequality = NECESSARY;
                         break;
+                    case 21:
+                        report_maximum_complexity_reached = TRUE;
+                        break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
                         usage(name);
@@ -2190,6 +2211,9 @@ int processOptions(int argc, char **argv) {
                 break;
             case 'e':
                 generateExpressions = TRUE;
+                break;
+            case 'a':
+                generateAllExpressions = TRUE;
                 break;
             case 'c':
                 doConjecturing = TRUE;
@@ -2239,7 +2263,7 @@ int processOptions(int argc, char **argv) {
     }
     
     if(onlyLabeled + onlyUnlabeled +
-            generateExpressions + doConjecturing != TRUE){
+            generateExpressions + generateAllExpressions + doConjecturing != TRUE){
         fprintf(stderr, "Please select one type to be generated.\n");
         usage(name);
         return EXIT_FAILURE;
@@ -2258,6 +2282,11 @@ int processOptions(int argc, char **argv) {
     }
     
     if (onlyLabeled && argc - optind != 3) {
+        usage(name);
+        return EXIT_FAILURE;
+    }
+    
+    if (generateAllExpressions && (argc > optind + 3)) {
         usage(name);
         return EXIT_FAILURE;
     }
@@ -2289,12 +2318,18 @@ int main(int argc, char *argv[]) {
     
     int unary = 0;
     int binary = 0;
-    if(!doConjecturing){
+    if(!(doConjecturing || generateAllExpressions)){
         unary = strtol(argv[optind], NULL, 10);
         binary = strtol(argv[optind+1], NULL, 10);
         if(onlyLabeled) {
             invariantCount = strtol(argv[optind+2], NULL, 10);
         }
+    } else if(generateAllExpressions && (argc - optind == 1)) {
+        invariantCount = strtol(argv[optind], NULL, 10);
+    } else if(generateAllExpressions && (argc - optind == 3)) {
+        unary = strtol(argv[optind], NULL, 10);
+        binary = strtol(argv[optind+1], NULL, 10);
+        invariantCount = strtol(argv[optind+2], NULL, 10);
     } else if(argc - optind == 2) {
         unary = strtol(argv[optind], NULL, 10);
         binary = strtol(argv[optind+1], NULL, 10);
@@ -2328,17 +2363,21 @@ int main(int argc, char *argv[]) {
         } else {
             readOperators();
         }
-        if(propertyBased){
-            readInvariantsValues_propertyBased();
-            if(verbose) printInvariantValues_propertyBased(stderr);
-            if(!checkKnownTheory_propertyBased()){
-                BAILOUT("Known theory is not consistent with main invariant")
-            }
+        if(generateAllExpressions && invariantCount>0){
+            allocateMemory_onlyLabeled();
         } else {
-            readInvariantsValues();
-            if(verbose) printInvariantValues(stderr);
-            if(!checkKnownTheory()){
-                BAILOUT("Known theory is not consistent with main invariant")
+            if(propertyBased){
+                readInvariantsValues_propertyBased();
+                if(verbose) printInvariantValues_propertyBased(stderr);
+                if(!checkKnownTheory_propertyBased()){
+                    BAILOUT("Known theory is not consistent with main invariant")
+                }
+            } else {
+                readInvariantsValues();
+                if(verbose) printInvariantValues(stderr);
+                if(!checkKnownTheory()){
+                    BAILOUT("Known theory is not consistent with main invariant")
+                }
             }
         }
     }
@@ -2364,7 +2403,7 @@ int main(int argc, char *argv[]) {
     if(timeOut) alarm(timeOut);
     
     //start actual generation process
-    if(doConjecturing){
+    if(doConjecturing || generateAllExpressions){
         conjecture(unary, binary);
     } else {
         generateTree(unary, binary);
@@ -2387,10 +2426,17 @@ int main(int argc, char *argv[]) {
     } else if(onlyLabeled) {
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
+    } else if(generateAllExpressions) {
+        fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
+        fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
     } else if(generateExpressions || doConjecturing) {
         fprintf(stderr, "Found %lu unlabeled trees.\n", treeCount);
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
         fprintf(stderr, "Found %lu valid expressions.\n", validExpressionsCount);
+    }
+    
+    if(report_maximum_complexity_reached){
+        fprintf(stderr, "Maximum complexity reached was %d\n", maximum_complexity_reached);
     }
     
     //do some heuristic-specific post-processing like outputting the conjectures
