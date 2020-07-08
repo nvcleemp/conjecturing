@@ -460,14 +460,14 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
             except:
                 stdin.write('NaN\n')
 
+    stdin.flush()
+
     if verbose:
         print("Finished computing and writing invariant values to expressions")
 
     if debug:
         for l in sp.stderr:
             print('> ' + l.rstrip())
-
-    stdin.flush()
 
     # process the output
     out = sp.stdout
@@ -761,14 +761,14 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
             except:
                 stdin.write('-1\n')
 
+    stdin.flush()
+
     if verbose:
         print("Finished computing and writing property values to expressions")
 
     if debug:
         for l in sp.stderr:
             print('> ' + l.rstrip())
-
-    stdin.flush()
 
     # process the output
     out = sp.stdout
