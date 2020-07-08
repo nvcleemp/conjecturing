@@ -22,8 +22,8 @@
 
 
         <ul>
-          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.12.tar.gz">Download <strong>0.12</strong></a></li>
-          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.12-CoCalc.zip">Download <strong>0.12-CoCalc</strong></a></li>
+          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.13.tar.gz">Download <strong>0.13</strong></a></li>
+          <li><a href="https://github.com/nvcleemp/conjecturing/archive/0.13-CoCalc.zip">Download <strong>0.13-CoCalc</strong></a></li>
           <li><a href="https://github.com/nvcleemp/conjecturing">View On <strong>GitHub</strong></a></li>
         </ul>
 
@@ -63,8 +63,8 @@
 <p>First you need to locate the Sage installation into which you want to install conjecturing. In case this is the system installation of Sage, you can find the location using the command <code>which sage</code>.</p>
 
 <ul>
-    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/releases/download/0.12/spkg.zip">spkg.zip</a>, extract it and copy the directory <i>conjecturing</i> into the directory <i>SAGE_ROOT/build/pkgs</i>.</li>
-    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/archive/0.12.tar.gz">conjecturing-0.12.tar.gz</a> and place the file into <i>SAGE_ROOT/upstream</i>.</li>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/releases/download/0.13/spkg.zip">spkg.zip</a>, extract it and copy the directory <i>conjecturing</i> into the directory <i>SAGE_ROOT/build/pkgs</i>.</li>
+    <li>Download the archive <a href="https://github.com/nvcleemp/conjecturing/archive/0.13.tar.gz">conjecturing-0.13.tar.gz</a> and place the file into <i>SAGE_ROOT/upstream</i>.</li>
     <li>Run the following command: <code>$ sage --package fix-checksum conjecturing</code><br>Make sure that you use the Sage installation into which you are installing.</li>
     <li>Install the package using the following command: <code>$ sage -i conjecturing</code><br>Make sure that you use the Sage installation into which you are installing.</li>
 </ul>
@@ -75,18 +75,18 @@
 <p>One easy way to work with Sage is by going to <a href="http://www.cocalc.com">http://www.cocalc.com</a>. Of course you can use our code on CoCalc. By default, however, it is not possible to install additional packages there, so we created a separate release of the conjecturing package which can easily be used on CoCalc.</p>
 
 <ul>
-<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.12-CoCalc.zip">0.12-CoCalc release</a>.</li>
+<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.13-CoCalc.zip">0.13-CoCalc release</a>.</li>
 <li>Create a new project on CoCalc, and upload the zip file from the previous step to that project.</li>
 <li>Open a terminal on CoCalc and execute the following commands:</li>
 </ul>
 
-<pre><code>~$ unzip conjecturing-0.12-CoCalc
-~$ cd conjecturing-0.12-CoCalc
-~/conjecturing-0.12-CoCalc$ make
+<pre><code>~$ unzip conjecturing-0.13-CoCalc
+~$ cd conjecturing-0.13-CoCalc
+~/conjecturing-0.13-CoCalc$ make
 </code></pre>
 
 <ul>
-<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above. In case you are bothered by the zip file and the directory 0.12-CoCalc, you can just remove them. Do not remove the files <code>expressions</code> and <code>conjecturing.py</code>.</li>
+<li>You are done. You can now start conjecturing using a Terminal or a Sage Worksheet. You can just follow the instructions above. In case you are bothered by the zip file and the directory 0.13-CoCalc, you can just remove them. Do not remove the files <code>expressions</code> and <code>conjecturing.py</code>.</li>
 </ul>
 
 <p>You can check that the installation was successful by creating a worksheet, copying the code below and executing it. If everything went OK, you should see some conjectures.</p>
@@ -107,7 +107,7 @@ conjecture(objects, invariants, 0)
 <p>You might want to use our code without going through the hassle of installing it within Sage. This might be the case if you do not have the correct priviliges to install conjecturing, or if you are using the Sage version from your distribution and you don't want to make changes to it. It is possible to do this, although it brings some limitations with it.</p>
 
 <ul>
-<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.12-CoCalc.zip">0.12-CoCalc release</a>.</li>
+<li>Download the <a href="https://github.com/nvcleemp/conjecturing/archive/0.13-CoCalc.zip">0.13-CoCalc release</a>.</li>
 <li>Unzip the folder into a temporary directory.</li>
 <li>Open a terminal, change the location to this directory and issue the <code>make</code> command.</li>
 <li>You are done. You can now start conjecturing, but do not remove the files <code>expressions</code> and <code>conjecturing.py</code> that were copied into your home directory.</li>
