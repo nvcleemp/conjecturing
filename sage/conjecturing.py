@@ -612,24 +612,26 @@ class PropertyBasedExpression(SageObject):
         values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
         return self.expression.evaluate(values)
 
-def get_premise(conjecture):
+def get_premise(conjecture, myprint=True):
     assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
     import sage.logic.propcalc as propcalc
     import sage.logic.logicparser as logicparser
     tree = conjecture.expression.full_tree()[1]
     if type(tree)!=list:
         tree = [tree]
-    print(conjecturing_recover_formula(tree))
+    if myprint:
+        print(conjecturing_recover_formula(tree))
     return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
 
-def get_conclusion(conjecture):
+def get_conclusion(conjecture, myprint=True):
     assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
     import sage.logic.propcalc as propcalc
     import sage.logic.logicparser as logicparser
     tree = conjecture.expression.full_tree()[2]
     if type(tree)!=list:
         tree = [tree]
-    print(conjecturing_recover_formula(tree))
+    if myprint:
+        print(conjecturing_recover_formula(tree))
     return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
 
 def conjecturing_recover_formula(prefix_tree):
