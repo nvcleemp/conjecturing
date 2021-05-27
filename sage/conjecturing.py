@@ -524,14 +524,8 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     for o in objects:
         for invariant in names:
             try:
-                #print(invariant)
                 stdin.write('{}\n'.format(float(get_value(invariantsDict[invariant], o))))
             except:
-                print(invariant, o.name)
-                print(invariantsDict[invariant])
-                print(get_value(invariantsDict[invariant], o))
-                print(float(get_value(invariantsDict[invariant], o)))
-                print('{}\n'.format(float(get_value(invariantsDict[invariant], o))))
                 stdin.write('NaN\n')
 
     stdin.flush()
@@ -593,6 +587,83 @@ class PropertyBasedConjecture(SageObject):
         values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
         return self.expression.evaluate(values)
 
+class PropertyBasedExpression(SageObject):
+
+    def __init__(self, expression, propertyCalculators):
+        """Constructs a new property based expression."""
+        self.expression = expression
+        self.propertyCalculators = propertyCalculators
+        self.__name__ = repr(self.expression)
+        super(PropertyBasedExpression, self).__init__()
+
+    def __eq__(self, other):
+        return self.expression == other.expression
+
+    def _repr_(self):
+        return repr(self.expression)
+
+    def _latex_(self):
+        return latex(self.expression)
+
+    def __call__(self, g):
+        return self.evaluate(g)
+
+    def evaluate(self, g):
+        values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
+        return self.expression.evaluate(values)
+
+def get_premise(conjecture):
+    assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
+    import sage.logic.propcalc as propcalc
+    import sage.logic.logicparser as logicparser
+    tree = conjecture.expression.full_tree()[1]
+    if type(tree)!=list:
+        tree = [tree]
+    print(conjecturing_recover_formula(tree))
+    return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+
+def get_conclusion(conjecture):
+    assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
+    import sage.logic.propcalc as propcalc
+    import sage.logic.logicparser as logicparser
+    tree = conjecture.expression.full_tree()[2]
+    if type(tree)!=list:
+        tree = [tree]
+    print(conjecturing_recover_formula(tree))
+    return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+
+def conjecturing_recover_formula(prefix_tree):
+    import sage.logic.logicparser as logicparser
+    formula = ''
+    if not isinstance(prefix_tree, list):
+        raise TypeError("the input must be a parse tree as a list")
+
+    formula = conjecturing_apply_func(prefix_tree, logicparser.recover_formula_internal)
+    if prefix_tree[0] == '~' or len(prefix_tree) == 1:
+        return formula
+    return formula[1:-1]
+
+def conjecturing_apply_func(tree, func):
+    # used when full syntax parse tree is passed as argument
+    if len(tree) == 1:
+        return func(tree)
+    # used when full syntax parse tree is passed as argument
+    elif len(tree) == 2:
+        rval = conjecturing_apply_func(tree[1], func)
+        return func([tree[0], rval])
+    elif isinstance(tree[1], list) and isinstance(tree[2], list):
+        lval = conjecturing_apply_func(tree[1], func)
+        rval = conjecturing_apply_func(tree[2], func)
+    elif isinstance(tree[1], list):
+        lval = conjecturing_apply_func(tree[1], func)
+        rval = tree[2]
+    elif isinstance(tree[2], list):
+        lval = tree[1]
+        rval = conjecturing_apply_func(tree[2], func)
+    else:
+        return func(tree)
+    return func([tree[0], lval, rval])
+
 def _makePropertyBasedConjecture(inputList, invariantsDict):
     import operator
 
@@ -625,7 +696,9 @@ def _makePropertyBasedConjecture(inputList, invariantsDict):
             raise ValueError("Error while reading output from expressions. Unknown element: {}".format(op))
 
     import sage.logic.propcalc as propcalc
-    return PropertyBasedConjecture(propcalc.formula(expressionStack.pop()), propertyCalculators, (inputList, invariantsDict))
+    my_expr = expressionStack.pop()
+    print(my_expr)
+    return PropertyBasedConjecture(propcalc.formula(my_expr), propertyCalculators, (inputList, invariantsDict))
 
 def allPropertyBasedOperators():
     """
