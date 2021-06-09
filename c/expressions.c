@@ -236,20 +236,20 @@ void dalmatianHeuristic(TREE *tree, double *values, int skipCount){
     
     //if this is the first conjecture, we just store it and return
     if(dalmatianFirst){
-       if(verbose){
-           fprintf(stderr, "Saving expression\n");
-           printExpression(tree, stderr);
-       }
-       memcpy(dalmatianCurrentConjectureValues[0], values, 
-               sizeof(double)*objectCount);
-       for(i=0; i<objectCount; i++){
-           dalmatianBestConjectureForObject[i] = 0;
-       }
-       dalmatianConjectureInUse[0] = TRUE;
-       copyTree(tree, dalmatianConjectures + 0);
-       dalmatianFirst = FALSE;
-       dalmatianUpdateHitCount();
-       return;
+        if(verbose){
+            fprintf(stderr, "Saving expression\n");
+            printExpression(tree, stderr);
+        }
+        memcpy(dalmatianCurrentConjectureValues[0], values, 
+                sizeof(double)*objectCount);
+        for(i=0; i<objectCount; i++){
+            dalmatianBestConjectureForObject[i] = 0;
+        }
+        dalmatianConjectureInUse[0] = TRUE;
+        copyTree(tree, dalmatianConjectures + 0);
+        dalmatianFirst = FALSE;
+        dalmatianUpdateHitCount();
+        return;
        
     }
     
