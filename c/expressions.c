@@ -15,7 +15,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <float.h>
-#include <malloc.h>
+//#include <malloc.h>
 
 #include "bintrees.h"
 #include "util.h"
@@ -210,9 +210,12 @@ inline void dalmatianUpdateHitCount(){
     
 }
 
-void dalmatianHeuristic(TREE *tree, double *values){
+void dalmatianHeuristic(TREE *tree, double *values, int skipCount){
     int i;
     //this heuristic assumes the expression was true for all objects
+    if(skipCount > allowedPercentageOfSkips * objectCount){
+      return;
+    }
     
     //if known theory is provided, we check that first
     boolean isMoreSignificant = FALSE;
@@ -233,20 +236,21 @@ void dalmatianHeuristic(TREE *tree, double *values){
     
     //if this is the first conjecture, we just store it and return
     if(dalmatianFirst){
-        if(verbose){
-            fprintf(stderr, "Saving expression\n");
-            printExpression(tree, stderr);
-        }
-        memcpy(dalmatianCurrentConjectureValues[0], values, 
-                sizeof(double)*objectCount);
-        for(i=0; i<objectCount; i++){
-            dalmatianBestConjectureForObject[i] = 0;
-        }
-        dalmatianConjectureInUse[0] = TRUE;
-        copyTree(tree, dalmatianConjectures + 0);
-        dalmatianFirst = FALSE;
-        dalmatianUpdateHitCount();
-        return;
+       if(verbose){
+           fprintf(stderr, "Saving expression\n");
+           printExpression(tree, stderr);
+       }
+       memcpy(dalmatianCurrentConjectureValues[0], values, 
+               sizeof(double)*objectCount);
+       for(i=0; i<objectCount; i++){
+           dalmatianBestConjectureForObject[i] = 0;
+       }
+       dalmatianConjectureInUse[0] = TRUE;
+       copyTree(tree, dalmatianConjectures + 0);
+       dalmatianFirst = FALSE;
+       dalmatianUpdateHitCount();
+       return;
+       
     }
     
     //check the significance
@@ -423,9 +427,12 @@ inline void dalmatianUpdateHitCount_propertyBased(){
     
 }
 
-void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
+void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values, int skipCount){
     int i;
     //this heuristic assumes the expression was true for all objects
+    if(skipCount > allowedPercentageOfSkips * objectCount){
+      return;
+    }
     
     //if known theory is provided, we check that first
     boolean isMoreSignificant = FALSE;
@@ -869,7 +876,7 @@ void handleExpression(TREE *tree, double *values, int calculatedValues, int hitC
             if(skipCount > allowedPercentageOfSkips * objectCount){
                 return;
             }
-            dalmatianHeuristic(tree, values);
+            dalmatianHeuristic(tree, values, skipCount);
         } else if(selectedHeuristic==GRINVIN_HEURISTIC){
             if(skipCount > allowedPercentageOfSkips * objectCount){
                 return;
@@ -889,7 +896,7 @@ void handleExpression_propertyBased(TREE *tree, boolean *values, int calculatedV
             if(skipCount > allowedPercentageOfSkips * objectCount){
                 return;
             }
-            dalmatianHeuristic_propertyBased(tree, values);
+            dalmatianHeuristic_propertyBased(tree, values, skipCount);
         } else if(selectedHeuristic==GRINVIN_HEURISTIC){
             BAILOUT("Grinvin heuristic is not defined for property-based conjectures.")
         }
@@ -1026,6 +1033,9 @@ void writeNonCommutativeBinaryOperatorExample(FILE *f){
 }
 
 boolean handleComparator(double left, double right, int id){
+    if ((isnan(left)) || isnan(right)) {
+      return TRUE;
+    }
     if(id==0){
         return left <= right;
     } else if(id==1){
