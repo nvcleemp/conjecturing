@@ -521,13 +521,14 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     if verbose:
         print("Started computing and writing invariant values to expressions")
 
-    for o in objects:
-        for invariant in names:
-            try:
-                stdin.write('{}\n'.format(float(get_value(invariantsDict[invariant], o))))
-            except:
-                stdin.write('NaN\n')
+    def format_value(o, invariant):
+        try:
+            return format(float(get_value(invariantsDict[invariant], o)))
+        except:
+            return 'NaN'
 
+    values = [format_value(invariant, o) for o in objects for invariant in names]
+    stdin.write('\n'.join(values))
     stdin.flush()
 
     if verbose:
@@ -903,13 +904,14 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     if verbose:
         print("Started computing and writing property values to expressions")
 
-    for o in objects:
-        for property in names:
-            try:
-                stdin.write('{}\n'.format(1 if bool(get_value(propertiesDict[property], o)) else 0))
-            except:
-                stdin.write('-1\n')
+    def format_value(o, property):
+        try:
+            return '1' if bool(get_value(propertiesDict[property], o)) else '0'
+        except:
+            return '-1'
 
+    values = [format_value(property, o) for o in objects for property in names]
+    stdin.write('\n'.join(values))
     stdin.flush()
 
     if verbose:
