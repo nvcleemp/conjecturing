@@ -521,7 +521,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     if verbose:
         print("Started computing and writing invariant values to expressions")
 
-    def format_value(o, invariant):
+    def format_value(invariant,o):
         try:
             return format(float(get_value(invariantsDict[invariant], o)))
         except:
@@ -904,7 +904,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     if verbose:
         print("Started computing and writing property values to expressions")
 
-    def format_value(o, property):
+    def format_value(property,o):
         try:
             return '1' if bool(get_value(propertiesDict[property], o)) else '0'
         except:
