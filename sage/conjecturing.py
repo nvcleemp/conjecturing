@@ -528,7 +528,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
             return 'NaN'
 
     values = [format_value(invariant, o) for o in objects for invariant in names]
-    stdin.write('\n'.join(values))
+    stdin.write('\n'.join(values)+'\n')
     stdin.flush()
 
     if verbose:
@@ -911,7 +911,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
             return '-1'
 
     values = [format_value(property, o) for o in objects for property in names]
-    stdin.write('\n'.join(values))
+    stdin.write('\n'.join(values)+'\n')
     stdin.flush()
 
     if verbose:
