@@ -3,6 +3,29 @@ sys.path.append(".") # Needed to pass Sage's automated testing
 
 from sage.all import *
 
+# this function creates invariant functions
+# requires that the init function for the example class looks like:
+# def __init__(self, number, mydf):
+    #        self.number = str(number)
+    #        self.mydf = mydf
+def build_inv(i):
+    def inv(self):
+        return self.mydf.iloc[int(self.number)][i]
+    inv.__name__ = i
+    return inv
+
+
+#this function creates property functions
+def build_prop(i):
+    def prop(self):
+        if float(self.mydf.iloc[int(self.number)][i]) == 1.0:
+            return False
+        return True
+    prop.__name__ = i
+    return prop
+
+
+
 def convert_name(name):
     for i in range(26):
         name = name.replace('({})'.format(chr(ord('a') + i)), '')
