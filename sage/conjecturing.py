@@ -4,8 +4,9 @@ sys.path.append(".") # Needed to pass Sage's automated testing
 from sage.all import *
 
 # this function creates invariant functions
+# pass the index (row name) and the data frame
 # requires that the init function for the example class looks like:
-# def __init__(self, number, mydf):
+# def __init__(self, name, mydf):
     #        self.name = name
     #        self.mydf = mydf
 def build_inv(i):
@@ -19,8 +20,8 @@ def build_inv(i):
 def build_prop(i):
     def prop(self):
         if float(self.mydf.loc[self.name][i]) == 1.0:
-            return False
-        return True
+            return True
+        return False
     prop.__name__ = i
     return prop
 
