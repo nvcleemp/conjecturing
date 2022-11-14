@@ -6,11 +6,11 @@ from sage.all import *
 # this function creates invariant functions
 # requires that the init function for the example class looks like:
 # def __init__(self, number, mydf):
-    #        self.number = str(number)
+    #        self.name = name
     #        self.mydf = mydf
 def build_inv(i):
     def inv(self):
-        return self.mydf.loc[self.number][i]
+        return self.mydf.loc[self.name][i]
     inv.__name__ = i
     return inv
 
@@ -18,7 +18,7 @@ def build_inv(i):
 #this function creates property functions
 def build_prop(i):
     def prop(self):
-        if float(self.mydf.loc[self.number][i]) == 1.0:
+        if float(self.mydf.loc[self.name][i]) == 1.0:
             return False
         return True
     prop.__name__ = i
