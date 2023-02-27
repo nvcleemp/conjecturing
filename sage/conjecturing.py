@@ -19,8 +19,8 @@ def build_inv(i):
 def build_prop(i):
     def prop(self):
         if float(self.mydf.loc[self.name][i]) == 1.0:
-            return False
-        return True
+            return True
+        return False
     prop.__name__ = i
     return prop
 
@@ -633,8 +633,11 @@ class PropertyBasedExpression(SageObject):
         return self.evaluate(g)
 
     def evaluate(self, g):
-        values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
-        return self.expression.evaluate(values)
+        try:
+            values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
+            return self.expression.evaluate(values)
+        except:
+            return float("NaN")
 
 def get_premise(conjecture, myprint=True):
     assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
@@ -645,7 +648,10 @@ def get_premise(conjecture, myprint=True):
         tree = [tree]
     if myprint:
         print(conjecturing_recover_formula(tree))
-    return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    try:
+        return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    except:
+        return float("NaN")
 
 def get_conclusion(conjecture, myprint=True):
     assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
@@ -656,7 +662,10 @@ def get_conclusion(conjecture, myprint=True):
         tree = [tree]
     if myprint:
         print(conjecturing_recover_formula(tree))
-    return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    try:
+        return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    except:
+        return float("NaN")
 
 def conjecturing_recover_formula(prefix_tree):
     import sage.logic.logicparser as logicparser
