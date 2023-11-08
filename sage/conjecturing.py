@@ -3,6 +3,98 @@ sys.path.append(".") # Needed to pass Sage's automated testing
 
 from sage.all import *
 
+# this function creates invariant functions
+# pass the index (row name) and the data frame
+# requires that the init function for the example class looks like:
+# def __init__(self, name, mydf):
+    #        self.name = name
+    #        self.mydf = mydf
+def build_inv(i):
+    def inv(self):
+        return self.mydf.loc[self.name][i]
+    inv.__name__ = i
+    return inv
+
+
+#this function creates property functions
+def build_prop(i):
+    def prop(self):
+        if float(self.mydf.loc[self.name][i]) == 1.0:
+            return True
+        return False
+    prop.__name__ = i
+    return prop
+
+
+
+def convert_name(name):
+    for i in range(26):
+        name = name.replace('({})'.format(chr(ord('a') + i)), '')
+    name = name.replace(' ', '_')
+    textform_first = {
+        '^2': '_squared',
+        '^3': '_cubed',
+        '1/': 'inverse_of_',
+        '<=': '_leq_',
+        '>=': '_geq_'
+    }
+    textform = {
+        '<': '_lt_',
+        '>': '_gt_',
+        '+': '_plus_',
+        '-': '_minus_',
+        '*': '_times_',
+        '/': '_divided_by_',
+        '^': '_to_the_power_',
+        '(': 'open_bracket_',
+        ')': '_close_bracket',
+        ',': '_or_', # added by Paul
+        '\'': '', # added by Paul
+        '=': '_equal_' # added by Paul
+               }
+    for op in textform_first:
+        name = name.replace(op, textform_first[op])
+    for op in textform:
+        name = name.replace(op, textform[op])
+    return name
+
+def convert_name_back(name):
+    for i in range(26):
+        name = name.replace('({})'.format(chr(ord('a') + i)), '')
+    # name = name.replace('_', ' ')
+    textform_first = {
+        '_squared': '^2',
+        '_cubed': '^3',
+        'inverse_of_': '1/',
+         '_leq_': '<=',
+         '_geq_': '>='
+    }
+    textform = {
+        '_lt_': '<',
+        '_gt_': '>',
+        '_plus_': '+',
+        '_minus_': '-',
+        '_times_': '*',
+        '_divided_by_': '/',
+        '_to_the_power_': '^',
+        'open_bracket_': '(',
+        '_close_bracket': ')',
+        '_or_': ',', # added by Paul
+        '_equal_': '=' # added by Paul
+               }
+    for op in textform_first:
+        name = name.replace(op, textform_first[op])
+    for op in textform:
+        name = name.replace(op, textform[op])
+    return name
+
+def convert_conjecture_names(conjectures):
+    for conj in conjectures:
+        conj.__name__ = convert_name(conj.__name__)
+
+def convert_names_back(conjectures): #note the plural name(s)
+    for conj in conjectures:
+        conj.__name__ = convert_name_back(conj.__name__)
 
 class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberProject
 
@@ -209,11 +301,11 @@ def allOperators():
 
 def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                debug=False, verbose=False, upperBound=True, operators=None,
-               theory=None, precomputed=None):
+               theory=None, precomputed=None, skips=0.0):
     """
     Runs the conjecturing program for invariants with the provided objects,
-    invariants and main invariant. This method requires the package conjecturing
-    to be installed.
+    invariants and main invariant. This method requires the program ``expressions``
+    to be in the current working directory of Sage.
 
     INPUT:
 
@@ -394,7 +486,7 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -c{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = './expressions -c{}{} --dalmatian {} --time {} --invariant-names --output stack {} --allowed-skips ' + str(skips)
     command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
                              '--all-operators ' if operators is None else '',
                              time, '--leq' if upperBound else '--geq')
@@ -453,13 +545,14 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     if verbose:
         print("Started computing and writing invariant values to expressions")
 
-    for o in objects:
-        for invariant in names:
-            try:
-                stdin.write('{}\n'.format(float(get_value(invariantsDict[invariant], o))))
-            except:
-                stdin.write('NaN\n')
+    def format_value(invariant,o):
+        try:
+            return format(float(get_value(invariantsDict[invariant], o)))
+        except:
+            return 'NaN'
 
+    values = [format_value(invariant, o) for o in objects for invariant in names]
+    stdin.write('\n'.join(values)+'\n')
     stdin.flush()
 
     if verbose:
@@ -519,6 +612,94 @@ class PropertyBasedConjecture(SageObject):
         values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
         return self.expression.evaluate(values)
 
+class PropertyBasedExpression(SageObject):
+
+    def __init__(self, expression, propertyCalculators):
+        """Constructs a new property based expression."""
+        self.expression = expression
+        self.propertyCalculators = propertyCalculators
+        self.__name__ = repr(self.expression)
+        super(PropertyBasedExpression, self).__init__()
+
+    def __eq__(self, other):
+        return self.expression == other.expression
+
+    def _repr_(self):
+        return repr(self.expression)
+
+    def _latex_(self):
+        return latex(self.expression)
+
+    def __call__(self, g):
+        return self.evaluate(g)
+
+    def evaluate(self, g):
+        try:
+            values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
+            return self.expression.evaluate(values)
+        except:
+            return float("NaN")
+
+def get_premise(conjecture, myprint=True):
+    assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
+    import sage.logic.propcalc as propcalc
+    import sage.logic.logicparser as logicparser
+    tree = conjecture.expression.full_tree()[1]
+    if type(tree)!=list:
+        tree = [tree]
+    if myprint:
+        print(conjecturing_recover_formula(tree))
+    try:
+        return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    except:
+        return float("NaN")
+
+def get_conclusion(conjecture, myprint=True):
+    assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
+    import sage.logic.propcalc as propcalc
+    import sage.logic.logicparser as logicparser
+    tree = conjecture.expression.full_tree()[2]
+    if type(tree)!=list:
+        tree = [tree]
+    if myprint:
+        print(conjecturing_recover_formula(tree))
+    try:
+        return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    except:
+        return float("NaN")
+
+def conjecturing_recover_formula(prefix_tree):
+    import sage.logic.logicparser as logicparser
+    formula = ''
+    if not isinstance(prefix_tree, list):
+        raise TypeError("the input must be a parse tree as a list")
+
+    formula = conjecturing_apply_func(prefix_tree, logicparser.recover_formula_internal)
+    if prefix_tree[0] == '~' or len(prefix_tree) == 1:
+        return formula
+    return formula[1:-1]
+
+def conjecturing_apply_func(tree, func):
+    # used when full syntax parse tree is passed as argument
+    if len(tree) == 1:
+        return func(tree)
+    # used when full syntax parse tree is passed as argument
+    elif len(tree) == 2:
+        rval = conjecturing_apply_func(tree[1], func)
+        return func([tree[0], rval])
+    elif isinstance(tree[1], list) and isinstance(tree[2], list):
+        lval = conjecturing_apply_func(tree[1], func)
+        rval = conjecturing_apply_func(tree[2], func)
+    elif isinstance(tree[1], list):
+        lval = conjecturing_apply_func(tree[1], func)
+        rval = tree[2]
+    elif isinstance(tree[2], list):
+        lval = tree[1]
+        rval = conjecturing_apply_func(tree[2], func)
+    else:
+        return func(tree)
+    return func([tree[0], lval, rval])
+
 def _makePropertyBasedConjecture(inputList, invariantsDict):
     import operator
 
@@ -551,7 +732,9 @@ def _makePropertyBasedConjecture(inputList, invariantsDict):
             raise ValueError("Error while reading output from expressions. Unknown element: {}".format(op))
 
     import sage.logic.propcalc as propcalc
-    return PropertyBasedConjecture(propcalc.formula(expressionStack.pop()), propertyCalculators, (inputList, invariantsDict))
+    my_expr = expressionStack.pop()
+    print(my_expr)
+    return PropertyBasedConjecture(propcalc.formula(my_expr), propertyCalculators, (inputList, invariantsDict))
 
 def allPropertyBasedOperators():
     """
@@ -571,11 +754,11 @@ def allPropertyBasedOperators():
 
 def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=False,
                             verbose=False, sufficient=True, operators=None,
-                            theory=None, precomputed=None):
+                            theory=None, precomputed=None, skips=0.0):
     """
     Runs the conjecturing program for properties with the provided objects,
-    properties and main property. This method requires the package conjecturing
-    to be installed.
+    properties and main property. This method requires the program ``expressions``
+    to be in the current working directory of Sage.
 
     INPUT:
 
@@ -642,7 +825,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
 
         >>> propertyBasedConjecture([3], [is_prime,is_even], 0, debug=True, verbose=True)
         Using the following command
-        expressions -pcv --dalmatian --all-operators --time 5 --invariant-names --output stack --sufficient --allowed-skips 0
+        ./expressions -pcv --dalmatian --all-operators --time 5 --invariant-names --output stack --sufficient --allowed-skips 0
         >      Invariant  1  Invariant  2
         >   1)    TRUE          FALSE
         > Generating trees with 0 unary nodes and 0 binary nodes.
@@ -695,7 +878,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -pc{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = './expressions -pc{}{} --dalmatian {} --time {} --invariant-names --output stack {} --allowed-skips ' + str(skips)
     command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
                              '--all-operators ' if operators is None else '',
                              time, '--sufficient' if sufficient else '--necessary')
@@ -754,13 +937,14 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     if verbose:
         print("Started computing and writing property values to expressions")
 
-    for o in objects:
-        for property in names:
-            try:
-                stdin.write('{}\n'.format(1 if bool(get_value(propertiesDict[property], o)) else 0))
-            except:
-                stdin.write('-1\n')
+    def format_value(property,o):
+        try:
+            return '1' if bool(get_value(propertiesDict[property], o)) else '0'
+        except:
+            return '-1'
 
+    values = [format_value(property, o) for o in objects for property in names]
+    stdin.write('\n'.join(values)+'\n')
     stdin.flush()
 
     if verbose:
