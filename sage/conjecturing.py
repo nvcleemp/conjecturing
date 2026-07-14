@@ -3,6 +3,103 @@ sys.path.append(".") # Needed to pass Sage's automated testing
 
 from sage.all import *
 
+import pulp    #for ip for dalmatian optimal subsetting 
+import math
+import re
+from itertools import combinations
+
+# this function creates invariant functions
+# pass the index (row name) and the data frame
+# requires that the init function for the example class looks like:
+# def __init__(self, name, mydf):
+    #        self.name = name
+    #        self.mydf = mydf
+def build_inv(i):
+    def inv(self):
+        return self.mydf.loc[self.name][i]
+    inv.__name__ = i
+    return inv
+
+
+#this function creates property functions
+def build_prop(i):
+    def prop(self):
+        if float(self.mydf.loc[self.name][i]) == 1.0:
+            return True
+        return False
+    prop.__name__ = i
+    return prop
+
+
+
+def convert_name(name):
+    for i in range(26):
+        name = name.replace('({})'.format(chr(ord('a') + i)), '')
+    name = name.replace(' ', '_')
+    textform_first = {
+        '^2': '_squared',
+        '^3': '_cubed',
+        '1/': 'inverse_of_',
+        '<=': '_leq_',
+        '>=': '_geq_'
+    }
+    textform = {
+        '<': '_lt_',
+        '>': '_gt_',
+        '+': '_plus_',
+        '-': '_minus_',
+        '*': '_times_',
+        '/': '_divided_by_',
+        '^': '_to_the_power_',
+        '(': 'open_bracket_',
+        ')': '_close_bracket',
+        ',': '_or_', # added by Paul
+        '\'': '', # added by Paul
+        '=': '_equal_' # added by Paul
+               }
+    for op in textform_first:
+        name = name.replace(op, textform_first[op])
+    for op in textform:
+        name = name.replace(op, textform[op])
+    return name
+
+def convert_name_back(name):
+    for i in range(26):
+        name = name.replace('({})'.format(chr(ord('a') + i)), '')
+    # name = name.replace('_', ' ')
+    textform_first = {
+        '_squared': '^2',
+        '_cubed': '^3',
+        'inverse_of_': '1/',
+         '_leq_': '<=',
+         '_geq_': '>='
+    }
+    textform = {
+        '_lt_': '<',
+        '_gt_': '>',
+        '_plus_': '+',
+        '_minus_': '-',
+        '_times_': '*',
+        '_divided_by_': '/',
+        '_to_the_power_': '^',
+        'open_bracket_': '(',
+        '_close_bracket': ')',
+        '_or_': ',', # added by Paul
+        '_equal_': '=' # added by Paul
+               }
+    for op in textform_first:
+        name = name.replace(op, textform_first[op])
+    for op in textform:
+        name = name.replace(op, textform[op])
+    return name
+
+def convert_conjecture_names(conjectures):
+    for conj in conjectures:
+        conj.__name__ = convert_name(conj.__name__)
+
+def convert_names_back(conjectures): #note the plural name(s)
+    for conj in conjectures:
+        conj.__name__ = convert_name_back(conj.__name__)
 
 class Conjecture(SageObject): #Based on GraphExpression from IndependenceNumberProject
 
@@ -209,11 +306,11 @@ def allOperators():
 
 def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
                debug=False, verbose=False, upperBound=True, operators=None,
-               theory=None, precomputed=None):
+               theory=None, precomputed=None, skips=0.0, complexity_limit=11, heuristic="dalmatian", params=None ):
     """
     Runs the conjecturing program for invariants with the provided objects,
-    invariants and main invariant. This method requires the package conjecturing
-    to be installed.
+    invariants and main invariant. This method requires the program ``expressions``
+    to be in the current working directory of Sage.
 
     INPUT:
 
@@ -265,6 +362,8 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     -  ``verbose`` - if given, this boolean value specifies whether the program
        ``expressions`` is ran in verbose mode. Note that this has nu purpose if
        ``debug`` is not also set to ``True``. The default value is ``False``.
+    - ``complexity_limit'' - the program will terminate if the complexity of 
+      expressions exceeds this value.
 
     EXAMPLES::
 
@@ -394,10 +493,46 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -c{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
-    command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
-                             '--all-operators ' if operators is None else '',
-                             time, '--leq' if upperBound else '--geq')
+    VALID_HEURISTICS = {
+        "dalmatian": "--dalmatian",
+        "sam": "--sam",
+        "rl": "--rl"
+    }
+    
+    try:
+        heuristic_flag = VALID_HEURISTICS[heuristic.lower()]
+    except KeyError:
+        raise ValueError(f"Unknown heuristic: {heuristic}")
+        
+    param_flags = ""
+
+    if params:
+        for key, value in params.items():
+            if value is None:
+                continue
+    
+            # Convert Python-style names to CLI-style
+            cli_key = key.replace("_", "-")
+    
+            param_flags += f" --{cli_key} {value}"
+
+
+    command = (
+    './expressions -c{}{} {} {} --time {} '
+    '--invariant-names --output stack {} '
+    '--allowed-skips {} --maximum-complexity '
+    '--complexity-limit {}{}'
+    ).format(
+        'v' if verbose and debug else '',
+        't' if theory is not None else '',
+        heuristic_flag,
+        '--all-operators ' if operators is None else '',
+        time,
+        '--leq' if upperBound else '--geq',
+        skips,
+        complexity_limit,
+        param_flags
+    )
 
     if verbose:
         print('Using the following command')
@@ -453,13 +588,14 @@ def conjecture(objects, invariants, mainInvariant, variableName='x', time=5,
     if verbose:
         print("Started computing and writing invariant values to expressions")
 
-    for o in objects:
-        for invariant in names:
-            try:
-                stdin.write('{}\n'.format(float(get_value(invariantsDict[invariant], o))))
-            except:
-                stdin.write('NaN\n')
+    def format_value(invariant,o):
+        try:
+            return format(float(get_value(invariantsDict[invariant], o)))
+        except:
+            return 'NaN'
 
+    values = [format_value(invariant, o) for o in objects for invariant in names]
+    stdin.write('\n'.join(values)+'\n')
     stdin.flush()
 
     if verbose:
@@ -519,6 +655,94 @@ class PropertyBasedConjecture(SageObject):
         values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
         return self.expression.evaluate(values)
 
+class PropertyBasedExpression(SageObject):
+
+    def __init__(self, expression, propertyCalculators):
+        """Constructs a new property based expression."""
+        self.expression = expression
+        self.propertyCalculators = propertyCalculators
+        self.__name__ = repr(self.expression)
+        super(PropertyBasedExpression, self).__init__()
+
+    def __eq__(self, other):
+        return self.expression == other.expression
+
+    def _repr_(self):
+        return repr(self.expression)
+
+    def _latex_(self):
+        return latex(self.expression)
+
+    def __call__(self, g):
+        return self.evaluate(g)
+
+    def evaluate(self, g):
+        try:
+            values = {prop: f(g) for (prop, f) in self.propertyCalculators.items()}
+            return self.expression.evaluate(values)
+        except:
+            return float("NaN")
+
+def get_premise(conjecture, myprint=True):
+    assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
+    import sage.logic.propcalc as propcalc
+    import sage.logic.logicparser as logicparser
+    tree = conjecture.expression.full_tree()[1]
+    if type(tree)!=list:
+        tree = [tree]
+    if myprint:
+        print(conjecturing_recover_formula(tree))
+    try:
+        return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    except:
+        return float("NaN")
+
+def get_conclusion(conjecture, myprint=True):
+    assert conjecture.expression.full_tree()[0] == '->', 'Not an implication'
+    import sage.logic.propcalc as propcalc
+    import sage.logic.logicparser as logicparser
+    tree = conjecture.expression.full_tree()[2]
+    if type(tree)!=list:
+        tree = [tree]
+    if myprint:
+        print(conjecturing_recover_formula(tree))
+    try:
+        return PropertyBasedExpression(propcalc.formula(conjecturing_recover_formula(tree)), conjecture.propertyCalculators)
+    except:
+        return float("NaN")
+
+def conjecturing_recover_formula(prefix_tree):
+    import sage.logic.logicparser as logicparser
+    formula = ''
+    if not isinstance(prefix_tree, list):
+        raise TypeError("the input must be a parse tree as a list")
+
+    formula = conjecturing_apply_func(prefix_tree, logicparser.recover_formula_internal)
+    if prefix_tree[0] == '~' or len(prefix_tree) == 1:
+        return formula
+    return formula[1:-1]
+
+def conjecturing_apply_func(tree, func):
+    # used when full syntax parse tree is passed as argument
+    if len(tree) == 1:
+        return func(tree)
+    # used when full syntax parse tree is passed as argument
+    elif len(tree) == 2:
+        rval = conjecturing_apply_func(tree[1], func)
+        return func([tree[0], rval])
+    elif isinstance(tree[1], list) and isinstance(tree[2], list):
+        lval = conjecturing_apply_func(tree[1], func)
+        rval = conjecturing_apply_func(tree[2], func)
+    elif isinstance(tree[1], list):
+        lval = conjecturing_apply_func(tree[1], func)
+        rval = tree[2]
+    elif isinstance(tree[2], list):
+        lval = tree[1]
+        rval = conjecturing_apply_func(tree[2], func)
+    else:
+        return func(tree)
+    return func([tree[0], lval, rval])
+
 def _makePropertyBasedConjecture(inputList, invariantsDict):
     import operator
 
@@ -551,7 +775,9 @@ def _makePropertyBasedConjecture(inputList, invariantsDict):
             raise ValueError("Error while reading output from expressions. Unknown element: {}".format(op))
 
     import sage.logic.propcalc as propcalc
-    return PropertyBasedConjecture(propcalc.formula(expressionStack.pop()), propertyCalculators, (inputList, invariantsDict))
+    my_expr = expressionStack.pop()
+    print(my_expr)
+    return PropertyBasedConjecture(propcalc.formula(my_expr), propertyCalculators, (inputList, invariantsDict))
 
 def allPropertyBasedOperators():
     """
@@ -571,11 +797,11 @@ def allPropertyBasedOperators():
 
 def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=False,
                             verbose=False, sufficient=True, operators=None,
-                            theory=None, precomputed=None):
+                            theory=None, precomputed=None, skips=0.0):
     """
     Runs the conjecturing program for properties with the provided objects,
-    properties and main property. This method requires the package conjecturing
-    to be installed.
+    properties and main property. This method requires the program ``expressions``
+    to be in the current working directory of Sage.
 
     INPUT:
 
@@ -642,7 +868,7 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
 
         >>> propertyBasedConjecture([3], [is_prime,is_even], 0, debug=True, verbose=True)
         Using the following command
-        expressions -pcv --dalmatian --all-operators --time 5 --invariant-names --output stack --sufficient --allowed-skips 0
+        ./expressions -pcv --dalmatian --all-operators --time 5 --invariant-names --output stack --sufficient --allowed-skips 0
         >      Invariant  1  Invariant  2
         >   1)    TRUE          FALSE
         > Generating trees with 0 unary nodes and 0 binary nodes.
@@ -695,10 +921,12 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
         names.append(name)
 
     # call the conjecturing program
-    command = 'expressions -pc{}{} --dalmatian {}--time {} --invariant-names --output stack {} --allowed-skips 0'
+    command = notebook_path + 'expressions -pc{}{} --dalmatian {} --time {} --invariant-names --output stack {} --allowed-skips {} --maximum-complexity --complexity-limit {}'
     command = command.format('v' if verbose and debug else '', 't' if theory is not None else '',
                              '--all-operators ' if operators is None else '',
-                             time, '--sufficient' if sufficient else '--necessary')
+                             time, '--sufficient' if sufficient else '--necessary',
+                             skips,
+                             complexity_limit)
 
     if verbose:
         print('Using the following command')
@@ -730,7 +958,12 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
                 if p_key in precomputed[o_key]:
                     precomputed_value = precomputed[o_key][p_key]
         if precomputed_value is None:
-            return prop(o)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                my_value = prop(o)
+                if w:
+                    return float("NaN")
+                return my_value 
         else:
             return precomputed_value
 
@@ -754,13 +987,14 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
     if verbose:
         print("Started computing and writing property values to expressions")
 
-    for o in objects:
-        for property in names:
-            try:
-                stdin.write('{}\n'.format(1 if bool(get_value(propertiesDict[property], o)) else 0))
-            except:
-                stdin.write('-1\n')
+    def format_value(property,o):
+        try:
+            return '1' if bool(get_value(propertiesDict[property], o)) else '0'
+        except:
+            return '-1'
 
+    values = [format_value(property, o) for o in objects for property in names]
+    stdin.write('\n'.join(values)+'\n')
     stdin.flush()
 
     if verbose:
@@ -788,3 +1022,171 @@ def propertyBasedConjecture(objects, properties, mainProperty, time=5, debug=Fal
         print("Finished conjecturing")
 
     return conjectures
+
+# ------------------------------------------------------------------
+# Optimization-based selection of Dalmatian expressions
+# ------------------------------------------------------------------
+
+def invariants_used(conj):
+    import re
+    return set(re.findall(r"[A-Za-z_]\w*\(x\)", str(conj)))
+
+
+def jaccard(A, B):
+    A = set(A)
+    B = set(B)
+    if len(A | B) == 0:
+        return 0.0
+    return float(len(A & B)) / float(len(A | B))
+
+
+def conjecture_complexity(conj):
+    """
+    Complexity = number of unary operators + 2 * number of binary operators.
+    The final comparator <= or >= is stored as binary, so it is subtracted.
+    """
+    unary = 0
+    binary = 0
+
+    for op, opType in conj.stack:
+        if opType == 1:
+            unary += 1
+        elif opType == 2:
+            binary += 1
+
+    binary = max(0, binary - 1)
+
+    return unary + 2 * binary
+
+
+def optimize_dalmatian_set(conjs, test_examples, invariants, target_invariant,
+                           k=5, alpha=1.0, beta=1.0,
+                           lam=0.1, rho=0.1,
+                           upper_bound=True,
+                           verbose=True):
+
+    target_function = invariants[target_invariant]
+
+    print("Running Dalmatian IP selection...")
+    print("Number of Dalmatian candidates:", len(conjs))
+    print("Number of holdout/test examples:", len(test_examples))
+
+    n = len(conjs)
+
+    if n == 0:
+        raise ValueError("No Dalmatian conjectures were provided.")
+
+    if int(k) > n:
+        raise ValueError("k cannot exceed the number of candidate conjectures.")
+
+    V, T, C = [], [], []
+
+    for c in conjs:
+        violations = []
+        tightness = []
+
+        for ex in test_examples:
+            true_val = float(target_function(ex))
+
+            try:
+                pred = float(c(ex, returnBoundValue=True))
+            except Exception:
+                pred = float("nan")
+
+            if not math.isfinite(pred):
+                violations.append(1e6)
+                tightness.append(1e6)
+                continue
+
+            if upper_bound:
+                violation = max(0.0, true_val - pred)
+            else:
+                violation = max(0.0, pred - true_val)
+
+            violations.append(violation)
+            tightness.append(abs(pred - true_val))
+
+        V.append(sum(violations) / float(len(violations)))
+        T.append(sum(tightness) / float(len(tightness)))
+        C.append(conjecture_complexity(c))
+
+    cost = {
+        i: float(alpha) * V[i] + float(beta) * T[i] + float(lam) * C[i]
+        for i in range(n)
+    }
+
+    R = {}
+    for i, j in combinations(range(n), 2):
+        R[(i, j)] = jaccard(invariants_used(conjs[i]),
+                             invariants_used(conjs[j]))
+
+    model = pulp.LpProblem("Dalmatian_Optimal_Set_Selection", pulp.LpMinimize)
+
+    x = {
+        i: pulp.LpVariable("x_{}".format(i), cat="Binary")
+        for i in range(n)
+    }
+
+    y = {
+        (i, j): pulp.LpVariable("y_{}_{}".format(i, j), cat="Binary")
+        for i, j in combinations(range(n), 2)
+    }
+
+    model += (
+        pulp.lpSum(cost[i] * x[i] for i in range(n))
+        +
+        float(rho) * pulp.lpSum(R[(i, j)] * y[(i, j)] for i, j in y)
+    )
+
+    model += pulp.lpSum(x[i] for i in range(n)) == int(k)
+
+    for i, j in y:
+        model += y[(i, j)] <= x[i]
+        model += y[(i, j)] <= x[j]
+        model += y[(i, j)] >= x[i] + x[j] - 1
+
+    model.solve(pulp.PULP_CBC_CMD(msg=False))
+
+    selected_idx = [
+        i for i in range(n)
+        if pulp.value(x[i]) is not None and pulp.value(x[i]) > 0.5
+    ]
+
+
+    if verbose:
+
+        print("\nSelected indices:", selected_idx)
+        print("Objective:", pulp.value(model.objective))
+    
+        print("\nSelected expressions:")
+    
+        for i in selected_idx:
+    
+            print("\nIndex:", i)
+            print(conjs[i])
+    
+            print("Holdout violation:", V[i])
+            print("Holdout tightness:", T[i])
+            print("Complexity:", C[i])
+            print("Individual cost:", cost[i])
+    
+        print("\nPairwise Jaccard similarities:")
+    
+        for i, j in combinations(selected_idx, 2):
+            print(
+                "({}, {}) -> {}".format(
+                    i,
+                    j,
+                    R[(i, j)]
+                )
+        )
+    return {
+        "selected_idx": selected_idx,
+        "selected_conjectures": [conjs[i] for i in selected_idx],
+        "objective": pulp.value(model.objective),
+        "V": V,
+        "T": T,
+        "C": C,
+        "cost": cost,
+        "redundancy": R
+    }

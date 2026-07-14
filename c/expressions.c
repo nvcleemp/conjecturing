@@ -15,7 +15,9 @@
 #include <signal.h>
 #include <unistd.h>
 #include <float.h>
-#include <malloc.h>
+#include <time.h>
+#include <limits.h>
+//#include <malloc.h>
 
 #include "bintrees.h"
 #include "util.h"
@@ -121,7 +123,7 @@ unsigned long int treeCount = 0;
 unsigned long int labeledTreeCount = 0;
 unsigned long int validExpressionsCount = 0;
 
-int maximum_complexity_reached = -1;
+unsigned long int complexity = 0;
 boolean report_maximum_complexity_reached = FALSE;
 
 unsigned long int timeOut = 0;
@@ -131,6 +133,8 @@ boolean userInterrupted = FALSE;
 boolean terminationSignalReceived = FALSE;
 
 boolean heuristicStoppedGeneration = FALSE;
+unsigned long int complexity_limit = (INT_MAX) ;
+boolean complexity_limit_reached = FALSE;
 
 boolean onlyUnlabeled = FALSE;
 boolean onlyLabeled = FALSE;
@@ -154,6 +158,8 @@ boolean closeInvariantsFile = FALSE;
 #define NO_HEURISTIC -1
 #define DALMATIAN_HEURISTIC 0
 #define GRINVIN_HEURISTIC 1
+#define SAM_HEURISTIC 2
+#define RL_HEURISTIC  3 
 
 int selectedHeuristic = NO_HEURISTIC;
 
@@ -210,9 +216,12 @@ inline void dalmatianUpdateHitCount(){
     
 }
 
-void dalmatianHeuristic(TREE *tree, double *values){
+void dalmatianHeuristic(TREE *tree, double *values, int skipCount){
     int i;
     //this heuristic assumes the expression was true for all objects
+    if(skipCount > allowedPercentageOfSkips * objectCount){
+      return;
+    }
     
     //if known theory is provided, we check that first
     boolean isMoreSignificant = FALSE;
@@ -247,6 +256,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
         dalmatianFirst = FALSE;
         dalmatianUpdateHitCount();
         return;
+       
     }
     
     //check the significance
@@ -259,9 +269,9 @@ void dalmatianHeuristic(TREE *tree, double *values){
     for(i=0; i<objectCount; i++){
         double currentBest = 
         dalmatianCurrentConjectureValues[dalmatianBestConjectureForObject[i]][i];
-        if(handleComparator(currentBest, values[i], inequality)){
+        if(handleComparator(currentBest, values[i], inequality+1)){
             conjectureFrequency[dalmatianBestConjectureForObject[i]]++;
-        } else {
+        } else if (handleComparator(values[i], currentBest, inequality+1) ) {
             if(verbose){
                 fprintf(stderr, "Conjecture is more significant for object %d.\n", i+1);
                 fprintf(stderr, "%11.6lf vs. %11.6lf\n", currentBest, values[i]);
@@ -284,7 +294,7 @@ void dalmatianHeuristic(TREE *tree, double *values){
     int smallestAvailablePosition = 0;
     
     while(smallestAvailablePosition < objectCount &&
-            conjectureFrequency[smallestAvailablePosition]>0){
+            conjectureFrequency[smallestAvailablePosition]>0){  // checking whether an expression is dropped
         smallestAvailablePosition++;
     }
     if(smallestAvailablePosition == objectCount){
@@ -423,9 +433,12 @@ inline void dalmatianUpdateHitCount_propertyBased(){
     
 }
 
-void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values){
+void dalmatianHeuristic_propertyBased(TREE *tree, boolean *values, int skipCount){
     int i;
     //this heuristic assumes the expression was true for all objects
+    if(skipCount > allowedPercentageOfSkips * objectCount){
+      return;
+    }
     
     //if known theory is provided, we check that first
     boolean isMoreSignificant = FALSE;
@@ -729,9 +742,833 @@ void grinvinHeuristicPostProcessing(){
     freeTree(&grinvinBestExpression);
 }
 
+/* ===================== SAM heuristic (dynamic top-k, alpha, beta, lambda) ===================== */
+
+typedef struct samConjecture {
+    TREE   *tree;     // deep copy we own
+    double  score;    // lower is better
+    boolean in_use;   // slot actually populated
+} samConjecture;
+
+/* Globals with defaults (you can wire CLI options later) */
+static int    sam_top_k  = 10;      /* --sam-top-k <int> */
+static double sam_alpha = 1;    /* --sam-alpha <double> */
+static double sam_lambda = 0.2;    /* --sam-lambda <double> */
+static double sam_beta   = 0.05;   /* --sam-beta <double> */
+
+static samConjecture *samConjectures = NULL;
+static int samUsed = 0;
+
+static void samFreeEntry(samConjecture *e){
+    if (e->in_use && e->tree){
+        freeTree(e->tree);
+        free(e->tree);
+    }
+    e->tree = NULL;
+    e->in_use = FALSE;
+    e->score = 0.0;
+}
+
+static int compareSamConjectures(const void *a, const void *b) {
+    const samConjecture *pa = (const samConjecture*)a;
+    const samConjecture *pb = (const samConjecture*)b;
+
+    // push unused to the end
+    if (!pa->in_use && !pb->in_use) return 0;
+    if (!pa->in_use) return 1;
+    if (!pb->in_use) return -1;
+
+    // ascending by score (best first)
+    if (pa->score < pb->score) return -1;
+    if (pa->score > pb->score) return  1;
+    return 0;
+}
+
+static inline double samViolation(double actual, double pred, int ineq) {
+    // non-negative hinge violations based on comparator
+    switch (ineq) {
+        case LEQ:      /* actual <= pred  */ return fmax(actual - pred, 0.0);
+        case LESS:     /* actual <  pred  */ return fmax(actual - pred, 0.0);
+        case GEQ:      /* actual >= pred  */ return fmax(pred   - actual, 0.0);
+        case GREATER:  /* actual >  pred  */ return fmax(pred   - actual, 0.0);
+        default: return 0.0;
+    }
+}
+
+static void samInsertCandidate(TREE *tree, double score){
+    // deep copy the tree we’re keeping
+    TREE *cpy = (TREE*)malloc(sizeof(TREE));
+    if (!cpy){ fprintf(stderr, "Out of memory\n"); exit(EXIT_FAILURE); }
+    initTree(cpy);
+    copyTree(tree, cpy);
+
+    samConjecture cand = { cpy, score, TRUE };
+
+    if (samUsed < sam_top_k) {
+        samConjectures[samUsed++] = cand;
+        qsort(samConjectures, samUsed, sizeof(samConjectures[0]), compareSamConjectures);
+        return;
+    }
+
+    // full: replace worst if better
+    qsort(samConjectures, sam_top_k, sizeof(samConjectures[0]), compareSamConjectures);
+    if (cand.score < samConjectures[sam_top_k-1].score) {
+        samFreeEntry(&samConjectures[sam_top_k-1]);
+        samConjectures[sam_top_k-1] = cand;
+        qsort(samConjectures, sam_top_k, sizeof(samConjectures[0]), compareSamConjectures);
+    } else {
+        freeTree(cand.tree);
+        free(cand.tree);
+    }
+}
+
+static void samHeuristicInit(void){
+    // allocate dynamic buffer
+    if (sam_top_k <= 0) sam_top_k = 1;
+    samConjectures = (samConjecture*)calloc((size_t)sam_top_k, sizeof(samConjecture));
+    if (!samConjectures){ fprintf(stderr, "Out of memory\n"); exit(EXIT_FAILURE); }
+
+    // initialize entries
+    for (int i = 0; i < sam_top_k; ++i) {
+        samConjectures[i].tree = NULL;
+        samConjectures[i].in_use = FALSE;
+        samConjectures[i].score = 0.0;
+    }
+    samUsed = 0;
+}
+
+static void samHeuristicPostProcessing(void){
+    if (!samConjectures){
+        fprintf(stderr, "SAM: no buffer.\n");
+        return;
+    }
+
+    int stored = (samUsed < sam_top_k) ? samUsed : sam_top_k;
+    if (stored == 0) {
+        fprintf(stderr, "SAM: no conjectures collected.\n");
+    } else {
+        qsort(samConjectures, stored, sizeof(samConjectures[0]), compareSamConjectures);
+
+        if (verbose) fprintf(stderr, "SAM top-%d (lower is better):\n", stored);
+
+        for (int i = 0, rank = 1; i < stored; ++i) {
+            if (!samConjectures[i].in_use || !samConjectures[i].tree || !samConjectures[i].tree->root) continue;
+
+            if (verbose) {
+                fprintf(stderr, "[%2d] score = %.6f :: ", rank++, samConjectures[i].score);
+                printExpression(samConjectures[i].tree, stderr);
+            }
+            // Output the conjecture to STDOUT
+            outputExpression(samConjectures[i].tree, stdout);
+        }
+    }
+
+    // free all slots and the array
+    for (int i = 0; i < sam_top_k; ++i) samFreeEntry(&samConjectures[i]);
+    free(samConjectures);
+    samConjectures = NULL;
+    samUsed = 0;
+}
+
+/* Core scoring: call this from handleExpression when selectedHeuristic==SAM_HEURISTIC */
+void samHeuristic(TREE *tree, double *values, int skipCount){
+    if (skipCount > allowedPercentageOfSkips * objectCount) return;
+
+    double sumViol = 0.0;         // average hinge violation (primary)
+    double sumTight = 0.0;        // average tightness among non-violators (secondary)
+    int n_eff = 0;                // # usable objects
+    int n_feasible = 0;           // # non-violating objects
+
+    for (int i = 0; i < objectCount; ++i) {
+        double actual = invariantValues[i][mainInvariant];
+        double pred   = values[i];
+        if (isnan(actual) || isnan(pred)) continue;
+
+        double v = samViolation(actual, pred, inequality);
+        sumViol += v;
+        n_eff++;
+
+        // Only measure tightness when the inequality is satisfied
+        if (v == 0.0) {
+            double tight;
+            if (inequality == LEQ || inequality == LESS) {
+                // want actual ≤ pred; smaller (pred - actual) is tighter
+                tight = fmax(pred - actual, 0.0);
+            } else { // GEQ or GREATER
+                // want actual ≥ pred; smaller (actual - pred) is tighter
+                tight = fmax(actual - pred, 0.0);
+            }
+            sumTight += tight;   // could use tight^2 if desired
+            n_feasible++;
+        }
+    }
+    if (n_eff == 0) return;
+
+    double avgViolation = sumViol / (double)n_eff;
+    double avgTightness = (n_feasible ? sumTight / (double)n_feasible : 0.0);
+
+    double complexityPenalty = (double)(targetUnary + 2 * targetBinary);
+    
+    double V = avgViolation; // (1.0 + avgViolation)
+    double T = avgTightness; // (1.0 + avgTightness)
+   // double Cmax = (double)complexity_limit;              // known constant
+    double C = complexityPenalty; // (Cmax + 1e-12)    // in [0,1]
+    //if (C > 1.0) C = 1.0                              // safety clamp
+
+    double score = sam_alpha * V + sam_beta * T + sam_lambda * C;
+    
+    /* Reject non-finite scores (NaN or Inf) */
+    if (!isfinite(score)) {
+        return;
+    }
+    samInsertCandidate(tree, score);
+}
+
+/* ===================== SAM heuristic (ends) ===================== */
+
+/* ========================================================================== */
+/* Reinforcement Learning (REINFORCE) Heuristic                               */
+/* Episodic training: θ persists, pool resets each episode                     */
+/* CSV logging: rl_learning_curve.csv                                          */
+/* Print ONLY when SWAP occurs (not append)                                    */
+/* Suggestion: add a small KEEP penalty when KEEP does not produce a SWAP      */
+/* ========================================================================== */
+
+static int RL_EPISODES = 4;   /* default */
+
+#ifndef RL_MAX_TOP_K
+#define RL_MAX_TOP_K 10000
+#endif
+
+#ifndef RL_FEAT_DIM
+#define RL_FEAT_DIM 8   /* [1, v, t, c, sim, aV, aC, fill] */
+#endif
+
+#ifndef RL_MAX_STEPS
+#define RL_MAX_STEPS 50000  /* reservoir sample size */
+#endif
+
+#ifndef RL_ONE_SHOT
+#define RL_ONE_SHOT 0
+#endif
+
+/* --- Suggested keep-penalty (discourages useless KEEP actions) ----------- */
+/* Your swap rewards are typically ~1e-5..3e-4, so 1e-4 is a good default. */
+#ifndef RL_KEEP_COST
+#define RL_KEEP_COST 1e-4
+#endif
+
+/*------------ Tunables -----------------------------------------------------*/
+static double rl_alpha_viol     = 1.0;
+static double rl_beta_tight     = 0.2;
+static double rl_lambda_comp    = 0.05;
+static double rl_rho_redund     = 0.05;
+static double rl_lr             = 0.05;
+static double rl_gamma          = 0.95;
+static double rl_baseline_alpha = 0.05;
+static int    rl_top_k          = 10;
+static unsigned rl_seed         = 0;
+static int rl_debug __attribute__((unused)) = 0;
+char rl_sim_name[256];
+
+/* logging controls */
+static int rl_log_every = 5000;          /* heartbeat every N candidates (0=off) */
+static unsigned long rl_seen = 0;
+static unsigned long rl_kept = 0;
+static unsigned long rl_swaps = 0;       /* SWAPS only (not appends) */
+static int rl_theta_initialized = 0;
+
+/* episode state */
+static int rl_episode = 1;              /* current episode index (1..RL_EPISODES) */
+static FILE *rl_curve_fp = NULL;
+
+/* reward tracking (episode) */
+static double rl_reward_sum = 0.0;
+static unsigned long rl_reward_n = 0;
+
+/* --- Target-based normalization (advisor fix) --------------------------- */
+static double rl_y_min = NAN;
+static double rl_y_max = NAN;
+static double rl_eps   = 1e-12;
+
+static void rlComputeTargetMinMax(void){
+    double mn = INFINITY, mx = -INFINITY;
+    int cnt = 0;
+    for (int i = 0; i < objectCount; ++i) {
+        double y = invariantValues[i][mainInvariant];
+        if (!isfinite(y)) continue;
+        if (y < mn) mn = y;
+        if (y > mx) mx = y;
+        cnt++;
+    }
+    if (cnt == 0) { rl_y_min = 0.0; rl_y_max = 1.0; return; }
+    rl_y_min = mn; rl_y_max = mx;
+    if (!isfinite(rl_y_min) || !isfinite(rl_y_max) || rl_y_min == rl_y_max) {
+        rl_y_min = 0.0; rl_y_max = 1.0;
+    }
+}
+
+/* --------------------------- Data structures ----------------------------- */
+typedef struct {
+    double avgViol;
+    double avgTight;
+    double complexity;
+} rlCandMetrics;
+
+typedef struct {
+    TREE  *tree;
+    rlCandMetrics m;
+    unsigned char *invBits;
+    int in_use;
+} rlPoolEntry;
+
+/* Policy θ and features ϕ */
+static double rl_theta[RL_FEAT_DIM];
+static double rlPhi[RL_FEAT_DIM];
+
+/* Experience buffer (reservoir sample) */
+#if !RL_ONE_SHOT
+typedef struct { double phi[RL_FEAT_DIM]; int a; double p; double r; } rlStep;
+static rlStep rlBuffer[RL_MAX_STEPS];
+static int    rlBufSize = 0;
+static unsigned long rlStepsSeen = 0;
+static double rlBaseline = 0.0;
+static int    rlBaselineInit = 0;
+#endif
+
+/* Pool */
+static rlPoolEntry rlPool[RL_MAX_TOP_K];
+static int rlPoolCount = 0;
+
+/* ------------------------------- Utils ---------------------------------- */
+
+/* Returns nonzero if x is finite (i.e., not NaN or ±Inf). */
+static inline int is_finite(double x){
+    return isfinite(x);
+}
+
+/* Clamps x to the closed interval [lo, hi]. */
+static inline double clamp(double x, double lo, double hi){
+    return x < lo ? lo : (x > hi ? hi : x);
+}
+
+/* Numerically stable sigmoid function with input clipping. */
+static inline double rlSigmoidSafe(double z){
+    if (!isfinite(z)) return 0.5;
+    z = clamp(z, -30.0, 30.0);
+    return 1.0/(1.0+exp(-z));
+}
+
+/* Returns a uniform random number in [0,1]. */
+static inline double rlRand01(void){
+    return (double)rand()/(double)RAND_MAX;
+}
+
+/* Computes the dot product of two length-n vectors. */
+static inline double rlDot(const double *a, const double *b, int n){
+    double s = 0.0;
+    for(int i=0;i<n;i++) s += a[i]*b[i];
+    return s;
+}
+
+/* Frees memory associated with a pool entry and resets its state. */
+static void rlFreeExpr(rlPoolEntry *e){
+    if (e->tree){
+        freeTree(e->tree);
+        free(e->tree);
+        e->tree = NULL;
+    }
+    if (e->invBits){
+        free(e->invBits);
+        e->invBits = NULL;
+    }
+    e->in_use = 0;
+}
+
+/* Computes violation magnitude for a predicted bound under the given inequality. */
+static inline double rlViolation(double actual, double pred, int ineq){
+    switch(ineq){
+        case LEQ:
+        case LESS:
+            return fmax(actual - pred, 0.0);
+        case GEQ:
+        case GREATER:
+            return fmax(pred - actual, 0.0);
+        default:
+            return 0.0;
+    }
+}
+
+/* -------------------------- Invariant bit utilities -------------------------- */
+
+/* Recursively marks invariants used in a tree by setting corresponding bits. */
+static void rlMarkInvsRec(NODE *node, unsigned char *bits){
+    if (!node) return;
+
+    if (node->contentLabel[0] == INVARIANT_LABEL) {
+        int idx = node->contentLabel[1];
+        if (0 <= idx && idx < invariantCount)
+            bits[idx] = 1;
+    }
+
+    rlMarkInvsRec(node->left, bits);
+    rlMarkInvsRec(node->right, bits);
+}
+
+/* Builds the invariant bitset representation for a tree. */
+static void rlBuildInvBitsForTree(TREE *tree, unsigned char *bits){
+    memset(bits, 0, (size_t)invariantCount);
+    rlMarkInvsRec(tree->root, bits);
+}
+
+/* Computes the Jaccard similarity between two invariant bitsets. */
+static double rlJaccard(const unsigned char *a, const unsigned char *b){
+    int inter = 0, uni = 0;
+
+    for(int i=0;i<invariantCount;i++){
+        int aa = a[i] != 0;
+        int bb = b[i] != 0;
+        inter += (aa && bb);
+        uni   += (aa || bb);
+    }
+
+    return (uni == 0) ? 0.0 : ((double)inter / (double)uni);
+}
+
+/* -------------------------- Metrics & Aggregates ------------------------ */
+static rlCandMetrics rlComputeCandMetrics(double *values){
+    rlCandMetrics m;
+    m.avgViol  = 0.0;
+    m.avgTight = 0.0;
+    m.complexity = (double)(targetUnary + 2*targetBinary);
+
+    int n_eff  = 0;
+    int n_feas = 0;
+
+    const double VCAP = 1e6;
+    const double NCAP = 10.0;
+
+    for (int i = 0; i < objectCount; i++) {
+        double a = invariantValues[i][mainInvariant];
+        double p = values[i];
+        if (!is_finite(a) || !is_finite(p)) continue;
+
+        double v_raw = rlViolation(a, p, inequality);
+        if (!is_finite(v_raw)) continue;
+        if (v_raw > VCAP) v_raw = VCAP;
+
+        double tight_raw = 0.0;
+        if (v_raw == 0.0) {
+            tight_raw = (inequality==LEQ || inequality==LESS) ? fmax(p - a, 0.0)
+                                                             : fmax(a - p, 0.0);
+            if (!is_finite(tight_raw)) tight_raw = 0.0;
+            if (tight_raw > VCAP) tight_raw = VCAP;
+        }
+
+        double v_base = 0.0, t_base = 0.0;
+        if (inequality==LEQ || inequality==LESS) {
+            v_base = fmax(a - rl_y_min, 0.0);
+            t_base = fmax(rl_y_max - a, 0.0);
+        } else {
+            v_base = fmax(rl_y_max - a, 0.0);
+            t_base = fmax(a - rl_y_min, 0.0);
+        }
+
+        double v_norm;
+        if (v_base <= rl_eps) v_norm = (v_raw <= rl_eps) ? 0.0 : 1.0;
+        else v_norm = v_raw / (v_base + rl_eps);
+        v_norm = isfinite(v_norm) ? clamp(v_norm, 0.0, NCAP) : 0.0;
+
+        m.avgViol += v_norm;
+        n_eff++;
+
+        if (v_raw == 0.0) {
+            double t_norm;
+            if (t_base <= rl_eps) t_norm = 0.0;
+            else t_norm = tight_raw / (t_base + rl_eps);
+            t_norm = isfinite(t_norm) ? clamp(t_norm, 0.0, NCAP) : 0.0;
+
+            m.avgTight += t_norm;
+            n_feas++;
+        }
+    }
+
+    if (n_eff == 0) {
+        m.avgViol = NAN; m.avgTight = NAN;
+    } else {
+        m.avgViol /= (double)n_eff;
+        if (n_feas > 0) m.avgTight /= (double)n_feas;
+        else m.avgTight = NCAP;
+    }
+    return m;
+}
+
+static void rlPoolAggregates(double *aV, double *aT, double *aC, double *aR){
+    if (rlPoolCount==0){ *aV=0.0; *aT=0.0; *aC=0.0; *aR=0.0; return; }
+    double sV=0.0, sT=0.0, sC=0.0, sR=0.0; int pairs=0;
+
+    for(int i=0;i<rlPoolCount;i++){
+        if (!rlPool[i].in_use) continue;
+        if (is_finite(rlPool[i].m.avgViol))    sV += rlPool[i].m.avgViol;
+        if (is_finite(rlPool[i].m.avgTight))   sT += rlPool[i].m.avgTight;
+        if (is_finite(rlPool[i].m.complexity)) sC += rlPool[i].m.complexity;
+        for(int j=i+1;j<rlPoolCount;j++){
+            if (!rlPool[j].in_use) continue;
+            double r = rlJaccard(rlPool[i].invBits, rlPool[j].invBits);
+            if (is_finite(r)){ sR += r; pairs++; }
+        }
+    }
+    int n = rlPoolCount;
+    *aV = (n>0)? sV/(double)n : 0.0;
+    *aT = (n>0)? sT/(double)n : 0.0;
+    *aC = (n>0)? sC/(double)n : 0.0;
+    *aR = (pairs>0)? sR/(double)pairs : 0.0;
+}
+
+static double rlPoolScore(void){
+    double aV,aT,aC,aR; rlPoolAggregates(&aV,&aT,&aC,&aR);
+    if (!isfinite(aV)) aV = 0.0;
+    if (!isfinite(aT)) aT = 0.0;
+    if (!isfinite(aC)) aC = 0.0;
+    if (!isfinite(aR)) aR = 0.0;
+    double sc = rl_alpha_viol * aV + rl_beta_tight * aT + rl_lambda_comp * aC + rl_rho_redund * aR;
+    return isfinite(sc) ? sc : 1e12;
+}
+
+/* -------------------------- Pool insert / swap --------------------------- */
+static TREE *rlCopyTree(TREE *src){
+    TREE *t = (TREE*)malloc(sizeof(TREE));
+    if (!t){ fprintf(stderr,"Out of memory\n"); exit(EXIT_FAILURE); }
+    initTree(t); copyTree(src, t);
+    return t;
+}
+
+typedef enum { RL_NOCHANGE=0, RL_APPEND=1, RL_SWAP=2 } rlChangeType;
+
+/* RETURN RL_APPEND, RL_SWAP, or RL_NOCHANGE */
+static rlChangeType rlInsertKeep(TREE *tree, const rlCandMetrics *m, const unsigned char *bits){
+    rlPoolEntry e; memset(&e,0,sizeof(e));
+    e.tree = rlCopyTree(tree);
+    e.m    = *m;
+    e.invBits = (unsigned char*)malloc((size_t)invariantCount);
+    if(!e.invBits){ fprintf(stderr,"Out of memory\n"); exit(EXIT_FAILURE); }
+    memcpy(e.invBits, bits, (size_t)invariantCount);
+    e.in_use = 1;
+
+    /* append while not full */
+    if (rlPoolCount < rl_top_k){
+        if (rlPoolCount < RL_MAX_TOP_K) {
+            rlPool[rlPoolCount++] = e;
+            return RL_APPEND;
+        } else {
+            rlFreeExpr(&e);
+            return RL_NOCHANGE;
+        }
+    }
+
+    /* pool full => best swap */
+    double bestScore = INFINITY;
+    int bestIdx = -1;
+    double current = rlPoolScore();
+
+    for(int i=0;i<rl_top_k;i++){
+        rlPoolEntry saved = rlPool[i];
+        rlPool[i] = e;
+        double sc = rlPoolScore();
+        rlPool[i] = saved;
+        if (is_finite(sc) && sc < bestScore){ bestScore=sc; bestIdx=i; }
+    }
+
+    if (bestScore < current && bestIdx >= 0){
+        rlFreeExpr(&rlPool[bestIdx]);
+        rlPool[bestIdx] = e;
+        return RL_SWAP;
+    } else {
+        rlFreeExpr(&e);
+        return RL_NOCHANGE;
+    }
+}
+
+/* ----------------------------- Features --------------------------------- */
+static void rlBuildPhi(const rlCandMetrics *m, const unsigned char *candBits){
+    double aV,aT,aC,aR; rlPoolAggregates(&aV,&aT,&aC,&aR);
+
+    double sim = 0.0; int cnt=0;
+    for(int i=0;i<rlPoolCount;i++){
+        if (!rlPool[i].in_use) continue;
+        double s = rlJaccard(candBits, rlPool[i].invBits);
+        if (is_finite(s)){ sim += s; cnt++; }
+    }
+    sim = (cnt>0)? sim/(double)cnt : 0.0;
+
+    double fillFrac = (rl_top_k>0)? ((double)rlPoolCount/(double)rl_top_k) : 0.0;
+
+    double v = is_finite(m->avgViol)    ? m->avgViol    : 0.0;
+    double t = is_finite(m->avgTight)   ? m->avgTight   : 0.0;
+    double c = is_finite(m->complexity) ? m->complexity : 0.0;
+    aV = is_finite(aV)? aV:0.0; aC = is_finite(aC)? aC:0.0;
+    sim = is_finite(sim)? sim:0.0; fillFrac = is_finite(fillFrac)? fillFrac:0.0;
+
+    int k=0;
+    rlPhi[k++] = 1.0;
+    rlPhi[k++] = v;
+    rlPhi[k++] = t;
+    rlPhi[k++] = c;
+    rlPhi[k++] = sim;
+    rlPhi[k++] = aV;
+    rlPhi[k++] = aC;
+    rlPhi[k++] = fillFrac;
+}
+
+/* ------------------- Reservoir store ------------------------------------- */
+#if !RL_ONE_SHOT
+static void rlReservoirStoreStep(const double *phi, int a, double p, double r){
+    rlStepsSeen++;
+
+    if (rlBufSize < RL_MAX_STEPS) {
+        for (int j=0;j<RL_FEAT_DIM;j++) rlBuffer[rlBufSize].phi[j] = phi[j];
+        rlBuffer[rlBufSize].a = a;
+        rlBuffer[rlBufSize].p = p;
+        rlBuffer[rlBufSize].r = r;
+        rlBufSize++;
+        return;
+    }
+
+    unsigned long j = (unsigned long)(rand() % (int)rlStepsSeen);
+    if (j < (unsigned long)RL_MAX_STEPS) {
+        int idx = (int)j;
+        for (int d=0; d<RL_FEAT_DIM; d++) rlBuffer[idx].phi[d] = phi[d];
+        rlBuffer[idx].a = a;
+        rlBuffer[idx].p = p;
+        rlBuffer[idx].r = r;
+    }
+}
+#endif
+
+/* ------------------- CSV logging ---------------------------------------- */
+static void rlCurveOpenIfNeeded(void){
+    if (rl_curve_fp) return;
+    rl_curve_fp = fopen("rl_learning_curve.csv", "w");
+    if (!rl_curve_fp) return;
+    fprintf(rl_curve_fp, "episode,final_score,seen,kept,swaps,avg_reward\n");
+    fflush(rl_curve_fp);
+}
+static void rlCurveAppend(int ep, double finalScore){
+    rlCurveOpenIfNeeded();
+    if (!rl_curve_fp) return;
+    double avgR = (rl_reward_n > 0) ? (rl_reward_sum / (double)rl_reward_n) : 0.0;
+    fprintf(rl_curve_fp, "%d,%.12g,%lu,%lu,%lu,%.12g\n",
+            ep, finalScore, rl_seen, rl_kept, rl_swaps, avgR);
+    fflush(rl_curve_fp);
+}
+
+/* ------------------- Heuristic entry points / lifecycle ----------------- */
+static void rlHeuristicInit(void){
+    if (!isfinite(rl_y_min) || !isfinite(rl_y_max)) rlComputeTargetMinMax();
+
+    rl_seen = 0; rl_kept = 0; rl_swaps = 0;
+    rl_reward_sum = 0.0; rl_reward_n = 0;
+
+#if !RL_ONE_SHOT
+    rlBufSize = 0;
+    rlStepsSeen = 0;
+    rlBaseline = 0.0;
+    rlBaselineInit = 0;
+#endif
+
+    static int seeded = 0;
+    if (!seeded) {
+        if (rl_seed != 0) srand(rl_seed);
+        else srand((unsigned int)time(NULL));
+        seeded = 1;
+    }
+
+    if (!rl_theta_initialized) {
+        for (int j=0;j<RL_FEAT_DIM;j++)
+            rl_theta[j] = 0.01 * ((rand()/(double)RAND_MAX) - 0.5);
+        rl_theta_initialized = 1;
+    }
+
+    rlPoolCount = 0;
+    for (int i=0; i<RL_MAX_TOP_K; ++i) {
+        rlPool[i].tree = NULL;
+        rlPool[i].invBits = NULL;
+        rlPool[i].in_use = 0;
+    }
+
+    fprintf(stderr, "\n[RL] === Episode %d / %d ===\n", rl_episode, RL_EPISODES);
+}
+
+void rlHeuristic(TREE *tree, double *values, int skipCount){
+#if RL_ONE_SHOT
+    (void)tree; (void)values; (void)skipCount;
+    return;
+#else
+    if (skipCount > allowedPercentageOfSkips * objectCount) return;
+
+    rlCandMetrics m = rlComputeCandMetrics(values);
+    if (!is_finite(m.avgViol)) return;
+
+    unsigned char *candBits = (unsigned char*)malloc((size_t)invariantCount);
+    if (!candBits){ fprintf(stderr,"Out of memory\n"); exit(EXIT_FAILURE); }
+    rlBuildInvBitsForTree(tree, candBits);
+
+    rlBuildPhi(&m, candBits);
+
+    double z = rlDot(rl_theta, rlPhi, RL_FEAT_DIM);
+    double p = rlSigmoidSafe(z);
+
+    int a = (rlRand01() < p) ? 1 : 0;
+
+    double before = rlPoolScore();
+    rlChangeType change = RL_NOCHANGE;
+
+    if (a == 1) {
+        rl_kept++;
+        change = rlInsertKeep(tree, &m, candBits);
+        if (change == RL_SWAP) rl_swaps++;
+    }
+
+    double after = rlPoolScore();
+
+    const double RCLIP = 10.0;
+    double reward = clamp(before - after, -RCLIP, RCLIP);
+    if (!isfinite(reward)) reward = 0.0;
+
+    /* --- Suggested change: penalize useless KEEP (KEEP but no swap) ------- */
+    /* This makes the policy learn to reserve KEEP for candidates that improve
+       the pool (especially once the pool is full). */
+    if (a == 1 && change != RL_SWAP) {
+        reward -= RL_KEEP_COST;
+    }
+
+    rl_reward_sum += reward;
+    rl_reward_n++;
+
+    rlReservoirStoreStep(rlPhi, a, p, reward);
+
+    rl_seen++;
+
+    if (change == RL_SWAP) {
+        fprintf(stderr,
+                "[RL-SWAP] ep=%d seen=%lu swaps=%lu score: %.9f -> %.9f r=%.3e p=%.3f z=%.3f "
+                "cand(v=%.6g t=%.6g c=%.6g)\n",
+                rl_episode, rl_seen, rl_swaps, before, after, reward, p, z,
+                m.avgViol, m.avgTight, m.complexity);
+    }
+
+    if (rl_log_every > 0 && (rl_seen % (unsigned long)rl_log_every) == 0) {
+        fprintf(stderr,
+                "[RL] ep=%d seen=%lu kept=%lu swaps=%lu pool=%d/%d score=%.6g\n",
+                rl_episode, rl_seen, rl_kept, rl_swaps, rlPoolCount, rl_top_k, rlPoolScore());
+    }
+
+    free(candBits);
+#endif
+}
+
+#if !RL_ONE_SHOT
+static void rlEndEpisodeUpdate(void){
+    if (rlBufSize==0) {
+        fprintf(stderr, "[RL] update skipped: empty reservoir\n");
+        return;
+    }
+
+    double G[RL_MAX_STEPS];
+    double running = 0.0;
+    for(int t=rlBufSize-1; t>=0; --t){
+        double rt = rlBuffer[t].r; if (!isfinite(rt)) rt = 0.0;
+        running = rt + rl_gamma*running; if (!isfinite(running)) running = 0.0;
+        G[t] = running;
+    }
+
+    if (!rlBaselineInit){
+        double avg=0.0; int c=0;
+        for(int t=0;t<rlBufSize;t++){ if (isfinite(G[t])){ avg+=G[t]; c++; } }
+        rlBaseline = (c>0)? avg/(double)c : 0.0;
+        rlBaselineInit = 1;
+    }
+
+    const double GRAD_CLIP = 1e3;
+    for(int t=0; t<rlBufSize; t++){
+        double adv = G[t] - rlBaseline; if (!isfinite(adv)) adv = 0.0;
+        double coeff = (double)(rlBuffer[t].a) - rlBuffer[t].p; if (!isfinite(coeff)) coeff = 0.0;
+
+        for(int j=0;j<RL_FEAT_DIM;j++){
+            double g = rl_lr * adv * coeff * rlBuffer[t].phi[j];
+            if (!isfinite(g)) g = 0.0;
+            g = clamp(g, -GRAD_CLIP, GRAD_CLIP);
+            rl_theta[j] += g;
+            if (!isfinite(rl_theta[j])) rl_theta[j] = 0.0;
+        }
+
+        rlBaseline = (1.0-rl_baseline_alpha)*rlBaseline + rl_baseline_alpha*G[t];
+        if (!isfinite(rlBaseline)) rlBaseline = 0.0;
+    }
+
+    fprintf(stderr, "[RL] policy updated (reservoir=%d stepsSeen=%lu)\n", rlBufSize, rlStepsSeen);
+
+    rlBufSize = 0;
+    rlStepsSeen = 0;
+}
+
+static int rlCmpIdxByScore(const void *a, const void *b){
+    int ia = *(const int*)a;
+    int ib = *(const int*)b;
+
+    int ua = rlPool[ia].in_use;
+    int ub = rlPool[ib].in_use;
+
+    if (ua && !ub) return -1;
+    if (!ua && ub) return 1;
+    if (!ua && !ub) return 0;
+
+    double sa = rlPool[ia].m.avgViol;
+    double sb = rlPool[ib].m.avgViol;
+
+    if (sa < sb) return -1;
+    if (sa > sb) return 1;
+    return 0;
+}
+
+static void rlHeuristicPostProcessing(void){
+    rlEndEpisodeUpdate();
+
+    double finalScore = rlPoolScore();
+
+    /* append CSV row for plot */
+    rlCurveAppend(rl_episode, finalScore);
+
+    fprintf(stderr, "[RL] Episode %d done: final_score=%.6f seen=%lu kept=%lu swaps=%lu\n",
+            rl_episode, finalScore, rl_seen, rl_kept, rl_swaps);
+
+    /* print conjectures to stdout (same as before) */
+    int should_print_pool = (rl_episode == RL_EPISODES);  /* only last episode */
+    if (should_print_pool && rlPoolCount > 0 ) {
+        int n = rlPoolCount;
+        int *idx = (int*)malloc((size_t)n * sizeof(int));
+        if (!idx) { fprintf(stderr, "Out of memory\n"); exit(EXIT_FAILURE); }
+        for (int i = 0; i < n; ++i) idx[i] = i;
+        qsort(idx, n, sizeof(int), rlCmpIdxByScore);
+
+        for (int k = 0; k < n; ++k) {
+            int i = idx[k];
+            if (rlPool[i].in_use && rlPool[i].tree && rlPool[i].tree->root) {
+                outputExpression(rlPool[i].tree, stdout);
+            }
+        }
+        free(idx);
+    }
+
+    for (int i = 0; i < rlPoolCount; ++i) rlFreeExpr(&rlPool[i]);
+    rlPoolCount = 0;
+}
+#endif
+
+/* --------------------------------- END RL --------------------------------- */
 //------ Stop generation -------
 
-boolean shouldGenerationProcessBeTerminated(){
+boolean shouldGenerationProcessBeTerminated(int complexity){
     if(heuristicStopConditionReached!=NULL){
         if(heuristicStopConditionReached()){
             heuristicStoppedGeneration = TRUE;
@@ -739,6 +1576,11 @@ boolean shouldGenerationProcessBeTerminated(){
         }
     }
     if(timeOutReached || userInterrupted || terminationSignalReceived){
+        return TRUE;
+    }
+    if (complexity > complexity_limit) {
+        complexity_limit_reached = TRUE;
+        complexity = complexity_limit;
         return TRUE;
     }
     
@@ -861,21 +1703,27 @@ void outputExpression(TREE *tree, FILE *f){
 
 void handleExpression(TREE *tree, double *values, int calculatedValues, int hitCount, int skipCount){
     validExpressionsCount++;
-    if(printValidExpressions){
+    if (printValidExpressions) {
         printExpression(tree, stderr);
     }
-    if(doConjecturing){
-        if(selectedHeuristic==DALMATIAN_HEURISTIC){
-            if(skipCount > allowedPercentageOfSkips * objectCount){
-                return;
-            }
-            dalmatianHeuristic(tree, values);
-        } else if(selectedHeuristic==GRINVIN_HEURISTIC){
-            if(skipCount > allowedPercentageOfSkips * objectCount){
-                return;
-            }
+    if (!doConjecturing) return;
+    if (skipCount > allowedPercentageOfSkips * objectCount) return;
+
+    switch (selectedHeuristic) {
+        case DALMATIAN_HEURISTIC:
+            dalmatianHeuristic(tree, values, skipCount);
+            break;
+        case GRINVIN_HEURISTIC:
             grinvinHeuristic(tree, values);
-        }
+            break;
+        case SAM_HEURISTIC:
+            samHeuristic(tree, values, skipCount);
+            break;
+        case RL_HEURISTIC:
+            rlHeuristic(tree, values, skipCount);
+            break;
+        default:
+            break;
     }
 }
 
@@ -889,7 +1737,7 @@ void handleExpression_propertyBased(TREE *tree, boolean *values, int calculatedV
             if(skipCount > allowedPercentageOfSkips * objectCount){
                 return;
             }
-            dalmatianHeuristic_propertyBased(tree, values);
+            dalmatianHeuristic_propertyBased(tree, values, skipCount);
         } else if(selectedHeuristic==GRINVIN_HEURISTIC){
             BAILOUT("Grinvin heuristic is not defined for property-based conjectures.")
         }
@@ -1026,6 +1874,9 @@ void writeNonCommutativeBinaryOperatorExample(FILE *f){
 }
 
 boolean handleComparator(double left, double right, int id){
+    if ((isnan(left)) || isnan(right)) {
+      return TRUE;
+    }
     if(id==0){
         return left <= right;
     } else if(id==1){
@@ -1209,8 +2060,24 @@ void checkExpression(TREE *tree){
     int calculatedValues = 0;
     int hitCount = 0;
     int skipCount = 0;
-    if (evaluateTree(tree, values, &calculatedValues, &hitCount, &skipCount)){
-        handleExpression(tree, values, objectCount, hitCount, skipCount);
+
+    /* Evaluate; may stop early if candidate violates inequality */
+    boolean ok = evaluateTree(tree, values, &calculatedValues, &hitCount, &skipCount);
+
+    /* IMPORTANT: avoid garbage values for the unevaluated tail */
+    for (int j = calculatedValues; j < objectCount; ++j) {
+        values[j] = NAN;
+    }
+
+    /* If RL is the selected heuristic, feed it EVERYTHING (valid + invalid) */
+    if (doConjecturing && selectedHeuristic == RL_HEURISTIC) {
+        rlHeuristic(tree, values, skipCount);
+        return;
+    }
+
+    /* Original behavior for other heuristics: only valid expressions */
+    if (ok) {
+        handleExpression(tree, values, calculatedValues, hitCount, skipCount);
     }
 }
 
@@ -1282,7 +2149,8 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
                     generateLabeledTree(tree, orderedNodes, pos+1);
                     invariantsUsed[i] = FALSE;
                 }
-                if(shouldGenerationProcessBeTerminated()){
+                complexity = targetUnary + 2*targetBinary;
+                if(shouldGenerationProcessBeTerminated(complexity)){
                     return;
                 }
             }
@@ -1291,7 +2159,8 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
             for (i=0; i<unaryOperatorCount; i++){
                 currentNode->contentLabel[1] = unaryOperators[i];
                 generateLabeledTree(tree, orderedNodes, pos+1);
-                if(shouldGenerationProcessBeTerminated()){
+                complexity = targetUnary + 2*targetBinary;
+                if(shouldGenerationProcessBeTerminated(complexity)){
                     return;
                 }
             }
@@ -1301,7 +2170,8 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
             for (i=0; i<nonCommBinaryOperatorCount; i++){
                 currentNode->contentLabel[1] = nonCommBinaryOperators[i];
                 generateLabeledTree(tree, orderedNodes, pos+1);
-                if(shouldGenerationProcessBeTerminated()){
+                complexity = targetUnary + 2*targetBinary;
+                if(shouldGenerationProcessBeTerminated(complexity)){
                     return;
                 }
             }
@@ -1312,7 +2182,8 @@ void generateLabeledTree(TREE *tree, NODE **orderedNodes, int pos){
                 for (i=0; i<commBinaryOperatorCount; i++){
                     currentNode->contentLabel[1] = commBinaryOperators[i];
                     generateLabeledTree(tree, orderedNodes, pos+1);
-                    if(shouldGenerationProcessBeTerminated()){
+                    complexity = targetUnary + 2*targetBinary;
+                    if(shouldGenerationProcessBeTerminated(complexity)){
                         return;
                     }
                 }
@@ -1370,7 +2241,8 @@ void generateTreeImpl(TREE *tree){
         addChildToNodeInTree(tree, parent);
         generateTreeImpl(tree);
         removeChildFromNodeInTree(tree, parent);
-        if(shouldGenerationProcessBeTerminated()){
+        complexity = targetUnary + 2*targetBinary;
+        if(shouldGenerationProcessBeTerminated(complexity)){
             return;
         }
     }
@@ -1380,7 +2252,8 @@ void generateTreeImpl(TREE *tree){
         addChildToNodeInTree(tree, parent);
         generateTreeImpl(tree);
         removeChildFromNodeInTree(tree, parent);
-        if(shouldGenerationProcessBeTerminated()){
+        complexity = targetUnary + 2*targetBinary;
+        if(shouldGenerationProcessBeTerminated(complexity)){
             return;
         }
     }
@@ -1391,9 +2264,7 @@ void generateTree(int unary, int binary){
         fprintf(stderr, "Generating trees with %d unary node%s and %d binary node%s.\n",
                 unary, unary == 1 ? "" : "s", binary, binary == 1 ? "" : "s");
     }
-    if(report_maximum_complexity_reached){//no need to check if this is larger since we generate them in increasing order
-        maximum_complexity_reached = 2*binary + unary;
-    }
+
     TREE tree;
     targetUnary = unary;
     targetBinary = binary;
@@ -1445,7 +2316,8 @@ void conjecture(int startUnary, int startBinary){
     
     generateTree(unary, binary);
     getNextOperatorCount(&unary, &binary);
-    while(!shouldGenerationProcessBeTerminated()) {
+    complexity = unary + 2*binary;
+    while(!shouldGenerationProcessBeTerminated(complexity)) {
         if(unary <= MAX_UNARY_COUNT && 
            binary <= MAX_BINARY_COUNT &&
            availableInvariants >= binary+1)
@@ -1680,6 +2552,8 @@ void readInvariantsValues(){
             }
         }
     }
+    /* === NEW: compute RL normalization constants === */
+    rlComputeTargetMinMax();
 }
 
 void readInvariantsValues_propertyBased(){
@@ -2052,6 +2926,11 @@ void help(char *name){
     fprintf(stderr, "   than the best value error up to that point.\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Please mail  \e[4mnico [DOT] vancleemput [AT] gmail [DOT] com\e[24m in case of trouble.\n");
+    fprintf(stderr, "    --rl\n");
+    fprintf(stderr, "       Use a REINFORCE policy (learned online) to keep/skip candidates.\n");
+    fprintf(stderr, "       Reward = improvement in a multi-term pool score (violation/tightness/\n");
+    fprintf(stderr, "       complexity/redundancy). Keeps top-%d and prints them at the end.\n", rl_top_k);
+
 }
 
 void usage(char *name){
@@ -2075,19 +2954,33 @@ int processOptions(int argc, char **argv) {
         {"all-operators", no_argument, NULL, 0},
         {"dalmatian", no_argument, NULL, 0},
         {"grinvin", no_argument, NULL, 0},
+        {"sam", no_argument, NULL, 0},
+        {"rl", no_argument, NULL, 0},
         {"invariant-names", no_argument, NULL, 0},
         {"operators", required_argument, NULL, 0},
         {"invariants", required_argument, NULL, 0},
         {"leq", no_argument, NULL, 0},
-        {"less", no_argument, NULL, 0},
+        {"less", no_argument, NULL, 0}, // don't use this option
         {"geq", no_argument, NULL, 0},
-        {"greater", no_argument, NULL, 0},
+        {"greater", no_argument, NULL, 0}, // don't use this option
         {"limits", required_argument, NULL, 0},
         {"allowed-skips", required_argument, NULL, 0},
         {"print-valid-expressions", no_argument, NULL, 0},
         {"sufficient", no_argument, NULL, 0},
         {"necessary", no_argument, NULL, 0},
         {"maximum-complexity", no_argument, NULL, 0},
+        {"complexity-limit", required_argument, NULL, 0},
+        {"top-k", required_argument, NULL, 0},
+        {"beta", required_argument, NULL, 0},
+        {"lambda", required_argument, NULL, 0},
+        {"alpha", required_argument, NULL, 0},
+        {"gamma", required_argument, NULL, 0},
+        {"learningrate", required_argument, NULL, 0},
+        {"baselinealpha", required_argument, NULL, 0},
+        {"sim", required_argument, NULL, 0},
+        {"seed", required_argument, NULL, 0},
+        {"rho", required_argument, NULL, 0},
+        {"episodes", required_argument, NULL, 0},
         {"help", no_argument, NULL, 'h'},
         {"verbose", no_argument, NULL, 'v'},
         {"unlabeled", no_argument, NULL, 'u'},
@@ -2149,48 +3042,107 @@ int processOptions(int argc, char **argv) {
                         heuristicStopConditionReached = grinvinHeuristicStopConditionReached;
                         heuristicPostProcessing = grinvinHeuristicPostProcessing;
                         break;
-                    case 9:
-                        useInvariantNames = TRUE;
+                    case 9: // 
+                        selectedHeuristic = SAM_HEURISTIC;
+                        heuristicInit = samHeuristicInit;
+                        heuristicStopConditionReached = NULL;         // no early stop for SAM
+                        heuristicPostProcessing = samHeuristicPostProcessing;
                         break;
                     case 10:
+                        selectedHeuristic = RL_HEURISTIC;
+                        heuristicInit = rlHeuristicInit;
+                        heuristicStopConditionReached = NULL;   // no early stop
+                        heuristicPostProcessing = rlHeuristicPostProcessing;
+                        break;
+                    case 11:
+                        useInvariantNames = TRUE;
+                        break;
+                    case 12:
                         operatorFile = fopen(optarg, "r");
                         closeOperatorFile = TRUE;
                         break;
-                    case 11:
+                    case 13:
                         invariantsFile = fopen(optarg, "r");
                         closeInvariantsFile = TRUE;
                         break;
-                    case 12:
+                    case 14:
                         inequality = LEQ;
                         break;
-                    case 13:
+                    case 15:
                         inequality = LESS;
                         break;
-                    case 14:
+                    case 16:
                         inequality = GEQ;
                         break;
-                    case 15:
+                    case 17:
                         inequality = GREATER;
                         break;
-                    case 16:
+                    case 18:
                         fprintf(stderr, "Limits are no longer supported.\n");
                         return EXIT_SUCCESS;
                         break;
-                    case 17:
+                    case 19:
                         allowedPercentageOfSkips = strtof(optarg, NULL);
                         break;
-                    case 18:
+                    case 20:
                         printValidExpressions = TRUE;
                         break;
-                    case 19:
+                    case 21:
                         inequality = SUFFICIENT;
                         break;
-                    case 20:
+                    case 22:
                         inequality = NECESSARY;
                         break;
-                    case 21:
+                    case 23:
                         report_maximum_complexity_reached = TRUE;
                         break;
+                    case 24:
+                        complexity_limit = strtoul(optarg, NULL, 10);
+                        break;
+                    case 25: /* --top-k */
+                        rl_top_k = strtol(optarg, NULL, 10);
+                        if (rl_top_k < 1) rl_top_k = 1;
+                        if (rl_top_k > RL_MAX_TOP_K) rl_top_k = RL_MAX_TOP_K;
+                        sam_top_k = rl_top_k;
+                        break;
+                    case 26:
+                        sam_beta = strtod(optarg, NULL);
+                        rl_beta_tight = sam_beta; /* if you reuse same name */
+                        break;
+                    case 27:
+                        sam_lambda = strtod(optarg, NULL);
+                        rl_lambda_comp  = sam_lambda;
+                        break;
+                    case 28:
+                        rl_alpha_viol = strtod(optarg, NULL);
+                        sam_alpha = rl_alpha_viol;
+                        break;
+                    case 29:
+                        rl_gamma = strtod(optarg, NULL);
+                        break;
+                    case 30:
+                        rl_lr= strtod(optarg, NULL);
+                        break;
+                    case 31:
+                        rl_baseline_alpha= strtod(optarg, NULL);
+                        break;
+                    case 32:
+                        strncpy(rl_sim_name, optarg, sizeof(rl_sim_name)-1);
+                        rl_sim_name[sizeof(rl_sim_name)-1] = '\0';
+                        break;
+                    case 33:
+                        rl_seed = (unsigned)strtoul(optarg, NULL, 10);
+                        break;
+                    case 34:
+                        rl_rho_redund= strtod(optarg, NULL);
+                        break;
+                    case 35: /* --episodes */
+                    RL_EPISODES = strtol(optarg, NULL, 10);
+                    if (RL_EPISODES <= 0) {
+                        fprintf(stderr, "--episodes must be positive\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    break;
                     default:
                         fprintf(stderr, "Illegal option index %d.\n", option_index);
                         usage(name);
@@ -2310,6 +3262,10 @@ int processOptions(int argc, char **argv) {
 
 int main(int argc, char *argv[]) {
     
+    time_t start, end;
+
+    start = time(NULL);
+
     operatorFile = stdin;
     invariantsFile = stdin;
     
@@ -2402,13 +3358,64 @@ int main(int argc, char *argv[]) {
     //if timeOut is non-zero: start alarm
     if(timeOut) alarm(timeOut);
     
-    //start actual generation process
-    if(doConjecturing || generateAllExpressions){
-        conjecture(unary, binary);
-    } else {
+/* ----------------- start actual generation process ----------------- */
+
+    if (doConjecturing || generateAllExpressions) {
+    
+        if (doConjecturing && selectedHeuristic == RL_HEURISTIC) {
+    
+            for (rl_episode = 1; rl_episode <= RL_EPISODES; ++rl_episode) {
+    
+                /* reset termination flags for a fresh episode */
+                timeOutReached = FALSE;
+                userInterrupted = FALSE;
+                terminationSignalReceived = FALSE;
+                heuristicStoppedGeneration = FALSE;
+                complexity_limit_reached = FALSE;
+    
+                /* optional: per-episode counters */
+                treeCount = 0;
+                labeledTreeCount = 0;
+                validExpressionsCount = 0;
+    
+                /* reset “progress” */
+                complexity = 0;
+    
+                /* re-arm per-episode timeout */
+                if (timeOut) alarm((unsigned int)timeOut);
+    
+                /* init episode (pool reset; theta persists) */
+                if (heuristicInit) heuristicInit();
+    
+                /* full pass over expressions */
+                conjecture(unary, binary);
+    
+                /* stop timer so it doesn't spill into next episode */
+                if (timeOut) alarm(0);
+    
+                /* update policy + log + print pool */
+                if (heuristicPostProcessing) heuristicPostProcessing();
+    
+                /* stop early only for user kills */
+                if (userInterrupted || terminationSignalReceived) break;
+            }
+    
+        } else {
+    
+            /* non-RL original single run */
+            timeOutReached = FALSE; /* Reset timeout flags */
+            if (timeOut) alarm((unsigned int)timeOut);   /* Arm timeout once for entire run */
+            if (heuristicInit) heuristicInit();
+            conjecture(unary, binary);
+    
+            if (timeOut) alarm(0);
+            if (heuristicPostProcessing) heuristicPostProcessing();
+        }
+    } else {    
+        /* not conjecturing: original behavior */
         generateTree(unary, binary);
     }
-    
+
     //give information about the reason why the program halted
     if(heuristicStoppedGeneration){
         fprintf(stderr, "Generation process was stopped by the conjecturing heuristic.\n");
@@ -2418,6 +3425,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Generation process was interrupted by user.\n");
     } else if(terminationSignalReceived){
         fprintf(stderr, "Generation process was killed.\n");
+    } else if(complexity_limit_reached){
+        fprintf(stderr, "Generation process was stopped because the maximum complexity was explored.\n");
     }
     
     //print some statistics
@@ -2434,15 +3443,9 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Found %lu labeled trees.\n", labeledTreeCount);
         fprintf(stderr, "Found %lu valid expressions.\n", validExpressionsCount);
     }
-    
-    if(report_maximum_complexity_reached){
-        fprintf(stderr, "Maximum complexity reached was %d\n", maximum_complexity_reached);
-    }
-    
-    //do some heuristic-specific post-processing like outputting the conjectures
-    if(heuristicPostProcessing!=NULL){
-        heuristicPostProcessing();
-    }
+    fprintf(stderr, "Maximum complexity reached: %lu\n", complexity-1);
+    end = time(NULL);
+    fprintf(stderr, "Elapsed time: %ld seconds\n", end - start);
     
     return 0;
 }
